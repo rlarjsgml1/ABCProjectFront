@@ -7,18 +7,49 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Build output
 dist
 dist-ssr
+build
+coverage
+
+# Tool caches
+.vite
+.cache
+.turbo
+.parcel-cache
+
+# Local environment
+.env
+.env.*
+!.env.example
 *.local
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
+*.iws
+*.iml
+*.ipr
+out
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# AI tool local state
+.claude/
+**/.claude/
+CLAUDE.md
+.codex/
+**/.codex/
+AGENTS.md
+.omc/
+.omx/
