@@ -24,6 +24,19 @@ export type PageResponse<T> = {
   last: boolean;
 };
 
+export type BookCard = {
+  bookId: number;
+  title: string;
+  coverImageUrl: string;
+  authors: string[];
+  publisherName: string;
+  rentalType: string;
+  rentalPrice: number;
+  averageRating: number;
+  reviewCount: number;
+  favoriteYn: boolean;
+};
+
 // DB 테이블명이 아니라 API-ME-001 응답 DTO 기준으로 front에서 쓰는 회원 정보 필드다.
 export type UserProfile = {
   loginId: string;
