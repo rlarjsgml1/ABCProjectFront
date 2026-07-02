@@ -24,6 +24,62 @@ export type PageResponse<T> = {
   last: boolean;
 };
 
+export type PointHistoryQuery = {
+  pointType?: string;
+  page?: number;
+  size?: number;
+};
+
+export type PointHistoryItem = {
+  pointHistoryId?: number;
+  pointId?: number;
+  id?: number;
+  detail?: string;
+  description?: string;
+  detailContent?: string;
+  earnedAt?: string;
+  createdAt?: string;
+  pointType?: string;
+  usageType?: string;
+  useType?: string;
+  amount?: number;
+  pointAmount?: number;
+};
+
+export type PointHistoryPage = PageResponse<PointHistoryItem> & {
+  currentPoint?: number;
+  balance?: number;
+  totalPoint?: number;
+};
+
+export type CouponHistoryQuery = {
+  status?: string;
+  usableForBookId?: number;
+  page?: number;
+  size?: number;
+};
+
+export type CouponHistoryItem = {
+  couponId?: number;
+  id?: number;
+  couponName?: string;
+  name?: string;
+  detail?: string;
+  description?: string;
+  issuedAt?: string;
+  createdAt?: string;
+  validFrom?: string;
+  validUntil?: string;
+  expiredAt?: string;
+  status?: string;
+  usableBookCount?: number;
+};
+
+export type CouponHistoryPage = PageResponse<CouponHistoryItem> & {
+  availableCouponCount?: number;
+  expiringThisMonthCount?: number;
+};
+
 export type BookCard = {
   bookId: number;
   title: string;
@@ -49,6 +105,12 @@ export type UserProfile = {
   status: string;
   gradeName?: string;
   membershipGrade?: string;
+  nextGradeName?: string;
+  nextGradeRemainingPercent?: number;
+  gradeProgressPercent?: number;
+  currentPaymentAmount?: number;
+  gradeBenefitText?: string;
+  remainingGradePeriodDays?: number;
   point?: number;
   couponCount?: number;
   rentalCount?: number;

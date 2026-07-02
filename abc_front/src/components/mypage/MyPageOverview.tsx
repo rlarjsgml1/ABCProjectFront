@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import type { UserProfile } from '../../types/api';
 
@@ -10,6 +10,20 @@ type MyPageOverviewProps = {
 
 type BarStyle = CSSProperties & {
   '--bar-height': string;
+};
+
+type GradeProgressStyle = CSSProperties & {
+  '--grade-progress': string;
+};
+
+type MembershipGradeDetails = {
+  currentGradeName: string;
+  nextGradeName: string;
+  remainingPercent: number;
+  progressPercent: number;
+  currentPaymentAmount: number;
+  benefitText: string;
+  remainingDays: number;
 };
 
 const emptyProfile: UserProfile = {
@@ -50,9 +64,42 @@ function getBarStyle(percent: number): BarStyle {
   return { '--bar-height': `${percent}%` };
 }
 
+function getClampedPercent(value: number | undefined, fallback: number) {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return fallback;
+  }
+
+  return Math.min(100, Math.max(0, value));
+}
+
+function formatWon(value: number) {
+  return `${value.toLocaleString('ko-KR')} 원`;
+}
+
+function getGradeProgressStyle(percent: number): GradeProgressStyle {
+  return { '--grade-progress': `${percent}%` };
+}
+
+function getMembershipGradeDetails(profile: UserProfile, currentGradeName: string): MembershipGradeDetails {
+  const remainingPercent = getClampedPercent(profile.nextGradeRemainingPercent, 73);
+  const progressPercent = getClampedPercent(profile.gradeProgressPercent, 100 - remainingPercent);
+
+  return {
+    currentGradeName,
+    nextGradeName: profile.nextGradeName ?? '나무',
+    remainingPercent,
+    progressPercent,
+    currentPaymentAmount: profile.currentPaymentAmount ?? 27000,
+    benefitText: profile.gradeBenefitText ?? `${currentGradeName} 등급 혜택 기본 대여 기간 +1일 적용중`,
+    remainingDays: profile.remainingGradePeriodDays ?? 13,
+  };
+}
+
 export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPageOverviewProps) {
+  const [isGradeModalOpen, setIsGradeModalOpen] = useState(false);
   const displayProfile = profile ?? emptyProfile;
-  const grade = displayProfile.gradeName ?? displayProfile.membershipGrade ?? '기본 등급';
+  const grade = displayProfile.gradeName ?? displayProfile.membershipGrade ?? '새싹';
+  const gradeDetails = getMembershipGradeDetails(displayProfile, grade);
   const topStats = [
     { label: '리뷰', value: valueOrDash(displayProfile.reviewCount) },
     { label: '포인트', value: formatPoint(displayProfile.point) },
@@ -98,11 +145,17 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
                 <span>이름</span>
                 <strong>{displayProfile.name}</strong>
               </Link>
-              <div className="profile-chip">
+              <button
+                className="profile-chip profile-chip-button"
+                type="button"
+                aria-haspopup="dialog"
+                aria-expanded={isGradeModalOpen}
+                onClick={() => setIsGradeModalOpen(true)}
+              >
                 <span aria-hidden="true">◆</span>
                 <strong>회원등급</strong>
                 <small>{grade}</small>
-              </div>
+              </button>
             </div>
             <div className="count-card-grid count-card-grid-top" aria-label="리뷰 포인트 쿠폰 요약">
               {topStats.map((card) => (
@@ -189,6 +242,61 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
           </div>
         </section>
       </div>
+
+      {isGradeModalOpen ? (
+        <div className="membership-modal-backdrop" onClick={() => setIsGradeModalOpen(false)}>
+          <section
+            className="membership-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="membership-modal-title"
+            aria-describedby="membership-modal-description"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="membership-modal-header">
+              <div>
+                <p className="eyebrow">MEMBERSHIP GRADE</p>
+                <h2 id="membership-modal-title">회원등급 안내</h2>
+              </div>
+              <button
+                className="membership-modal-close"
+                type="button"
+                aria-label="회원등급 안내 닫기"
+                onClick={() => setIsGradeModalOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="membership-modal-body" id="membership-modal-description">
+              <p className="membership-grade-current">
+                현재 회원님의 등급은 <strong>{gradeDetails.currentGradeName}</strong> 입니다.
+              </p>
+              <p className="membership-grade-remaining">
+                다음 등급까지 <strong>{gradeDetails.remainingPercent} %</strong> 남았습니다.
+              </p>
+
+              <div className="membership-payment-card">
+                <span>현재 결제 금액</span>
+                <strong>{formatWon(gradeDetails.currentPaymentAmount)}</strong>
+              </div>
+
+              <div className="membership-progress-block" aria-label="회원등급 진행률">
+                <div className="membership-progress-track">
+                  <span className="membership-progress-fill" style={getGradeProgressStyle(gradeDetails.progressPercent)} />
+                </div>
+                <div className="membership-progress-labels">
+                  <span>{gradeDetails.currentGradeName}</span>
+                  <span>{gradeDetails.nextGradeName}</span>
+                </div>
+              </div>
+
+              <p className="membership-benefit-text">{gradeDetails.benefitText}</p>
+              <p className="membership-period-text">현재 등급 유지 기간 {gradeDetails.remainingDays}일 남았습니다.</p>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </section>
   );
 }

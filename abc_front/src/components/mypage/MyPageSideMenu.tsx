@@ -5,6 +5,7 @@ const menuItems = [
   { label: '즐겨찾기', enabled: false },
   { label: '최근 읽은 책', enabled: false },
   { label: '이용 내역', enabled: false },
+  { label: '포인트/쿠폰', to: '/me/points-coupons', enabled: true, end: true },
   { label: '프로필 수정', to: '/me/profile', enabled: true, end: true },
   { label: '희망 도서 신청', enabled: false },
   { label: '희망 도서 신청 내역', enabled: false },
