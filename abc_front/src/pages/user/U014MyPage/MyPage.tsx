@@ -1,9 +1,70 @@
+import { useEffect, useState } from 'react';
+import { getApiErrorMessage, getMyProfile } from '../../../api/profileApi';
+import { EmptyState } from '../../../components/common/EmptyState';
+import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
+import type { UserProfile } from '../../../types/api';
+
+const libraryItems = [
+  { title: '대여 중인 도서', description: '현재 읽고 있는 전자책 목록이 연결될 영역입니다.' },
+  { title: '완독 도서', description: '완독 처리한 도서와 최근 독서 기록을 표시합니다.' },
+  { title: '나의 리뷰', description: '작성한 리뷰와 별점 활동이 모이는 공간입니다.' },
+];
+
 export function MyPage() {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadProfile() {
+      try {
+        const data = await getMyProfile();
+        if (!ignore) {
+          setProfile(data);
+          setErrorMessage('');
+        }
+      } catch (error) {
+        if (!ignore) {
+          setProfile(null);
+          setErrorMessage(getApiErrorMessage(error));
+        }
+      } finally {
+        if (!ignore) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadProfile();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   return (
-    <section className="page-section">
-      <p className="eyebrow">U-014</p>
-      <h1>마이페이지</h1>
-      <p>회원 요약 카드, 내 서재, 결제, 알림, 포인트/쿠폰 메뉴를 배치할 화면입니다.</p>
-    </section>
+    <MyPageLayout profile={profile} isLoading={isLoading} errorMessage={errorMessage} titleId="mypage-library-title">
+      <section className="page-section usage-history-panel">
+        <div className="section-heading-row">
+          <div>
+            <p className="eyebrow">U-014 LIBRARY</p>
+            <h2 id="mypage-library-title">내 서재</h2>
+          </div>
+          <span>이용 현황</span>
+        </div>
+        <p>대여, 완독, 리뷰 활동이 연결되면 이 영역에서 내 독서 흐름을 확인합니다.</p>
+        <div className="library-preview-list" aria-label="내 서재 미리보기">
+          {libraryItems.map((item) => (
+            <article className="library-preview-item" key={item.title}>
+              <h3>{item.title}</h3>
+              <p>{item.description}</p>
+            </article>
+          ))}
+        </div>
+        <EmptyState title="표시할 이용 내역이 없습니다." description="대여, 완독, 리뷰 API 연결 후 목록을 표시합니다." />
+      </section>
+    </MyPageLayout>
   );
 }
