@@ -7,12 +7,13 @@ type ProtectedRouteProps = {
 };
 
 export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
-  const token = localStorage.getItem('accessToken');
   const role = localStorage.getItem('memberRole');
 
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
+  // 화면 검수 중에는 로그인 API 없이 U-014/U-015에 직접 진입할 수 있게 임시로 redirect를 막는다.
+  // const token = localStorage.getItem('accessToken');
+  // if (!token) {
+  //   return <Navigate to="/login" replace />;
+  // }
 
   if (requireAdmin && role !== 'ADMIN') {
     return <Navigate to="/" replace />;
