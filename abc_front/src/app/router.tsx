@@ -25,6 +25,7 @@ import { BooksPage } from '../pages/user/U006Books/BooksPage';
 import { HomePage } from '../pages/user/U001Home/HomePage';
 import { LoginPage } from '../pages/user/U003Login/LoginPage';
 import { MyPage } from '../pages/user/U014MyPage/MyPage';
+import { PointsCouponsPage } from '../pages/user/U017PointsCoupons/PointsCouponsPage';
 import { ProfileEditPage } from '../pages/user/U015ProfileEdit/ProfileEditPage';
 import { SearchResultsPage } from '../pages/user/U007SearchResults/SearchResultsPage';
 import { SignupPage } from '../pages/user/U002Signup/SignupPage';
@@ -52,6 +53,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <ProfileEditPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/me/points-coupons',
+        element: (
+          <ProtectedRoute>
+            <PointsCouponsPage />
           </ProtectedRoute>
         ),
       },

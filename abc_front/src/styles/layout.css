@@ -322,6 +322,19 @@
   text-align: center;
 }
 
+.profile-chip-button {
+  width: 100%;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.profile-chip-button:hover,
+.profile-chip-button:focus-visible {
+  outline: var(--space-1) solid var(--color-primary);
+  outline-offset: var(--space-1);
+}
+
 .profile-chip span,
 .profile-chip small {
   color: var(--mypage-widget-muted);
@@ -504,6 +517,134 @@
   background: var(--mypage-widget-surface);
 }
 
+.membership-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  background: color-mix(in srgb, var(--color-text) 48%, transparent);
+}
+
+.membership-modal {
+  width: min(100%, calc(var(--space-10) * 12));
+  display: grid;
+  gap: var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  color: var(--color-text);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
+.membership-modal-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.membership-modal-header h2,
+.membership-modal-header p,
+.membership-modal-body p {
+  margin: 0;
+}
+
+.membership-modal-close {
+  display: grid;
+  place-items: center;
+  width: var(--space-8);
+  height: var(--space-8);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  color: var(--color-text);
+  background: var(--color-surface);
+  cursor: pointer;
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.membership-modal-close:hover,
+.membership-modal-close:focus-visible {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  outline: 0;
+}
+
+.membership-modal-body {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.membership-grade-current,
+.membership-grade-remaining {
+  font-weight: 800;
+}
+
+.membership-grade-current strong,
+.membership-grade-remaining strong,
+.membership-payment-card strong {
+  color: var(--color-primary);
+}
+
+.membership-payment-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  background: var(--color-primary-soft);
+}
+
+.membership-payment-card span {
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.membership-progress-block {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.membership-progress-track {
+  overflow: hidden;
+  height: var(--space-3);
+  border-radius: var(--space-10);
+  background: var(--color-surface-muted);
+}
+
+.membership-progress-fill {
+  display: block;
+  width: var(--grade-progress);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-primary);
+}
+
+.membership-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  color: var(--color-muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.membership-benefit-text,
+.membership-period-text {
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background: var(--color-surface-muted);
+  font-weight: 700;
+}
+
+.membership-period-text {
+  color: var(--color-muted);
+}
+
 .profile-edit-form {
   display: grid;
   gap: var(--space-6);
@@ -550,10 +691,176 @@
   color: var(--color-muted);
 }
 
+.points-coupons-panel,
+.points-coupons-tab-panel {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.points-coupons-tabs {
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid var(--color-border);
+  border-radius: var(--space-10);
+  padding: var(--space-1);
+  background: var(--color-surface-muted);
+}
+
+.points-coupons-tab {
+  border: 0;
+  border-radius: var(--space-10);
+  padding: var(--space-3) var(--space-6);
+  color: var(--color-muted);
+  background: transparent;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.points-coupons-tab:hover,
+.points-coupons-tab:focus-visible {
+  color: var(--color-primary);
+  outline: var(--space-1) solid var(--color-primary-soft);
+  outline-offset: var(--space-1);
+}
+
+.points-coupons-tab.is-active {
+  color: var(--color-primary);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.points-coupons-summary-card {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  background: linear-gradient(135deg, var(--color-primary-soft), var(--color-surface));
+  box-shadow: var(--shadow-sm);
+}
+
+.points-coupons-summary-card::after {
+  content: '';
+  position: absolute;
+  inset: auto var(--space-6) var(--space-4) auto;
+  width: var(--space-10);
+  height: var(--space-10);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+.points-coupons-summary-card span {
+  color: var(--color-muted);
+  font-weight: 800;
+}
+
+.points-coupons-summary-card strong {
+  color: var(--color-primary);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.points-summary-card {
+  width: min(100%, calc(var(--space-10) * 10));
+}
+
+.coupon-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.coupon-expiring-card {
+  background: linear-gradient(135deg, var(--color-warning-soft), var(--color-surface));
+}
+
+.coupon-expiring-card strong {
+  color: var(--color-warning);
+}
+
+.coupon-expiring-card::after {
+  background: color-mix(in srgb, var(--color-warning) 18%, transparent);
+}
+
+.points-coupons-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.points-coupons-toolbar p {
+  margin: 0;
+  color: var(--color-muted);
+  font-weight: 800;
+}
+
+.points-coupons-toolbar label {
+  display: grid;
+  gap: var(--space-2);
+  min-width: calc(var(--space-10) * 4);
+  font-weight: 800;
+}
+
+.points-coupons-toolbar label span {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.points-coupons-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.points-coupons-table {
+  width: 100%;
+  min-width: calc(var(--space-10) * 18);
+  border-collapse: collapse;
+}
+
+.points-coupons-table th,
+.points-coupons-table td {
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-4);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.points-coupons-table th {
+  color: var(--color-muted);
+  background: var(--color-surface-muted);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.points-coupons-table td {
+  font-weight: 700;
+}
+
+.points-coupons-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.points-coupons-table td[colspan] {
+  padding: var(--space-8);
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.points-coupons-action {
+  white-space: nowrap;
+}
+
 @media (max-width: 960px) {
   .mypage-content-shell,
   .mypage-grid,
-  .profile-form-grid {
+  .profile-form-grid,
+  .coupon-summary-grid {
     grid-template-columns: 1fr;
   }
 
@@ -573,7 +880,8 @@
 @media (max-width: 640px) {
   .mypage-hero,
   .section-heading-row,
-  .form-action-row {
+  .form-action-row,
+  .points-coupons-toolbar {
     align-items: stretch;
     flex-direction: column;
   }
