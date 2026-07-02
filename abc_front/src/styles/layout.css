@@ -1,3 +1,4 @@
+
 .app-shell {
   min-height: 100vh;
   display: flex;
@@ -581,4 +582,153 @@
   .count-card-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* 헤더 */
+.abc-header {
+  width: 100%;
+  padding: 32px 10.4vw 40px;
+  background: #ffffff;
+}
+
+.abc-header-top {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.abc-logo {
+  color: #003d2d;
+  font-size: 52px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 2px;
+  text-decoration: none;
+}
+
+.abc-search {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  align-items: center;
+  width: 636px;
+  height: 52px;
+  border-radius: 999px;
+  background: #d9d9d9;
+  overflow: hidden;
+}
+
+.abc-search-button {
+  width: 52px;
+  height: 52px;
+  border: 0;
+  background: transparent;
+  color: #111111;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.abc-search-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.abc-search-input {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 0 24px 0 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #111111;
+  font-size: 16px;
+}
+
+.abc-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 226px;
+}
+
+.abc-outline-button,
+.abc-dark-button {
+  height: 36px;
+  padding: 0 17px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.abc-outline-button {
+  border: 1px solid #003d2d;
+  background: #ffffff;
+  color: #003d2d;
+}
+
+.abc-dark-button {
+  border: 1px solid #003d2d;
+  background: #003d2d;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.abc-profile-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #908c8c;
+  color: #ffffff;
+  box-shadow: 3px 4px 9px rgba(0, 0, 0, 0.3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.abc-profile-button svg {
+  width: 25px;
+  height: 25px;
+}
+
+.abc-nav {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: center;
+  width: 100%;
+  margin-top: 60px;
+}
+
+.abc-nav-link {
+  color: #999999;
+  font-size: 20px;
+  font-weight: 400;
+  text-align: center;
+  text-decoration: none;
+}
+
+.abc-nav-link:first-child {
+  text-align: left;
+}
+
+.abc-nav-link:last-child {
+  text-align: right;
+}
+
+.abc-nav-link.active {
+  color: #111111;
+  font-weight: 1000;
 }
