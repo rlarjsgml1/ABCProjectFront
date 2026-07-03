@@ -28,6 +28,7 @@ import { MyPage } from '../pages/user/U014MyPage/MyPage';
 import { AttendancePage } from '../pages/user/U016Attendance/AttendancePage';
 import { PointsCouponsPage } from '../pages/user/U017PointsCoupons/PointsCouponsPage';
 import { ProfileEditPage } from '../pages/user/U015ProfileEdit/ProfileEditPage';
+import { ReadingStatsPage } from '../pages/user/U026ReadingStats/ReadingStatsPage';
 import { SearchResultsPage } from '../pages/user/U007SearchResults/SearchResultsPage';
 import { SignupPage } from '../pages/user/U002Signup/SignupPage';
 
@@ -70,6 +71,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <PointsCouponsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/me/statistics',
+        element: (
+          <ProtectedRoute>
+            <ReadingStatsPage />
           </ProtectedRoute>
         ),
       },

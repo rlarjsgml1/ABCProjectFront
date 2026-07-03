@@ -1144,11 +1144,237 @@ a.count-card:focus-visible {
   color: var(--attendance-accent);
 }
 
+.reading-statistics-page {
+  --reading-statistics-surface: var(--color-surface);
+  --reading-statistics-panel: color-mix(in srgb, var(--color-primary-soft) 36%, var(--color-surface));
+  --reading-statistics-accent: var(--color-primary);
+  --reading-statistics-green: var(--color-success);
+  display: grid;
+  gap: var(--space-6);
+  background: linear-gradient(135deg, var(--reading-statistics-panel), var(--reading-statistics-surface));
+}
+
+.reading-statistics-page h3,
+.reading-statistics-page p {
+  margin: 0;
+}
+
+.reading-statistics-heading > span,
+.reading-statistics-kicker {
+  color: var(--reading-statistics-accent);
+  font-weight: 900;
+}
+
+.reading-statistics-kicker {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+}
+
+.reading-statistics-controls {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.reading-statistics-tabs {
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid var(--color-border);
+  border-radius: var(--space-10);
+  padding: var(--space-1);
+  background: var(--color-surface-muted);
+}
+
+.reading-statistics-tab {
+  border: 0;
+  border-radius: var(--space-10);
+  padding: var(--space-3) var(--space-6);
+  color: var(--color-muted);
+  background: transparent;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.reading-statistics-tab:hover,
+.reading-statistics-tab:focus-visible {
+  color: var(--reading-statistics-accent);
+  outline: var(--space-1) solid var(--color-primary-soft);
+  outline-offset: var(--space-1);
+}
+
+.reading-statistics-tab.is-active {
+  color: var(--reading-statistics-accent);
+  background: var(--reading-statistics-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.reading-statistics-date-field {
+  display: grid;
+  gap: var(--space-2);
+  min-width: calc(var(--space-10) * 4);
+  font-weight: 900;
+}
+
+.reading-statistics-date-field span {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.reading-statistics-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.reading-statistics-summary-card,
+.reading-statistics-chart-card,
+.reading-statistics-environment-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--reading-statistics-surface) 88%, transparent);
+  box-shadow: var(--shadow-sm);
+}
+
+.reading-statistics-summary-card {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-6);
+}
+
+.reading-statistics-summary-card::after {
+  content: '';
+  position: absolute;
+  inset: auto var(--space-6) var(--space-4) auto;
+  width: var(--space-10);
+  height: var(--space-10);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--reading-statistics-accent) 16%, transparent);
+}
+
+.reading-statistics-summary-card span,
+.reading-statistics-pill,
+.reading-statistics-chart-item span,
+.reading-statistics-environment-card p,
+.reading-statistics-environment-metric span {
+  color: var(--color-muted);
+  font-weight: 800;
+}
+
+.reading-statistics-summary-card strong {
+  color: var(--reading-statistics-accent);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.reading-statistics-secondary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.reading-statistics-pill {
+  border-radius: var(--space-10);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-muted);
+}
+
+.reading-statistics-pill strong {
+  color: var(--reading-statistics-accent);
+}
+
+.reading-statistics-dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.8fr);
+  gap: var(--space-6);
+  align-items: stretch;
+}
+
+.reading-statistics-chart-card,
+.reading-statistics-environment-card {
+  display: grid;
+  gap: var(--space-6);
+  padding: var(--space-6);
+}
+
+.reading-statistics-chart-card .section-heading-row span {
+  color: var(--reading-statistics-accent);
+  font-weight: 900;
+}
+
+.reading-statistics-chart {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--space-10), 1fr));
+  gap: var(--space-4);
+  align-items: end;
+  min-height: calc(var(--space-10) * 6);
+}
+
+.reading-statistics-chart-item {
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+  gap: var(--space-2);
+  min-height: calc(var(--space-10) * 6);
+  text-align: center;
+}
+
+.reading-statistics-bar-track {
+  overflow: hidden;
+  display: flex;
+  align-items: end;
+  justify-self: center;
+  width: var(--space-8);
+  height: 100%;
+  border-radius: var(--space-10);
+  background: var(--color-surface-muted);
+}
+
+.reading-statistics-bar-fill {
+  display: block;
+  width: 100%;
+  height: var(--reading-stat-height);
+  border-radius: inherit;
+  background: linear-gradient(180deg, var(--reading-statistics-accent), var(--reading-statistics-green));
+}
+
+.reading-statistics-chart-item strong {
+  color: var(--color-text);
+  font-size: 0.9rem;
+}
+
+.reading-statistics-environment-card {
+  align-content: space-between;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--color-success-soft) 72%, var(--color-surface)), var(--reading-statistics-surface));
+}
+
+.reading-statistics-environment-grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.reading-statistics-environment-metric {
+  display: grid;
+  gap: var(--space-2);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  background: var(--reading-statistics-surface);
+}
+
+.reading-statistics-environment-metric strong {
+  color: var(--reading-statistics-green);
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
 @media (max-width: 960px) {
   .mypage-content-shell,
   .mypage-grid,
   .profile-form-grid,
-  .coupon-summary-grid {
+  .coupon-summary-grid,
+  .reading-statistics-summary-grid,
+  .reading-statistics-dashboard {
     grid-template-columns: 1fr;
   }
 
@@ -1169,7 +1395,8 @@ a.count-card:focus-visible {
   .mypage-hero,
   .section-heading-row,
   .form-action-row,
-  .points-coupons-toolbar {
+  .points-coupons-toolbar,
+  .reading-statistics-controls {
     align-items: stretch;
     flex-direction: column;
   }

@@ -239,7 +239,7 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
         <section className="reading-stats" aria-label="독서 통계">
           <div className="section-heading-row">
             <h2>나의 독서통계</h2>
-            <Link to="/me" aria-label="나의 독서통계 상세 보기">
+            <Link to="/me/statistics" aria-label="나의 독서통계 상세 보기">
               ›
             </Link>
           </div>
