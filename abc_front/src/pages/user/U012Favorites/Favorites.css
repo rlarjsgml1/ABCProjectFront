@@ -1,0 +1,200 @@
+/* U-012 즐겨찾기 페이지 전체 영역 */
+.favorites-page {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* 제목 + 오른쪽 도서 둘러보기 */
+.favorites-title-row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+/* 오른쪽 상단 도서 둘러보기 링크 */
+.browse-text-link {
+  color: #6b7280;
+  font-size: 18px;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+
+/* 오른쪽 상단 도서 둘러보기 hover */
+.browse-text-link:hover {
+  color: #1f4d3a;
+}
+
+/* 제목 아래 설명 */
+.favorites-description {
+  width: 100%;
+  margin: 8px 0 44px;
+  color: #111827;
+  font-size: 18px;
+}
+
+/* 관심도서 개수 + 정렬 영역 */
+.favorites-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+/* 관심도서 n권 */
+.favorites-header strong {
+  color: #111827;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+/* 정렬 select */
+.favorites-sort {
+  width: 220px;
+  height: 44px;
+  border: 2px solid #111827;
+  padding: 0 16px;
+  color: #111827;
+  background-color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* 즐겨찾기 도서 목록 */
+.favorites-list {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* 도서 카드 */
+.favorite-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  min-height: 210px;
+  padding: 24px 84px 24px 44px;
+  background-color: #ffffff;
+}
+
+/* 도서 표지 링크 */
+.favorite-cover-link {
+  flex-shrink: 0;
+}
+
+/* 도서 표지 이미지 */
+.favorite-cover-link img {
+  width: 136px;
+  height: 194px;
+  border-radius: 16px;
+  object-fit: cover;
+  background-color: #f7f7f7;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* 도서 정보 영역 */
+.favorite-info {
+  flex: 1;
+}
+
+/* 도서 제목 */
+.favorite-title {
+  display: inline-block;
+  margin-bottom: 28px;
+  color: #111827;
+  font-size: 24px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* 도서 제목 hover */
+.favorite-title:hover {
+  text-decoration: underline;
+}
+
+/* 저자, 출판사, 장르 */
+.favorite-meta {
+  margin: 0 0 12px;
+  color: #6b7280;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* 등록일 */
+.favorite-date {
+  margin: 0;
+  color: #6b7280;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* 무료/유료 배지 */
+.favorite-type {
+  width: 128px;
+  height: 42px;
+  border: 1px solid #9ca3af;
+  border-radius: 8px;
+  background-color: #dff1e6;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+/* 하트 삭제 버튼 */
+.favorite-heart {
+  position: absolute;
+  top: 88px;
+  right: 28px;
+  border: none;
+  background: none;
+  color: #111827;
+  font-size: 32px;
+  cursor: pointer;
+}
+
+/* 하트 hover */
+.favorite-heart:hover {
+  transform: scale(1.08);
+}
+
+/* 빈 목록 카드 */
+.favorites-empty {
+  align-items: center;
+  text-align: center;
+  gap: 20px;
+  padding: 56px 24px;
+}
+
+/* 빈 목록 문구 */
+.favorites-empty p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+/* 빈 목록 도서 둘러보기 버튼 */
+.browse-button {
+  width: 100%;
+  max-width: 360px;
+  height: 48px;
+  border-radius: 10px;
+  background-color: #1f4d3a;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 빈 목록 도서 둘러보기 버튼 hover */
+.browse-button:hover {
+  background-color: #173b2c;
+}
