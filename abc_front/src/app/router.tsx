@@ -25,6 +25,10 @@ import { BooksPage } from '../pages/user/U006Books/BooksPage';
 import { HomePage } from '../pages/user/U001Home/HomePage';
 import { LoginPage } from '../pages/user/U003Login/LoginPage';
 import { MyPage } from '../pages/user/U014MyPage/MyPage';
+import { AttendancePage } from '../pages/user/U016Attendance/AttendancePage';
+import { PointsCouponsPage } from '../pages/user/U017PointsCoupons/PointsCouponsPage';
+import { ProfileEditPage } from '../pages/user/U015ProfileEdit/ProfileEditPage';
+import { ReadingStatsPage } from '../pages/user/U026ReadingStats/ReadingStatsPage';
 import { SearchResultsPage } from '../pages/user/U007SearchResults/SearchResultsPage';
 import { SignupPage } from '../pages/user/U002Signup/SignupPage';
 import { FindIdPage } from '../pages/user/U004FindId/FindIdPage';
@@ -49,6 +53,38 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <MyPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/me/profile',
+        element: (
+          <ProtectedRoute>
+            <ProfileEditPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/me/attendance',
+        element: (
+          <ProtectedRoute>
+            <AttendancePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/me/points-coupons',
+        element: (
+          <ProtectedRoute>
+            <PointsCouponsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/me/statistics',
+        element: (
+          <ProtectedRoute>
+            <ReadingStatsPage />
           </ProtectedRoute>
         ),
       },
