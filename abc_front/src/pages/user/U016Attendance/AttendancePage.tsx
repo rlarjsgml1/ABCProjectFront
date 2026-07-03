@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { checkInToday, getCurrentAttendanceQuery, getMonthlyAttendance } from '../../../api/attendanceApi';
-import { getApiErrorMessage, getMyProfile } from '../../../api/profileApi';
+import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
-import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
-import type { AttendanceMonthlyData, UserProfile } from '../../../types/api';
+import type { AttendanceMonthlyData } from '../../../types/api';
 
 type AttendanceProgressStyle = CSSProperties & {
   '--attendance-progress': string;
@@ -28,42 +27,10 @@ function getProgressStyle(data: AttendanceMonthlyData): AttendanceProgressStyle 
 
 export function AttendancePage() {
   const attendanceQuery = useMemo(() => getCurrentAttendanceQuery(), []);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isProfileLoading, setIsProfileLoading] = useState(true);
-  const [profileError, setProfileError] = useState('');
   const [attendanceData, setAttendanceData] = useState<AttendanceMonthlyData | null>(null);
   const [attendanceError, setAttendanceError] = useState('');
   const [checkInMessage, setCheckInMessage] = useState('');
   const [isCheckingIn, setIsCheckingIn] = useState(false);
-
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadProfile() {
-      try {
-        const data = await getMyProfile();
-        if (!ignore) {
-          setProfile(data);
-          setProfileError('');
-        }
-      } catch (error) {
-        if (!ignore) {
-          setProfile(null);
-          setProfileError(getApiErrorMessage(error));
-        }
-      } finally {
-        if (!ignore) {
-          setIsProfileLoading(false);
-        }
-      }
-    }
-
-    void loadProfile();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -109,8 +76,7 @@ export function AttendancePage() {
   const isTodayCheckedIn = attendanceData?.todayCheckedIn ?? false;
 
   return (
-    <MyPageLayout profile={profile} isLoading={isProfileLoading} errorMessage={profileError} titleId="attendance-title">
-      <section className="page-section attendance-page">
+      <section className="page-section attendance-page" aria-labelledby="attendance-title">
         <div className="section-heading-row attendance-heading-row">
           <div>
             <p className="eyebrow">U-016 ATTENDANCE</p>
@@ -206,6 +172,5 @@ export function AttendancePage() {
           </ul>
         </section>
       </section>
-    </MyPageLayout>
   );
 }

@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom';
+import { Footer } from './Footer';
 import { Header } from './Header';
 
 export function UserLayout() {
@@ -10,7 +11,7 @@ export function UserLayout() {
                 <Outlet />
             </main>
 
-            <footer className="site-footer">Acorn Book Cloud</footer>
+            <Footer />
         </div>
     );
 }
