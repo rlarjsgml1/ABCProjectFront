@@ -80,6 +80,45 @@ export type CouponHistoryPage = PageResponse<CouponHistoryItem> & {
   expiringThisMonthCount?: number;
 };
 
+export type ReadingStatisticsPeriodType = 'WEEKLY' | 'MONTHLY' | 'YEARLY' | 'TOTAL';
+
+export type ReadingStatisticsQuery = {
+  periodType: ReadingStatisticsPeriodType;
+  baseDate?: string;
+};
+
+export type ReadingStatisticsSummary = {
+  rentalCount: number;
+  readBookCount: number;
+  readPageCount: number;
+  reviewCount: number;
+  favoriteCount: number;
+};
+
+export type ReadingEnvironmentMetrics = {
+  carbonSavedKg: number;
+  treeSavedCount: number;
+  calculationDescription: string;
+};
+
+export type ReadingTrendPoint = {
+  label: string;
+  periodStartDate?: string;
+  periodEndDate?: string;
+  rentalCount: number;
+  readBookCount: number;
+  readPageCount: number;
+};
+
+export type ReadingStatisticsData = {
+  periodType: ReadingStatisticsPeriodType;
+  baseDate?: string;
+  summary: ReadingStatisticsSummary;
+  environmentMetrics: ReadingEnvironmentMetrics;
+  trendPoints: ReadingTrendPoint[];
+  generatedAt?: string;
+};
+
 
 export type AttendanceMonthlyQuery = {
   year: number;
