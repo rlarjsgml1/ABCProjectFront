@@ -27,6 +27,10 @@ import { LoginPage } from '../pages/user/U003Login/LoginPage';
 import { MyPage } from '../pages/user/U014MyPage/MyPage';
 import { SearchResultsPage } from '../pages/user/U007SearchResults/SearchResultsPage';
 import { SignupPage } from '../pages/user/U002Signup/SignupPage';
+import { FindIdPage } from '../pages/user/U004FindId/FindIdPage';
+import { FavoritesPage } from '../pages/user/U012Favorites/FavoritesPage';
+import { AttendancePage } from '../pages/user/U016Attendance/AttendancePage';
+
 
 export const router = createBrowserRouter([
   {
@@ -38,6 +42,8 @@ export const router = createBrowserRouter([
       { path: '/books/:bookId', element: <BookDetailPage /> },
       { path: '/login', element: <LoginPage /> },
       { path: '/signup', element: <SignupPage /> },
+      { path: '/find-id', element: <FindIdPage /> },
+
       {
         path: '/me',
         element: (
@@ -48,6 +54,11 @@ export const router = createBrowserRouter([
       },
     ],
   },
+ { path: '/me/favorites', element: <FavoritesPage />, },
+{path: '/me/attendance', element: <AttendancePage />,},
+
+
+
   {
     path: '/admin',
     element: <AdminLayout />,
