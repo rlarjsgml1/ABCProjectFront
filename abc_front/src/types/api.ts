@@ -80,6 +80,41 @@ export type CouponHistoryPage = PageResponse<CouponHistoryItem> & {
   expiringThisMonthCount?: number;
 };
 
+
+export type AttendanceMonthlyQuery = {
+  year: number;
+  month: number;
+};
+
+export type AttendanceDayStatus = 'ATTENDED' | 'MISSED' | 'EMPTY';
+
+export type AttendanceDay = {
+  date: string;
+  day: number;
+  status: AttendanceDayStatus;
+  isToday: boolean;
+};
+
+export type AttendanceMonthlyData = {
+  year: number;
+  month: number;
+  attendedDates: string[];
+  days: AttendanceDay[];
+  todayCheckedIn: boolean;
+  consecutiveDays: number;
+  monthlyAttendanceCount: number;
+  challengeDays: number;
+  rewardGuide: string[];
+};
+
+export type AttendanceCheckInResult = {
+  checkedIn: boolean;
+  message: string;
+  checkedInAt: string;
+  monthlyAttendance: AttendanceMonthlyData;
+  issuedReward?: string;
+};
+
 export type BookCard = {
   bookId: number;
   title: string;

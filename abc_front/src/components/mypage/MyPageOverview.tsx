@@ -26,6 +26,12 @@ type MembershipGradeDetails = {
   remainingDays: number;
 };
 
+type TopStat = {
+  label: string;
+  value: string | number;
+  to?: string;
+};
+
 const emptyProfile: UserProfile = {
   loginId: '-',
   name: '회원',
@@ -100,10 +106,10 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
   const displayProfile = profile ?? emptyProfile;
   const grade = displayProfile.gradeName ?? displayProfile.membershipGrade ?? '새싹';
   const gradeDetails = getMembershipGradeDetails(displayProfile, grade);
-  const topStats = [
+  const topStats: TopStat[] = [
     { label: '리뷰', value: valueOrDash(displayProfile.reviewCount) },
-    { label: '포인트', value: formatPoint(displayProfile.point) },
-    { label: '쿠폰', value: valueOrDash(displayProfile.couponCount) },
+    { label: '포인트', value: formatPoint(displayProfile.point), to: '/me/points-coupons' },
+    { label: '쿠폰', value: valueOrDash(displayProfile.couponCount), to: '/me/points-coupons' },
   ];
   const bottomStats = [
     { label: '대여', value: valueOrDash(displayProfile.rentalCount) },
@@ -158,12 +164,19 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
               </button>
             </div>
             <div className="count-card-grid count-card-grid-top" aria-label="리뷰 포인트 쿠폰 요약">
-              {topStats.map((card) => (
-                <div className="count-card" key={card.label}>
-                  <strong>{card.value}</strong>
-                  <span>{card.label}</span>
-                </div>
-              ))}
+              {topStats.map((card) =>
+                card.to ? (
+                  <Link className="count-card" key={card.label} to={card.to}>
+                    <strong>{card.value}</strong>
+                    <span>{card.label}</span>
+                  </Link>
+                ) : (
+                  <div className="count-card" key={card.label}>
+                    <strong>{card.value}</strong>
+                    <span>{card.label}</span>
+                  </div>
+                ),
+              )}
             </div>
           </div>
           <div className="count-card-grid count-card-grid-bottom" aria-label="대여 완독 즐겨찾기 요약">
@@ -195,7 +208,7 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
             </div>
             <p className="overview-widget-surface">새 알림 {valueOrDash(displayProfile.unreadNotificationCount)}건</p>
           </article>
-          <article className="activity-card overview-widget">
+          <Link className="activity-card overview-widget overview-widget-link" to="/me/attendance" aria-label="출석체크 페이지로 이동">
             <h2>출석체크</h2>
             <div className="overview-stamp-row" aria-label={`출석 스탬프 ${attendanceCount}개`}>
               {Array.from({ length: 7 }, (_, index) => (
@@ -206,7 +219,7 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
                 />
               ))}
             </div>
-          </article>
+          </Link>
           <article className="activity-card overview-widget">
             <h2>챌린지 현황</h2>
             <div className="overview-trophy-row" aria-label={`챌린지 트로피 ${challengeCount}개`}>
