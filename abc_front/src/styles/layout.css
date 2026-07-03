@@ -374,6 +374,19 @@
   text-align: center;
 }
 
+a.count-card {
+  color: inherit;
+  text-decoration: none;
+}
+
+a.count-card:hover,
+a.count-card:focus-visible {
+  color: inherit;
+  text-decoration: none;
+  outline: 2px solid var(--mypage-widget-text);
+  outline-offset: var(--space-1);
+}
+
 .count-card span {
   display: block;
   color: var(--mypage-widget-muted);
@@ -406,6 +419,19 @@
   border-radius: var(--mypage-widget-radius);
   padding: var(--space-4);
   background: var(--mypage-widget-bg);
+}
+
+.overview-widget-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.overview-widget-link:hover,
+.overview-widget-link:focus-visible {
+  color: inherit;
+  text-decoration: none;
+  outline: 2px solid var(--mypage-widget-text);
+  outline-offset: var(--space-1);
 }
 
 .overview-widget h2,
@@ -856,6 +882,268 @@
   white-space: nowrap;
 }
 
+
+.attendance-page {
+  --attendance-surface: var(--color-surface);
+  --attendance-mint: color-mix(in srgb, var(--color-success-soft) 72%, var(--color-surface));
+  --attendance-mint-strong: color-mix(in srgb, var(--color-success) 18%, var(--color-surface));
+  --attendance-ink: var(--color-text);
+  --attendance-muted: var(--color-muted);
+  --attendance-accent: var(--color-success);
+  --attendance-reward: var(--color-warning);
+  display: grid;
+  gap: var(--space-6);
+  background: linear-gradient(135deg, var(--attendance-mint), var(--attendance-surface));
+}
+
+.attendance-heading-row > span {
+  color: var(--attendance-accent);
+  font-weight: 800;
+}
+
+.attendance-page h3,
+.attendance-page p,
+.attendance-page ul {
+  margin: 0;
+}
+
+.attendance-dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.attendance-calendar-panel,
+.attendance-side-panel,
+.attendance-status-card,
+.attendance-challenge-card,
+.attendance-reward-card,
+.attendance-notice-panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--attendance-surface) 88%, transparent);
+  box-shadow: var(--shadow-sm);
+}
+
+.attendance-calendar-panel {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-6);
+}
+
+.attendance-calendar-header,
+.attendance-legend,
+.attendance-legend-item,
+.attendance-weekdays,
+.attendance-calendar-grid,
+.attendance-side-panel,
+.attendance-status-card,
+.attendance-challenge-card,
+.attendance-reward-card,
+.attendance-notice-panel {
+  display: grid;
+}
+
+.attendance-calendar-header {
+  grid-template-columns: 1fr auto;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.attendance-calendar-kicker {
+  color: var(--attendance-accent);
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.attendance-calendar-header h3 {
+  color: var(--attendance-ink);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.attendance-legend {
+  grid-auto-flow: column;
+  gap: var(--space-3);
+  align-items: center;
+  color: var(--attendance-muted);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.attendance-legend-item {
+  grid-auto-flow: column;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.attendance-dot {
+  width: var(--space-3);
+  height: var(--space-3);
+  border-radius: 50%;
+}
+
+.attendance-dot.is-today {
+  border: 2px solid var(--attendance-accent);
+  background: var(--attendance-surface);
+}
+
+.attendance-dot.is-attended {
+  background: var(--attendance-accent);
+}
+
+.attendance-weekdays,
+.attendance-calendar-grid {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.attendance-weekdays span {
+  color: var(--attendance-muted);
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.attendance-day-cell {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--attendance-muted);
+  background: var(--attendance-surface);
+  font-weight: 800;
+}
+
+.attendance-day-cell.is-empty {
+  visibility: hidden;
+}
+
+.attendance-day-cell.is-attended {
+  border-color: var(--attendance-accent);
+  color: var(--attendance-surface);
+  background: var(--attendance-accent);
+}
+
+.attendance-day-cell.is-today {
+  border-color: var(--attendance-accent);
+  box-shadow: 0 0 0 var(--space-1) var(--attendance-mint-strong);
+}
+
+.attendance-side-panel {
+  gap: var(--space-4);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.attendance-status-card,
+.attendance-challenge-card,
+.attendance-reward-card,
+.attendance-notice-panel {
+  gap: var(--space-3);
+  padding: var(--space-6);
+}
+
+.attendance-status-card span,
+.attendance-progress-badge,
+.attendance-reward-card li,
+.attendance-notice-panel li {
+  color: var(--attendance-muted);
+  font-weight: 700;
+}
+
+.attendance-status-card strong {
+  color: var(--attendance-accent);
+  font-size: 2.4rem;
+  line-height: 1;
+}
+
+.attendance-status-card p {
+  color: var(--attendance-muted);
+  font-weight: 700;
+}
+
+.attendance-check-button {
+  width: 100%;
+  justify-content: center;
+}
+
+.attendance-challenge-card .section-heading-row h3,
+.attendance-reward-card h3,
+.attendance-notice-panel h3 {
+  color: var(--attendance-ink);
+  font-size: 1rem;
+}
+
+.attendance-challenge-card .section-heading-row span {
+  color: var(--attendance-accent);
+  font-weight: 900;
+}
+
+.attendance-acorn-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.attendance-acorn {
+  display: grid;
+  place-items: center;
+  width: var(--space-8);
+  height: var(--space-8);
+  border-radius: 50%;
+  color: var(--attendance-muted);
+  background: var(--color-surface-muted);
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.attendance-acorn.is-active {
+  color: var(--attendance-surface);
+  background: var(--attendance-reward);
+}
+
+.attendance-progress-track {
+  overflow: hidden;
+  height: var(--space-3);
+  border-radius: var(--space-10);
+  background: var(--color-surface-muted);
+}
+
+.attendance-progress-fill {
+  display: block;
+  width: var(--attendance-progress);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--attendance-accent), var(--attendance-reward));
+}
+
+.attendance-progress-badge {
+  width: fit-content;
+  border-radius: var(--space-10);
+  padding: var(--space-2) var(--space-3);
+  background: var(--attendance-mint);
+}
+
+.attendance-reward-card ul,
+.attendance-notice-panel ul {
+  display: grid;
+  gap: var(--space-2);
+  padding-left: var(--space-6);
+}
+
+.attendance-reward-card li::marker {
+  color: var(--attendance-reward);
+}
+
+.attendance-notice-panel li::marker {
+  color: var(--attendance-accent);
+}
+
 @media (max-width: 960px) {
   .mypage-content-shell,
   .mypage-grid,
@@ -894,6 +1182,8 @@
 
 /* 헤더 */
 .abc-header {
+  --abc-header-brand: #003d2d;
+  --abc-header-surface: #ffffff;
   width: 100%;
   padding: 32px 10.4vw 40px;
   background: #ffffff;
@@ -964,6 +1254,30 @@
   justify-content: flex-end;
   gap: 10px;
   min-width: 226px;
+}
+
+.abc-attendance-link {
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--abc-header-brand);
+  border-radius: 999px;
+  padding: 0 17px;
+  color: var(--abc-header-brand);
+  background: var(--abc-header-surface);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.abc-attendance-link:hover,
+.abc-attendance-link:focus-visible {
+  color: var(--abc-header-surface);
+  background: var(--abc-header-brand);
+  outline: 0;
 }
 
 .abc-outline-button,
@@ -1039,4 +1353,26 @@
 .abc-nav-link.active {
   color: #111111;
   font-weight: 1000;
+}
+
+@media (max-width: 960px) {
+  .attendance-dashboard {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .attendance-calendar-header,
+  .attendance-legend {
+    grid-auto-flow: row;
+    grid-template-columns: 1fr;
+  }
+
+  .attendance-calendar-panel,
+  .attendance-status-card,
+  .attendance-challenge-card,
+  .attendance-reward-card,
+  .attendance-notice-panel {
+    padding: var(--space-4);
+  }
 }
