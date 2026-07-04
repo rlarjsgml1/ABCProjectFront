@@ -4,7 +4,6 @@ import { Button } from '../../../components/common/Button';
 export function LoginPage() {
   return (
     <section className="page-section form-page">
-      <p className="eyebrow">U-003</p>
       <h1 className="auth-page-title">로그인</h1>
 
       <form className="form-card">

@@ -97,7 +97,6 @@ export function FavoritesPage() {
     <section className="page-section favorites-page">
       <div className="favorites-title-row">
         <div>
-          <p className="eyebrow">U-012</p>
           <h1>즐겨찾기</h1>
         </div>
       </div>

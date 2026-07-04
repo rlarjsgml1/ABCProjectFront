@@ -49,7 +49,6 @@ export function MyPage() {
       <section className="page-section usage-history-panel">
         <div className="section-heading-row">
           <div>
-            <p className="eyebrow">U-014 LIBRARY</p>
             <h2 id="mypage-library-title">내 서재</h2>
           </div>
           <span>이용 현황</span>
