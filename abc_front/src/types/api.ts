@@ -167,6 +167,22 @@ export type BookCard = {
   favoriteYn: boolean;
 };
 
+export type FavoriteSort = 'recent' | 'title';
+
+export type FavoriteBooksQuery = {
+  sort?: FavoriteSort;
+  page?: number;
+  size?: number;
+};
+
+export type FavoriteBookItem = BookCard & {
+  favoriteId?: number;
+  registeredAt?: string;
+  createdAt?: string;
+};
+
+export type FavoriteBooksPage = PageResponse<FavoriteBookItem>;
+
 // DB 테이블명이 아니라 API-ME-001 응답 DTO 기준으로 front에서 쓰는 회원 정보 필드다.
 export type UserProfile = {
   loginId: string;

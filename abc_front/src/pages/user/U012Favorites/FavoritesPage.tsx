@@ -1,69 +1,104 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import './Favorites.css';
+import { deleteMyFavorite, getMyFavorites } from '../../../api/favoritesApi';
+import { getApiErrorMessage } from '../../../api/profileApi';
+import type { FavoriteBookItem, FavoriteSort } from '../../../types/api';
 
-type FavoriteBook = {
-  id: number;
-  title: string;
-  author: string;
-  publisher: string;
-  category: string;
-  rentalType: '무료' | '유료';
-  registeredAt: string;
-  coverUrl: string;
-};
+const pageSize = 20;
 
-const favoriteBooks: FavoriteBook[] = [
-  {
-    id: 1,
-    title: '달러구트 꿈 백화점',
-    author: '이미예',
-    publisher: '팩토리나인',
-    category: '소설',
-    rentalType: '유료',
-    registeredAt: '2026-07-01',
-    coverUrl: 'https://placehold.co/120x170?text=Book',
-  },
-  {
-    id: 2,
-    title: '불편한 편의점',
-    author: '김호연',
-    publisher: '나무옆의자',
-    category: '소설',
-    rentalType: '무료',
-    registeredAt: '2026-06-28',
-    coverUrl: 'https://placehold.co/120x170?text=Book',
-  },
-  {
-    id: 3,
-    title: '아몬드',
-    author: '손원평',
-    publisher: '창비',
-    category: '소설',
-    rentalType: '무료',
-    registeredAt: '2026-06-25',
-    coverUrl: 'https://placehold.co/120x170?text=Book',
-  },
-  {
-    id: 4,
-    title: '세이노의 가르침',
-    author: '세이노',
-    publisher: '데이원',
-    category: '자기계발',
-    rentalType: '무료',
-    registeredAt: '2026-06-20',
-    coverUrl: 'https://placehold.co/120x170?text=Book',
-  },
-];
+function formatAuthors(authors: string[]) {
+  return authors.length > 0 ? authors.join(', ') : '-';
+}
+
+function formatRentalType(value: string) {
+  if (value === 'FREE') {
+    return '무료';
+  }
+
+  if (value === 'PAID') {
+    return '유료';
+  }
+
+  return value || '-';
+}
+
+function formatRegisteredDate(book: FavoriteBookItem) {
+  const value = book.registeredAt ?? book.createdAt;
+
+  if (!value) {
+    return '-';
+  }
+
+  const time = new Date(value).getTime();
+
+  if (Number.isNaN(time)) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).format(time);
+}
 
 export function FavoritesPage() {
-  const isEmpty = favoriteBooks.length === 0;
+  const [favoriteBooks, setFavoriteBooks] = useState<FavoriteBookItem[]>([]);
+  const [sort, setSort] = useState<FavoriteSort>('recent');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDeletingBookId, setIsDeletingBookId] = useState<number | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadFavorites() {
+      setIsLoading(true);
+      setErrorMessage('');
+
+      try {
+        const data = await getMyFavorites({ sort, page: 0, size: pageSize });
+
+        if (!ignore) {
+          setFavoriteBooks(data.content);
+        }
+      } catch (error) {
+        if (!ignore) {
+          setFavoriteBooks([]);
+          setErrorMessage(getApiErrorMessage(error));
+        }
+      } finally {
+        if (!ignore) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadFavorites();
+
+    return () => {
+      ignore = true;
+    };
+  }, [sort]);
+
+  async function handleDeleteFavorite(bookId: number) {
+    setIsDeletingBookId(bookId);
+    setErrorMessage('');
+
+    try {
+      await deleteMyFavorite(bookId);
+      setFavoriteBooks((books) => books.filter((book) => book.bookId !== bookId));
+    } catch (error) {
+      setErrorMessage(getApiErrorMessage(error));
+    } finally {
+      setIsDeletingBookId(null);
+    }
+  }
+
+  const isEmpty = !isLoading && favoriteBooks.length === 0;
 
   return (
     <section className="page-section favorites-page">
       <div className="favorites-title-row">
         <div>
           <p className="eyebrow">U-012</p>
-          <h1>내 관심도서 목록</h1>
+          <h1>즐겨찾기</h1>
         </div>
 
         <Link to="/books" className="browse-text-link">
@@ -72,17 +107,20 @@ export function FavoritesPage() {
       </div>
 
       <p className="favorites-description">
-        나의 관심도서 목록을 확인할 수 있습니다.
+        내가 즐겨찾기한 도서 목록을 확인할 수 있습니다.
       </p>
 
       <div className="favorites-header">
-        <strong>관심도서 {favoriteBooks.length}권</strong>
+        <strong>즐겨찾기 {favoriteBooks.length}권</strong>
 
-        <select className="favorites-sort" defaultValue="recent">
+        <select className="favorites-sort" value={sort} onChange={(event) => setSort(event.target.value as FavoriteSort)}>
           <option value="recent">최근 등록순</option>
           <option value="title">제목순</option>
         </select>
       </div>
+
+      {errorMessage ? <div className="status-banner status-banner-error">{errorMessage}</div> : null}
+      {isLoading ? <div className="status-banner">즐겨찾기 목록을 불러오는 중입니다.</div> : null}
 
       {isEmpty ? (
         <div className="form-card favorites-empty">
@@ -92,41 +130,45 @@ export function FavoritesPage() {
             도서 둘러보기
           </Link>
         </div>
-      ) : (
+      ) : null}
+
+      {!isLoading && favoriteBooks.length > 0 ? (
         <div className="favorites-list">
           {favoriteBooks.map((book) => (
-            <article key={book.id} className="favorite-card">
-              <Link to={`/books/${book.id}`} className="favorite-cover-link">
-                <img src={book.coverUrl} alt={`${book.title} 표지`} />
+            <article key={book.bookId} className="favorite-card">
+              <Link to={`/books/${book.bookId}`} className="favorite-cover-link">
+                <img src={book.coverImageUrl} alt={`${book.title} 표지`} />
               </Link>
 
               <div className="favorite-info">
-                <Link to={`/books/${book.id}`} className="favorite-title">
+                <Link to={`/books/${book.bookId}`} className="favorite-title">
                   {book.title}
                 </Link>
 
                 <p className="favorite-meta">
-                  {book.author} | {book.publisher} | {book.category}
+                  {formatAuthors(book.authors)} | {book.publisherName}
                 </p>
 
                 <p className="favorite-date">
-                  관심 도서 목록 등록일 {book.registeredAt}
+                  즐겨찾기 등록일 {formatRegisteredDate(book)}
                 </p>
               </div>
 
-              <span className="favorite-type">{book.rentalType}</span>
+              <span className="favorite-type">{formatRentalType(book.rentalType)}</span>
 
               <button
                 type="button"
                 className="favorite-heart"
                 aria-label={`${book.title} 즐겨찾기 해제`}
+                disabled={isDeletingBookId === book.bookId}
+                onClick={() => void handleDeleteFavorite(book.bookId)}
               >
                 ♡
               </button>
             </article>
           ))}
         </div>
-      )}
+      ) : null}
     </section>
   );
 }

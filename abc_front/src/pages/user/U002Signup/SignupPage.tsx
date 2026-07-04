@@ -1,5 +1,4 @@
 import { Button } from '../../../components/common/Button';
-import './Signup.css';
 import { Link } from 'react-router-dom';
 
 

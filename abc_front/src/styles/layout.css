@@ -136,6 +136,184 @@
   font-weight: 700;
 }
 
+.auth-page-title {
+  text-align: center;
+  margin-bottom: var(--space-6);
+}
+
+.auth-tabs {
+  display: flex;
+  width: 100%;
+  margin: 0 0 var(--space-6);
+  padding: var(--space-1);
+  background-color: #f1f1f1;
+  border-radius: var(--radius-md);
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 10px 0;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #555;
+  transition: all 0.2s ease;
+}
+
+.auth-tab.active {
+  background-color: #d0d0d0;
+  color: #222;
+  font-weight: 600;
+}
+
+.login-button {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-6);
+}
+
+.form-card select {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font: inherit;
+  background: var(--color-surface);
+}
+
+.signup-select {
+  width: 100%;
+  height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font: inherit;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  outline: none;
+}
+
+.signup-select:invalid {
+  color: var(--color-muted);
+}
+
+.signup-select option {
+  color: var(--color-text);
+}
+
+.form-card input[type='date'] {
+  color: var(--color-muted);
+}
+
+.form-card input[type='date']:valid {
+  color: var(--color-text);
+}
+
+.form-actions {
+  display: flex;
+  width: 100%;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.form-actions button {
+  flex: 1;
+}
+
+.login-option-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: var(--space-2) 0 var(--space-4);
+}
+
+.form-card .keep-login {
+  display: flex;
+  grid-template-columns: none;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.form-card .keep-login input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+}
+
+.find-links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.8125rem;
+}
+
+.find-links a,
+.find-links span {
+  color: var(--color-muted);
+  text-decoration: none;
+}
+
+.form-card .keep-login span {
+  display: inline;
+  margin: 0;
+  line-height: 14px;
+}
+
+.google-login-btn {
+  width: 100%;
+  height: 44px;
+  margin-top: var(--space-3);
+  border: none;
+  border-radius: var(--radius-md);
+  color: #333;
+  background-color: #d0d0d0;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.find-id-card {
+  gap: 14px;
+}
+
+.find-tab-menu {
+  display: flex;
+  width: 100%;
+  margin: 0 0 var(--space-6);
+  padding: var(--space-1);
+  background-color: #f1f1f1;
+  border-radius: var(--radius-md);
+}
+
+.find-tab {
+  flex: 1;
+  padding: 10px 0;
+  border: none;
+  border-radius: 6px;
+  color: #555;
+  background: transparent;
+  cursor: pointer;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.find-tab.active {
+  color: #222;
+  background-color: #d0d0d0;
+  font-weight: 600;
+}
+
+.find-tab:not(.active):hover {
+  color: #333;
+}
+
 .empty-state {
   margin-top: var(--space-6);
   border: 1px dashed var(--color-border);
@@ -203,6 +381,196 @@
 .mypage-main {
   display: grid;
   gap: var(--space-6);
+}
+
+.favorites-page {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.favorites-title-row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.browse-text-link {
+  color: var(--color-muted);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: var(--space-1);
+}
+
+.browse-text-link:hover,
+.browse-text-link:focus-visible {
+  color: var(--color-primary);
+}
+
+.favorites-description {
+  width: 100%;
+  margin: var(--space-2) 0 var(--space-6);
+  color: var(--color-text);
+  font-size: 0.95rem;
+}
+
+.favorites-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.favorites-header strong {
+  color: var(--color-text);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.favorites-sort {
+  width: calc(var(--space-10) * 4);
+  height: var(--space-10);
+  border: 1px solid var(--color-text);
+  border-radius: var(--radius-md);
+  padding: 0 var(--space-3);
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.favorites-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.favorite-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  min-height: calc(var(--space-10) * 4);
+  padding: var(--space-4) var(--space-10) var(--space-4) var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.favorite-cover-link {
+  flex-shrink: 0;
+}
+
+.favorite-cover-link img {
+  width: calc(var(--space-10) * 2.4);
+  height: calc(var(--space-10) * 3.4);
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  background-color: var(--color-surface-muted);
+  box-shadow: var(--shadow-sm);
+}
+
+.favorite-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.favorite-title {
+  display: inline-block;
+  margin-bottom: var(--space-4);
+  color: var(--color-text);
+  font-size: 1.15rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.favorite-title:hover,
+.favorite-title:focus-visible {
+  text-decoration: underline;
+}
+
+.favorite-meta {
+  margin: 0 0 var(--space-2);
+  color: var(--color-muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.favorite-date {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.favorite-type {
+  min-width: calc(var(--space-10) * 2.1);
+  height: var(--space-8);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0 var(--space-4);
+  background-color: var(--color-primary-soft);
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.favorite-heart {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  border: none;
+  background: none;
+  color: var(--color-text);
+  font-size: 1.45rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.favorite-heart:hover,
+.favorite-heart:focus-visible {
+  transform: scale(1.08);
+}
+
+.favorites-empty {
+  align-items: center;
+  text-align: center;
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-6);
+}
+
+.favorites-empty p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.95rem;
+}
+
+.browse-button {
+  width: 100%;
+  max-width: calc(var(--space-10) * 8);
+  height: var(--space-10);
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary);
+  color: var(--color-surface);
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.browse-button:hover,
+.browse-button:focus-visible {
+  background-color: var(--color-primary-dark);
 }
 
 .visually-hidden {
@@ -538,7 +906,7 @@ a.count-card:focus-visible {
 
 .mini-bar-fill {
   width: var(--space-6);
-  height: var(--bar-height);
+  height: var(--bar-height, 24%);
   border-radius: var(--space-1) var(--space-1) 0 0;
   background: var(--mypage-widget-surface);
 }
@@ -645,7 +1013,7 @@ a.count-card:focus-visible {
 
 .membership-progress-fill {
   display: block;
-  width: var(--grade-progress);
+  width: var(--grade-progress, 0%);
   height: 100%;
   border-radius: inherit;
   background: var(--color-primary);
@@ -1116,7 +1484,7 @@ a.count-card:focus-visible {
 
 .attendance-progress-fill {
   display: block;
-  width: var(--attendance-progress);
+  width: var(--attendance-progress, 0%);
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, var(--attendance-accent), var(--attendance-reward));
@@ -1334,7 +1702,7 @@ a.count-card:focus-visible {
 .reading-statistics-bar-fill {
   display: block;
   width: 100%;
-  height: var(--reading-stat-height);
+  height: var(--reading-stat-height, 8%);
   border-radius: inherit;
   background: linear-gradient(180deg, var(--reading-statistics-accent), var(--reading-statistics-green));
 }

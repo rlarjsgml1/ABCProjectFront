@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 
 const menuItems = [
   { label: '내 서재', to: '/me', enabled: true, end: true },
-  { label: '즐겨찾기', enabled: false },
+  { label: '즐겨찾기', to: '/me/favorites', enabled: true, end: true },
   { label: '최근 읽은 책', enabled: false },
   { label: '이용 내역', enabled: false },
   { label: '포인트/쿠폰', to: '/me/points-coupons', enabled: true, end: true },
