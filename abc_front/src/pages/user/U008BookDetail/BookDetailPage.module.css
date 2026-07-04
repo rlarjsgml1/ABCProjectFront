@@ -10,6 +10,15 @@
   font-weight: 700;
 }
 
+.testNotice {
+  margin: var(--space-4) 0 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
 .hero {
   display: grid;
   grid-template-columns: 240px 1fr 280px;
@@ -81,6 +90,7 @@
 .spec div {
   display: grid;
   grid-template-columns: 120px 1fr;
+  align-items: center;
   gap: var(--space-4);
 }
 
@@ -99,7 +109,6 @@
 .inlineValue {
   display: flex;
   align-items: center;
-  min-height: 32px;
 }
 
 .chip,
@@ -234,6 +243,42 @@
   text-decoration: none;
 }
 
+.bookGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-6);
+}
+
+.bookCard {
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  display: grid;
+  gap: var(--space-2);
+  padding: 0;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.bookCard strong,
+.bookCard span {
+  color: var(--color-text);
+}
+
+.bookThumb {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
 .reviewSummary {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -250,6 +295,121 @@
   border-radius: var(--radius-lg);
   margin-top: var(--space-8);
   padding: var(--space-6);
+}
+
+.reviewRows {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.reviewRow {
+  position: relative;
+  display: grid;
+  grid-template-columns: 48px 1fr auto min-content;
+  align-items: center;
+  gap: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-4) 0;
+}
+
+.reviewRow :global(.button) {
+  white-space: nowrap;
+}
+
+.reviewProfile {
+  width: 48px;
+  aspect-ratio: 1;
+  border-radius: var(--radius-lg);
+  background: var(--color-border);
+}
+
+.reviewBody {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.reviewBody strong,
+.reviewBody p {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.stars {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.starPicker {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+.starPicker button {
+  border: 0;
+  background: transparent;
+  color: var(--color-border);
+  cursor: pointer;
+  font: inherit;
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: var(--space-2);
+}
+
+.starPicker button.starActive {
+  color: var(--color-primary);
+}
+
+.reviewDate {
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.reviewMenu {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.reviewMenu > button {
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.reviewMenuPanel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 10;
+  min-width: 96px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  display: grid;
+}
+
+.reviewMenuPanel button {
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: var(--space-2) var(--space-3);
+  text-align: center;
+}
+
+.reviewEditInput {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font: inherit;
 }
 
 .reviewHeader {
@@ -358,6 +518,11 @@
 
   .cover {
     width: 180px;
+  }
+
+  .bookGrid,
+  .reviewRow {
+    grid-template-columns: 1fr;
   }
 
   .reviewHeader {
