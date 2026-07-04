@@ -88,12 +88,16 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      {
+        path: '/me/favorites',
+        element: (
+          <ProtectedRoute>
+            <FavoritesPage />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
- { path: '/me/favorites', element: <FavoritesPage />, },
-
-
-
   {
     path: '/admin',
     element: <AdminLayout />,

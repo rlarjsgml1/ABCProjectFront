@@ -1,4 +1,3 @@
-import './FindId.css';
 import { Button } from '../../../components/common/Button';
 
 export function FindIdPage() {
