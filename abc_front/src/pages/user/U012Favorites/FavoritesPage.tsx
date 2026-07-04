@@ -100,10 +100,6 @@ export function FavoritesPage() {
           <p className="eyebrow">U-012</p>
           <h1>즐겨찾기</h1>
         </div>
-
-        <Link to="/books" className="browse-text-link">
-          도서 둘러보기
-        </Link>
       </div>
 
       <p className="favorites-description">

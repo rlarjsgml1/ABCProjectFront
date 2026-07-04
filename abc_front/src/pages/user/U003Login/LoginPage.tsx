@@ -28,6 +28,14 @@ export function LoginPage() {
           <input name="password" type="password" placeholder="비밀번호를 입력하세요" />
         </label>
 
+        <div className="form-button">
+          <Button type="submit">로그인</Button>
+        </div>
+
+        <button type="button" className="google-login-btn">
+          Google로 로그인하기
+        </button>
+
         {/* 로그인 유지 / 아이디·비밀번호 찾기 */}
         <div className="login-option-row">
           <label className="keep-login">
@@ -41,14 +49,6 @@ export function LoginPage() {
             <a href="#">비밀번호 찾기</a>
           </div>
         </div>
-
-       <div className="form-button">
-         <Button type="submit">로그인</Button>
-       </div>
-
-        <button type="button" className="google-login-btn">
-          Google로 로그인하기
-        </button>
       </form>
     </section>
   );
