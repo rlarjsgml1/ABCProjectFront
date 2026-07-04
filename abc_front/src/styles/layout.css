@@ -1998,8 +1998,14 @@ a.count-card:focus-visible {
 }
 
 .book-detail-page {
-  max-width: 1040px;
+  max-width: 1120px;
   margin: 0 auto;
+}
+
+.book-detail-error {
+  margin: var(--space-4) 0;
+  color: var(--color-danger);
+  font-weight: 700;
 }
 
 .book-detail-id {
@@ -2008,16 +2014,21 @@ a.count-card:focus-visible {
   font-weight: 700;
 }
 
-.book-detail-layout {
+.book-detail-hero {
   display: grid;
-  grid-template-columns: 180px 1fr;
+  grid-template-columns: 240px 1fr 280px;
   gap: var(--space-8);
   align-items: flex-start;
   margin-top: var(--space-6);
 }
 
+.book-detail-left {
+  display: grid;
+  gap: var(--space-4);
+}
+
 .book-detail-cover {
-  width: 180px;
+  width: 100%;
   aspect-ratio: 3 / 4;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -2028,6 +2039,17 @@ a.count-card:focus-visible {
   color: var(--color-muted);
   font-weight: 700;
   overflow: hidden;
+}
+
+.book-detail-favorite {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: var(--space-3);
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .book-detail-cover img {
@@ -2041,15 +2063,70 @@ a.count-card:focus-visible {
   color: var(--color-text);
 }
 
-.book-detail-info p {
-  margin: 0 0 var(--space-2);
+.book-detail-info h1 {
+  margin: 0 0 var(--space-4);
   color: var(--color-text);
 }
 
-.book-detail-description {
+.book-detail-meta,
+.book-detail-spec {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.book-detail-meta div,
+.book-detail-spec div {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: var(--space-4);
+}
+
+.book-detail-meta dt,
+.book-detail-spec dt {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.book-detail-meta dd,
+.book-detail-spec dd {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.book-detail-chip,
+.book-detail-tags span {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.book-detail-intro {
+  margin-top: var(--space-6);
+}
+
+.book-detail-intro strong {
+  display: block;
+  margin-bottom: var(--space-3);
+  color: var(--color-text);
+}
+
+.book-detail-intro p {
+  margin: 0;
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.book-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
   margin-top: var(--space-4);
-  color: var(--color-muted);
-  line-height: 1.7;
 }
 
 .book-detail-empty {
@@ -2058,22 +2135,229 @@ a.count-card:focus-visible {
   font-weight: 700;
 }
 
-.book-detail-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin-top: var(--space-8);
+.book-detail-action-panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  display: grid;
+  gap: var(--space-4);
 }
 
-.book-detail-actions a {
+.book-detail-action-panel .button {
+  width: 100%;
+  justify-content: center;
   text-decoration: none;
+}
+
+.book-detail-side-links {
+  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  display: grid;
+  gap: var(--space-4);
+}
+
+.book-detail-side-links a,
+.book-detail-side-links button {
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.book-detail-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid var(--color-border);
+  margin: var(--space-8) 0 0;
+}
+
+.book-detail-tabs a {
+  padding: var(--space-4);
+  color: var(--color-text);
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+}
+
+.book-detail-tabs a:first-child {
+  border-bottom: 3px solid var(--color-text);
+}
+
+.book-detail-section {
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-8) 0;
+}
+
+.book-detail-section h2,
+.book-detail-section h3 {
+  margin: 0 0 var(--space-6);
+  color: var(--color-text);
+}
+
+.book-detail-row-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.book-detail-row-title a {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.book-detail-book-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--space-6);
+}
+
+.book-detail-small-card {
+  display: grid;
+  gap: var(--space-2);
+  color: var(--color-text);
+}
+
+.book-detail-small-card div {
+  aspect-ratio: 3 / 4;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.book-detail-small-card strong,
+.book-detail-small-card span {
+  line-height: 1.2;
+}
+
+.book-detail-review-summary {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-8);
+}
+
+.book-detail-review-summary strong {
+  display: block;
+  margin-bottom: var(--space-4);
+  color: var(--color-text);
+  text-align: center;
+}
+
+.book-detail-score {
+  margin: 0 0 var(--space-4);
+  color: var(--color-primary);
+  font-weight: 700;
+  text-align: center;
+}
+
+.book-detail-rating-row {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  gap: var(--space-3);
+  align-items: center;
+  margin-bottom: var(--space-2);
+  color: var(--color-text);
+}
+
+.book-detail-rating-row div {
+  height: var(--space-2);
+  background: var(--color-border);
+}
+
+.book-detail-rating-row div span {
+  display: block;
+  height: 100%;
+  background: var(--color-primary);
+}
+
+.book-detail-rating-row em {
+  color: var(--color-text);
+  font-style: normal;
+}
+
+.book-detail-age-chart {
+  min-height: 180px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-4);
+  align-items: end;
+}
+
+.book-detail-age-chart div {
+  height: 160px;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: var(--space-2);
+  align-items: end;
+  justify-items: center;
+}
+
+.book-detail-age-chart span {
+  width: var(--space-6);
+  min-height: var(--space-2);
+  background: var(--color-primary);
+}
+
+.book-detail-age-chart em {
+  color: var(--color-text);
+  font-style: normal;
+  font-weight: 700;
+}
+
+.book-detail-review-list {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin-top: var(--space-8);
+  padding: var(--space-6);
+}
+
+.book-detail-review-item {
+  display: grid;
+  grid-template-columns: 48px 120px 1fr 100px 32px;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-3) 0;
+}
+
+.book-detail-review-item > div:first-child {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  background: var(--color-border);
+}
+
+.book-detail-review-item strong,
+.book-detail-review-item span,
+.book-detail-review-item p,
+.book-detail-review-item time {
+  color: var(--color-text);
+}
+
+.book-detail-review-item p {
+  margin: 0;
+}
+
+.book-detail-review-item button {
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
 }
 
 .review-modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: rgba(17, 24, 39, 0.45);
+  background: var(--color-muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2123,15 +2407,26 @@ a.count-card:focus-visible {
 }
 
 @media (max-width: 720px) {
-  .book-detail-layout {
+  .book-detail-hero,
+  .book-detail-review-summary {
     grid-template-columns: 1fr;
   }
 
   .book-detail-cover {
-    width: 160px;
+    width: 180px;
   }
 
-  .book-detail-actions {
-    flex-direction: column;
+  .book-detail-book-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .book-detail-review-item {
+    grid-template-columns: 48px 1fr;
+  }
+
+  .book-detail-review-item p,
+  .book-detail-review-item time,
+  .book-detail-review-item button {
+    grid-column: 2;
   }
 }
