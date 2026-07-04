@@ -49,7 +49,6 @@ export function BooksPage() {
     <section className="page-section">
       <div className="section-heading-row">
         <div>
-          <p className="eyebrow">U-006</p>
           <h1>도서 목록</h1>
         </div>
         <span>최신 도서</span>

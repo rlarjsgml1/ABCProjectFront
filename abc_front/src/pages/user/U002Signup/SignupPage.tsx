@@ -23,13 +23,12 @@ export function SignupPage() {
 
   return (
     <section className="page-section form-page">
-      <p className="eyebrow">U-002</p>
-      <h1>회원가입</h1>
+      <h1 className="auth-page-title">회원가입</h1>
 
-<div className="auth-tabs">
-  <Link to="/login" className="auth-tab">로그인</Link>
-  <Link to="/signup" className="auth-tab active">회원가입</Link>
-</div>
+      <div className="auth-tabs">
+        <Link to="/login" className="auth-tab">로그인</Link>
+        <Link to="/signup" className="auth-tab active">회원가입</Link>
+      </div>
       <form className="form-card">
         <label>
           아이디

@@ -79,7 +79,6 @@ export function AttendancePage() {
       <section className="page-section attendance-page" aria-labelledby="attendance-title">
         <div className="section-heading-row attendance-heading-row">
           <div>
-            <p className="eyebrow">U-016 ATTENDANCE</p>
             <h2 id="attendance-title">출석체크</h2>
           </div>
           <span>매일 쌓는 독서 루틴</span>
