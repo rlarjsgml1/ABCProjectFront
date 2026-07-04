@@ -1,12 +1,10 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useState } from 'react';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import type { TooltipContentProps } from 'recharts';
 import { getFallbackReadingStatistics, getMyReadingStatistics } from '../../../api/statisticsApi';
 import { getApiErrorMessage, getMyProfile } from '../../../api/profileApi';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
-import type { ReadingStatisticsData, ReadingStatisticsPeriodType, ReadingTrendPoint, UserProfile } from '../../../types/api';
-
-type TrendBarStyle = CSSProperties & {
-  '--reading-stat-height': string;
-};
+import type { ReadingStatisticsData, ReadingStatisticsPeriodType, UserProfile } from '../../../types/api';
 
 const periodTabs: Array<{ label: string; value: ReadingStatisticsPeriodType }> = [
   { label: '전체', value: 'TOTAL' },
@@ -35,10 +33,22 @@ function formatTree(value: number) {
   return `${value.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}그루`;
 }
 
-function getTrendBarStyle(point: ReadingTrendPoint, maxReadPageCount: number): TrendBarStyle {
-  const percent = maxReadPageCount > 0 ? Math.max(8, Math.round((point.readPageCount / maxReadPageCount) * 100)) : 8;
+function ReadingStatisticsTooltip({ active, label, payload }: TooltipContentProps) {
+  if (!active || !payload.length) {
+    return null;
+  }
 
-  return { '--reading-stat-height': `${percent}%` };
+  const readPageCount = Number(payload[0]?.value ?? 0);
+
+  return (
+    <div className="reading-statistics-chart-tooltip">
+      <p className="reading-statistics-chart-tooltip-label">{label}</p>
+      <p className="reading-statistics-chart-tooltip-value">
+        <span>읽은 페이지</span>
+        <strong>{formatNumber(readPageCount)}페이지</strong>
+      </p>
+    </div>
+  );
 }
 
 export function ReadingStatsPage() {
@@ -123,8 +133,6 @@ export function ReadingStatsPage() {
     { label: '리뷰 수', value: `${formatNumber(statistics.summary.reviewCount)}건` },
     { label: '즐겨찾기 수', value: `${formatNumber(statistics.summary.favoriteCount)}권` },
   ];
-  const maxReadPageCount = Math.max(...statistics.trendPoints.map((point) => point.readPageCount), 0);
-
   return (
     <MyPageLayout profile={profile} isLoading={isProfileLoading} errorMessage={profileError} titleId="reading-stats-title">
       <section className="page-section reading-statistics-page">
@@ -188,15 +196,38 @@ export function ReadingStatsPage() {
             </div>
 
             <div className="reading-statistics-chart" role="img" aria-label="기간별 읽은 페이지 막대그래프">
-              {statistics.trendPoints.map((point) => (
-                <div className="reading-statistics-chart-item" key={point.label}>
-                  <div className="reading-statistics-bar-track" aria-hidden="true">
-                    <span className="reading-statistics-bar-fill" style={getTrendBarStyle(point, maxReadPageCount)} />
-                  </div>
-                  <strong>{formatNumber(point.readPageCount)}p</strong>
-                  <span>{point.label}</span>
-                </div>
-              ))}
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={statistics.trendPoints} margin={{ top: 12, right: 8, bottom: 0, left: 8 }}>
+                  <CartesianGrid stroke="var(--reading-statistics-chart-grid)" strokeDasharray="4 8" vertical={false} />
+                  <XAxis
+                    dataKey="label"
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: 'var(--reading-statistics-chart-muted)' }}
+                    tickMargin={12}
+                  />
+                  <YAxis
+                    allowDecimals={false}
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: 'var(--reading-statistics-chart-muted)' }}
+                    tickMargin={12}
+                    width={64}
+                    tickFormatter={(value) => `${formatNumber(value)}p`}
+                  />
+                  <Tooltip
+                    content={(tooltipProps: TooltipContentProps) => <ReadingStatisticsTooltip {...tooltipProps} />}
+                    cursor={{ fill: 'var(--reading-statistics-chart-cursor)' }}
+                  />
+                  <Bar
+                    dataKey="readPageCount"
+                    fill="var(--reading-statistics-chart-bar)"
+                    name="읽은 페이지"
+                    radius={[8, 8, 8, 8]}
+                    maxBarSize={32}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </section>
 

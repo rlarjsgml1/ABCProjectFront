@@ -1,8 +1,26 @@
+import { useState } from 'react';
 import { Button } from '../../../components/common/Button';
 import { Link } from 'react-router-dom';
 
 
+function formatPhoneNumber(value: string) {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+
+  if (digits.length <= 3) {
+    return digits;
+  }
+
+  if (digits.length <= 7) {
+    return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  }
+
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+}
+
+
 export function SignupPage() {
+  const [phone, setPhone] = useState('');
+
   return (
     <section className="page-section form-page">
       <p className="eyebrow">U-002</p>
@@ -16,6 +34,20 @@ export function SignupPage() {
         <label>
           아이디
           <input name="loginId" type="text" placeholder="아이디를 입력하세요" />
+        </label>
+
+        <label>
+          비밀번호
+          <input name="password" type="password" placeholder="비밀번호를 입력하세요" />
+        </label>
+
+        <label>
+          비밀번호 확인
+          <input
+            name="passwordConfirm"
+            type="password"
+            placeholder="비밀번호를 다시 입력하세요"
+          />
         </label>
 
         <label>
@@ -36,7 +68,15 @@ export function SignupPage() {
 
         <label>
           전화번호
-          <input name="phone" type="tel" placeholder="010-0000-0000" />
+          <input
+            name="phone"
+            type="tel"
+            value={phone}
+            onChange={(event) => setPhone(formatPhoneNumber(event.target.value))}
+            inputMode="numeric"
+            maxLength={13}
+            placeholder="010-0000-0000"
+          />
         </label>
 
         <label>
@@ -47,20 +87,6 @@ export function SignupPage() {
         <label>
           이메일
           <input name="email" type="email" placeholder="abc@example.com" />
-        </label>
-
-        <label>
-          비밀번호
-          <input name="password" type="password" placeholder="비밀번호를 입력하세요" />
-        </label>
-
-        <label>
-          비밀번호 확인
-          <input
-            name="passwordConfirm"
-            type="password"
-            placeholder="비밀번호를 다시 입력하세요"
-          />
         </label>
 
         <div className="form-actions">
