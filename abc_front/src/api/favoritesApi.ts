@@ -9,6 +9,14 @@ export async function getMyFavorites(params: FavoriteBooksQuery = {}) {
   return response.data.data;
 }
 
+export async function createMyFavorite(bookId: number) {
+  const response = await apiClient.post<ApiResponse<{ bookId: number }>>('/me/favorites', {
+    bookId,
+  });
+
+  return response.data.data;
+}
+
 export async function deleteMyFavorite(bookId: number) {
   const response = await apiClient.delete<ApiResponse<{ deleted: boolean }>>(`/me/favorites/${bookId}`);
 

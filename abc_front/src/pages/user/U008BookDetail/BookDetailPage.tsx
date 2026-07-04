@@ -1,7 +1,29 @@
 import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getBookDetail } from '../../../api/bookApi';
+import { createMyFavorite, deleteMyFavorite } from '../../../api/favoritesApi';
 import type { BookDetail } from '../../../types/book';
+import styles from './BookDetailPage.module.css';
+
+type DetailTab = 'description' | 'recommendations' | 'reviews';
+type ModalType = 'login' | 'bookReport' | 'reviewReport' | 'deleteReview' | null;
+
+function ModalShell({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
+  return (
+    <div className={styles.modalBackdrop}>
+      <div className={styles.modal}>
+        <div className={styles.modalHeader}>
+          <h2>{title}</h2>
+          <button type="button" onClick={onClose} aria-label="닫기">
+            x
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export function BookDetailPage() {
   const { bookId } = useParams();
@@ -9,17 +31,10 @@ export function BookDetailPage() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-
-  const displayBook: BookDetail = book ?? {
-    bookId: Number(bookId ?? 0),
-    title: '책 제목 입니다',
-    author: '이름',
-    publisher: '출판사 이름',
-    description: '소개합니다 소개합니다 소개적어요 소개적어요 소개적어요',
-    coverImageUrl: '',
-    rentalType: 'FREE',
-    status: 'AVAILABLE',
-  };
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteMessage, setFavoriteMessage] = useState('');
+  const [activeTab, setActiveTab] = useState<DetailTab>('description');
+  const [activeModal, setActiveModal] = useState<ModalType>(null);
 
   useEffect(() => {
     async function loadBookDetail() {
@@ -32,6 +47,7 @@ export function BookDetailPage() {
       try {
         const bookDetail = await getBookDetail(Number(bookId));
         setBook(bookDetail);
+        setIsFavorite(false);
       } catch {
         setErrorMessage('도서 정보를 불러오지 못했습니다.');
       } finally {
@@ -42,253 +58,344 @@ export function BookDetailPage() {
     loadBookDetail();
   }, [bookId]);
 
+  async function handleFavoriteClick() {
+    if (!bookId) return;
+
+    if (!localStorage.getItem('accessToken')) {
+      setActiveModal('login');
+      return;
+    }
+
+    const nextFavorite = !isFavorite;
+    setIsFavorite(nextFavorite);
+    setFavoriteMessage('');
+
+    try {
+      if (nextFavorite) {
+        await createMyFavorite(Number(bookId));
+        setFavoriteMessage('관심목록에 추가되었습니다.');
+      } else {
+        await deleteMyFavorite(Number(bookId));
+        setFavoriteMessage('관심목록에서 해제되었습니다.');
+      }
+    } catch {
+      setIsFavorite(!nextFavorite);
+      setFavoriteMessage('찜하기 처리에 실패했습니다.');
+    }
+  }
+
+  function openMemberModal(modalType: Exclude<ModalType, null>) {
+    if (!localStorage.getItem('accessToken')) {
+      setActiveModal('login');
+      return;
+    }
+
+    setActiveModal(modalType);
+  }
+
+  function openReviewEditor() {
+    if (!localStorage.getItem('accessToken')) {
+      setActiveModal('login');
+      return;
+    }
+
+    setIsReviewModalOpen(true);
+  }
+
   if (loading) {
     return (
-      <section className="page-section book-detail-page">
+      <section className={`page-section ${styles.page}`}>
         <p>데이터를 불러오는 중입니다.</p>
       </section>
     );
   }
 
   return (
-    <section className="page-section book-detail-page">
+    <section className={`page-section ${styles.page}`}>
       <p className="eyebrow">U-008</p>
 
-      {errorMessage && <p className="book-detail-error">{errorMessage}</p>}
+      {errorMessage && <p className={styles.error}>{errorMessage}</p>}
 
-      <section className="book-detail-hero" aria-labelledby="book-detail-title">
-        <div className="book-detail-left">
-          <div className="book-detail-cover">
-            {displayBook.coverImageUrl ? <img src={displayBook.coverImageUrl} alt={displayBook.title} /> : <span>표지 영역</span>}
+      <section className={styles.hero} aria-labelledby="book-detail-title">
+        <div className={styles.left}>
+          <div className={styles.cover}>
+            {book?.coverImageUrl ? <img src={book.coverImageUrl} alt={book.title} /> : <span>표지 영역</span>}
           </div>
 
-          <button className="book-detail-favorite" type="button">
-            ♡ 찜하기
+          <button
+            className={`${styles.favorite} ${isFavorite ? styles.active : ''}`}
+            type="button"
+            onClick={handleFavoriteClick}
+            aria-pressed={isFavorite}
+          >
+            {isFavorite ? '♥ 찜하기' : '♡ 찜하기'}
           </button>
+          {favoriteMessage && <p className={styles.favoriteMessage}>{favoriteMessage}</p>}
         </div>
 
-        <div className="book-detail-info">
-          <h1 id="book-detail-title">{displayBook.title}</h1>
+        <div className={styles.info}>
+          <h1 id="book-detail-title">{book?.title ?? '도서 정보가 없습니다.'}</h1>
 
-          <dl className="book-detail-meta">
+          <dl className={styles.meta}>
             <div>
               <dt>작가</dt>
-              <dd>{displayBook.author}</dd>
+              <dd>{book?.author ?? '-'}</dd>
             </div>
             <div>
               <dt>출판사</dt>
-              <dd>{displayBook.publisher}</dd>
+              <dd>{book?.publisher ?? '-'}</dd>
             </div>
             <div>
               <dt>ISBN</dt>
-              <dd>12348556456</dd>
+              <dd>-</dd>
             </div>
             <div>
               <dt>장르</dt>
-              <dd>장르 적기</dd>
+              <dd>-</dd>
             </div>
             <div>
               <dt>페이지 수</dt>
-              <dd>페이지 수 숫자 p</dd>
+              <dd>-</dd>
             </div>
             <div>
               <dt>유료 / 무료</dt>
-              <dd>
-                <span className="book-detail-chip">{displayBook.rentalType === 'FREE' ? '무료' : '유료'}</span>
+              <dd className={styles.inlineValue}>
+                {book ? <span className={styles.chip}>{book.rentalType === 'FREE' ? '무료' : '유료'}</span> : '-'}
               </dd>
             </div>
             <div>
               <dt>대여 가능일</dt>
-              <dd>7일</dd>
+              <dd>-</dd>
             </div>
             <div>
               <dt>반납 예정일</dt>
-              <dd>2026.02.05</dd>
+              <dd>-</dd>
             </div>
           </dl>
 
-          <div className="book-detail-intro">
+          <div className={styles.intro}>
             <strong>책 소개</strong>
-            <p>{displayBook.description}</p>
+            <p>{book?.description ?? '도서 상세 정보를 불러오면 책 소개가 표시됩니다.'}</p>
           </div>
 
-          <div className="book-detail-tags" aria-label="키워드">
-            <span># 판타지</span>
-            <span># 로맨스</span>
-            <span># 취미생활</span>
-            <span># 성장</span>
+          <div className={styles.tags} aria-label="키워드">
+            <span>키워드 없음</span>
           </div>
         </div>
 
-        <aside className="book-detail-action-panel" aria-label="도서 활동">
+        <aside className={styles.actionPanel} aria-label="도서 활동">
           <Link className="button button-primary" to={`/books/${bookId}/rent`}>
-            ▣ 대여하기
+            대여하기
           </Link>
           <button className="button button-secondary" type="button">
-            ▣ 소장하기
+            소장하기
           </button>
 
-          <div className="book-detail-side-links">
-            <button type="button">⚐ 책 신고하기</button>
-            <Link to={`/books/${bookId}/libraries`}>♡ 도서관 위치 확인</Link>
-            <button type="button" onClick={() => setIsReviewModalOpen(true)}>
-              ✎ 나의 리뷰 작성
+          <div className={styles.sideLinks}>
+            <button type="button" onClick={() => openMemberModal('bookReport')}>
+              <span>책 신고하기</span>
+            </button>
+            <Link to={`/books/${bookId}/libraries`}>
+              <span>도서관 위치 확인</span>
+            </Link>
+            <button type="button" onClick={openReviewEditor}>
+              <span>나의 리뷰 작성</span>
             </button>
           </div>
         </aside>
       </section>
 
-      <nav className="book-detail-tabs" aria-label="도서 상세 탭">
-        <a href="#book-description">책 소개</a>
-        <a href="#book-recommendations">책 추천</a>
-        <a href="#book-reviews">리뷰</a>
+      <nav className={styles.tabs} aria-label="도서 상세 탭">
+        <a
+          className={activeTab === 'description' ? styles.tabActive : ''}
+          href="#book-description"
+          onClick={() => setActiveTab('description')}
+        >
+          책 소개
+        </a>
+        <a
+          className={activeTab === 'recommendations' ? styles.tabActive : ''}
+          href="#book-recommendations"
+          onClick={() => setActiveTab('recommendations')}
+        >
+          책 추천
+        </a>
+        <a className={activeTab === 'reviews' ? styles.tabActive : ''} href="#book-reviews" onClick={() => setActiveTab('reviews')}>
+          리뷰
+        </a>
       </nav>
 
-      <section className="book-detail-section" id="book-description">
+      <section className={styles.section} id="book-description">
         <h2>상세 정보</h2>
-        <dl className="book-detail-spec">
+        <dl className={styles.spec}>
           <div>
             <dt>ISBN</dt>
-            <dd>989-11-678923-7-3</dd>
+            <dd>-</dd>
           </div>
           <div>
             <dt>출판사</dt>
-            <dd>{displayBook.publisher}</dd>
+            <dd>{book?.publisher ?? '-'}</dd>
           </div>
           <div>
             <dt>발행일</dt>
-            <dd>2025.09.04</dd>
+            <dd>-</dd>
           </div>
           <div>
             <dt>파일 형식</dt>
-            <dd>EPUB, PDF</dd>
+            <dd>-</dd>
           </div>
           <div>
             <dt>지원 기기</dt>
-            <dd>PC, 모바일, 태블릿</dd>
+            <dd>-</dd>
           </div>
           <div>
             <dt>언어</dt>
-            <dd>한국어</dd>
+            <dd>-</dd>
           </div>
           <div>
             <dt>카테고리</dt>
-            <dd>판타지, 로맨스</dd>
+            <dd>-</dd>
           </div>
           <div>
             <dt>키워드</dt>
-            <dd>기억, 첫사랑, 성장</dd>
+            <dd>-</dd>
           </div>
         </dl>
       </section>
 
-      <section className="book-detail-section" id="book-recommendations">
-        <div className="book-detail-row-title">
+      <section className={styles.section} id="book-recommendations">
+        <div className={styles.rowTitle}>
           <h2>같은 작가의 다른 책</h2>
           <Link to={`/books/${bookId}/recommendations`}>더보기</Link>
         </div>
-        <div className="book-detail-book-row">
-          {[1, 2, 3, 4, 5, 6].map((item) => (
-            <article className="book-detail-small-card" key={`author-${item}`}>
-              <div aria-hidden="true" />
-              <strong>책 제목</strong>
-              <span>작가 이름</span>
-            </article>
-          ))}
-        </div>
+        <p className={styles.emptyState}>추천 도서 API 연결 후 표시됩니다.</p>
       </section>
 
-      <section className="book-detail-section">
-        <div className="book-detail-row-title">
+      <section className={styles.section}>
+        <div className={styles.rowTitle}>
           <h2>같은 장르의 다른 책</h2>
           <Link to={`/books/${bookId}/recommendations`}>더보기</Link>
         </div>
-        <div className="book-detail-book-row">
-          {[1, 2, 3, 4, 5, 6].map((item) => (
-            <article className="book-detail-small-card" key={`genre-${item}`}>
-              <div aria-hidden="true" />
-              <strong>책 제목</strong>
-              <span>작가 이름</span>
-            </article>
-          ))}
-        </div>
+        <p className={styles.emptyState}>추천 도서 API 연결 후 표시됩니다.</p>
       </section>
 
-      <section className="book-detail-section" id="book-reviews">
-        <h2>다람쥐's 리뷰 (182)</h2>
-
-        <div className="book-detail-review-summary">
-          <div>
-            <strong>사용자총점</strong>
-            <p className="book-detail-score">9.7 / 10</p>
-            {[55, 30, 2, 5, 8].map((score, index) => (
-              <div className="book-detail-rating-row" key={score + index}>
-                <span>{5 - index}점</span>
-                <div>
-                  <span style={{ width: `${score}%` }} />
-                </div>
-                <em>{score}%</em>
-              </div>
-            ))}
-          </div>
-
-          <div>
-            <strong>10대의 사용자가 가장 많이 감상했어요</strong>
-            <div className="book-detail-age-chart">
-              {[55, 30, 2, 5, 8].map((score, index) => (
-                <div key={score + index}>
-                  <span style={{ height: `${score}%` }} />
-                  <em>{['10대', '20대', '30대', '40대', '50대 이상'][index]}</em>
-                </div>
-              ))}
-            </div>
-          </div>
+      <section className={styles.section} id="book-reviews">
+        <div className={styles.reviewHeader}>
+          <h2>리뷰</h2>
+          <button className="button button-secondary" type="button" onClick={openReviewEditor}>
+            나의 리뷰 작성
+          </button>
         </div>
 
-        <div className="book-detail-review-list">
+        <div className={styles.reviewSummary}>
+          <p className={styles.emptyState}>리뷰 목록 API 연결 후 평점 요약이 표시됩니다.</p>
+        </div>
+
+        <div className={styles.reviewList}>
           <h3>이 책을 읽은 독자들의 한 줄 소감평</h3>
-          {[1, 2, 3, 4, 5, 6].map((item) => (
-            <article className="book-detail-review-item" key={item}>
-              <div aria-hidden="true" />
-              <div>
-                <strong>책벌레 234님</strong>
-                <span>★★★★★</span>
-              </div>
-              <p>한 문장 한 문장이 그림처럼 아름다워요. 추천해요.</p>
-              <time>2026.0{item}.28</time>
-              <button type="button" aria-label="리뷰 더보기">
-                ⋮
-              </button>
-            </article>
-          ))}
+          <p className={styles.emptyState}>등록된 리뷰가 없습니다.</p>
         </div>
       </section>
 
       {isReviewModalOpen && (
-        <div className="review-modal-backdrop">
-          <div className="review-modal">
-            <h2>리뷰 작성/수정 영역</h2>
+        <ModalShell title="나의 리뷰 작성" onClose={() => setIsReviewModalOpen(false)}>
+          <label>
+            별점
+            <input type="number" min="1" max="5" />
+          </label>
 
-            <label>
-              별점
-              <input type="number" min="1" max="5" />
-            </label>
+          <label>
+            리뷰 내용
+            <textarea placeholder="이 책에 대한 감상을 남겨주세요." />
+          </label>
 
-            <label>
-              리뷰 내용
-              <textarea />
-            </label>
-
-            <div className="review-modal-actions">
-              <button className="button button-primary" type="button">
-                저장
-              </button>
-              <button className="button button-secondary" type="button" onClick={() => setIsReviewModalOpen(false)}>
-                취소
-              </button>
-            </div>
+          <div className={styles.modalActions}>
+            <button className="button button-primary" type="button">
+              리뷰 등록
+            </button>
+            <button className="button button-secondary" type="button" onClick={() => setIsReviewModalOpen(false)}>
+              취소
+            </button>
           </div>
-        </div>
+        </ModalShell>
+      )}
+
+      {activeModal === 'login' && (
+        <ModalShell title="회원 전용 기능입니다" onClose={() => setActiveModal(null)}>
+          <p className={styles.modalMessage}>로그인/회원가입 후 이용할 수 있습니다.</p>
+          <div className={styles.modalActions}>
+            <Link className="button button-primary" to="/login">
+              예
+            </Link>
+            <button className="button button-secondary" type="button" onClick={() => setActiveModal(null)}>
+              아니오
+            </button>
+          </div>
+        </ModalShell>
+      )}
+
+      {activeModal === 'bookReport' && (
+        <ModalShell title="책 신고하기" onClose={() => setActiveModal(null)}>
+          <label>
+            신고 사유
+            <select>
+              <option>신고 사유를 선택하세요.</option>
+              <option>책의 오류 및 수정</option>
+              <option>제목과 다른 책 내용</option>
+              <option>혐오 또는 불쾌한 내용</option>
+            </select>
+          </label>
+
+          <label>
+            신고 내용
+            <textarea placeholder="신고 내용을 입력해 주세요." />
+          </label>
+
+          <div className={styles.modalActions}>
+            <button className="button button-primary" type="button">
+              신고 등록
+            </button>
+          </div>
+        </ModalShell>
+      )}
+
+      {activeModal === 'reviewReport' && (
+        <ModalShell title="리뷰 신고하기" onClose={() => setActiveModal(null)}>
+          <label>
+            신고 사유
+            <select>
+              <option>신고 사유를 선택하세요.</option>
+              <option>욕설 및 비방</option>
+              <option>스포일러</option>
+              <option>불쾌함</option>
+            </select>
+          </label>
+
+          <label>
+            신고 내용
+            <textarea placeholder="신고 내용을 입력해 주세요." />
+          </label>
+
+          <div className={styles.modalActions}>
+            <button className="button button-primary" type="button">
+              신고 등록
+            </button>
+          </div>
+        </ModalShell>
+      )}
+
+      {activeModal === 'deleteReview' && (
+        <ModalShell title="리뷰 삭제" onClose={() => setActiveModal(null)}>
+          <p className={styles.modalMessage}>정말 이 리뷰를 삭제하시겠습니까?</p>
+          <div className={styles.modalActions}>
+            <button className="button button-primary" type="button">
+              예
+            </button>
+            <button className="button button-secondary" type="button" onClick={() => setActiveModal(null)}>
+              아니오
+            </button>
+          </div>
+        </ModalShell>
       )}
     </section>
   );
