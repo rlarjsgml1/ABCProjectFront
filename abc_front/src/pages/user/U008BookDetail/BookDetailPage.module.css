@@ -170,11 +170,12 @@
   color: var(--color-text);
   display: flex;
   align-items: center;
+  justify-content: center;
   min-height: 40px;
   padding: var(--space-2) 0;
   font: inherit;
   font-weight: 700;
-  text-align: left;
+  text-align: center;
   text-decoration: none;
   cursor: pointer;
 }

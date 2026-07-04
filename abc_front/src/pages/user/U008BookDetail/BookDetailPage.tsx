@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getBookDetail } from '../../../api/bookApi';
 import { createMyFavorite, deleteMyFavorite } from '../../../api/favoritesApi';
 import type { BookDetail } from '../../../types/book';
@@ -27,6 +27,7 @@ function ModalShell({ title, children, onClose }: { title: string; children: Rea
 
 export function BookDetailPage() {
   const { bookId } = useParams();
+  const navigate = useNavigate();
   const [book, setBook] = useState<BookDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -82,6 +83,17 @@ export function BookDetailPage() {
       setIsFavorite(!nextFavorite);
       setFavoriteMessage('찜하기 처리에 실패했습니다.');
     }
+  }
+
+  function handleRentClick() {
+    if (!bookId) return;
+
+    if (!localStorage.getItem('accessToken')) {
+      setActiveModal('login');
+      return;
+    }
+
+    navigate(`/books/${bookId}/rent`);
   }
 
   function openMemberModal(modalType: Exclude<ModalType, null>) {
@@ -184,10 +196,10 @@ export function BookDetailPage() {
         </div>
 
         <aside className={styles.actionPanel} aria-label="도서 활동">
-          <Link className="button button-primary" to={`/books/${bookId}/rent`}>
+          <button className="button button-primary" type="button" onClick={handleRentClick}>
             대여하기
-          </Link>
-          <button className="button button-secondary" type="button">
+          </button>
+          <button className="button button-secondary" type="button" onClick={handleRentClick}>
             소장하기
           </button>
 
