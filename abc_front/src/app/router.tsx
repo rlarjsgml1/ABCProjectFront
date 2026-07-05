@@ -33,6 +33,11 @@ import { SearchResultsPage } from '../pages/user/U007SearchResults/SearchResults
 import { SignupPage } from '../pages/user/U002Signup/SignupPage';
 import { FindIdPage } from '../pages/user/U004FindId/FindIdPage';
 import { FavoritesPage } from '../pages/user/U012Favorites/FavoritesPage';
+import { RecentBooksPage } from '../pages/user/U028RecentBooks/RecentBooksPage';
+import { PaymentsPage } from '../pages/user/U018Payments/PaymentsPage';
+import { ReportsPage } from '../pages/user/U021Reports/ReportsPage';
+import { BookRequestPage } from '../pages/user/U022BookRequest/BookRequestPage';
+import { BookRequestHistoryPage } from '../pages/user/U023BookRequestHistory/BookRequestHistoryPage';
 
 
 
@@ -93,6 +98,46 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <FavoritesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/me/recent-books',
+        element: (
+          <ProtectedRoute>
+            <RecentBooksPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/me/payments',
+        element: (
+          <ProtectedRoute>
+            <PaymentsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/me/reports',
+        element: (
+          <ProtectedRoute>
+            <ReportsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/me/book-requests',
+        element: (
+          <ProtectedRoute>
+            <BookRequestPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/me/book-requests/history',
+        element: (
+          <ProtectedRoute>
+            <BookRequestHistoryPage />
           </ProtectedRoute>
         ),
       },
