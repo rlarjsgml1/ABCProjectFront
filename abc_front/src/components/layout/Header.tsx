@@ -1,5 +1,8 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { AUTH_CHANGED_EVENT } from '../../api/authApi';
+
+const authStorageKeys = ['accessToken', 'memberRole', 'memberId', 'loginId', 'memberName'];
 
 const navItems = [
     { to: '/', label: 'HOME' },
@@ -19,6 +22,20 @@ export function Header() {
 
     useEffect(() => {
         setIsLoggedIn(Boolean(localStorage.getItem('accessToken')));
+    }, [location.pathname, location.search]);
+
+    useEffect(() => {
+        const syncAuthState = () => {
+            setIsLoggedIn(Boolean(localStorage.getItem('accessToken')));
+        };
+
+        window.addEventListener('storage', syncAuthState);
+        window.addEventListener(AUTH_CHANGED_EVENT, syncAuthState);
+
+        return () => {
+            window.removeEventListener('storage', syncAuthState);
+            window.removeEventListener(AUTH_CHANGED_EVENT, syncAuthState);
+        };
     }, []);
 
     const isActiveNav = (to: string) => {
@@ -35,8 +52,9 @@ export function Header() {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('accessToken');
+        authStorageKeys.forEach((key) => localStorage.removeItem(key));
         setIsLoggedIn(false);
+        window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
         navigate('/');
     };
 

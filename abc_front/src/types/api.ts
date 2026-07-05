@@ -24,6 +24,44 @@ export type PageResponse<T> = {
   last: boolean;
 };
 
+export type SignupRequest = {
+  loginId: string;
+  password: string;
+  passwordConfirm: string;
+  name: string;
+  email: string;
+  phone?: string;
+  birthDate: string;
+  gender?: string;
+};
+
+export type SignupResponse = {
+  memberId: number;
+  loginId: string;
+  name: string;
+  role: string;
+};
+
+export type LoginRequest = {
+  loginId: string;
+  password: string;
+};
+
+export type LoginMember = {
+  memberId: number;
+  loginId: string;
+  name: string;
+  role: string;
+};
+
+export type LoginResponse = {
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
+  member: LoginMember;
+};
+
+
 export type PointHistoryQuery = {
   pointType?: string;
   page?: number;

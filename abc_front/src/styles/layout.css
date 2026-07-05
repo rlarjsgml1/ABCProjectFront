@@ -168,6 +168,26 @@
   font-weight: 600;
 }
 
+.form-message {
+  margin: 0;
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.form-message-error {
+  border: 1px solid rgba(220, 38, 38, 0.24);
+  color: var(--color-danger);
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.form-message-success {
+  border: 1px solid rgba(0, 61, 45, 0.2);
+  color: #003d2d;
+  background: rgba(0, 61, 45, 0.08);
+}
+
 .login-button {
   display: flex;
   justify-content: center;
@@ -1803,10 +1823,13 @@ a.count-card:focus-visible {
 /* 헤더 */
 .abc-header {
   --abc-header-brand: #003d2d;
-  --abc-header-surface: #ffffff;
+  --abc-header-surface: var(--color-surface);
+  --abc-header-ink: var(--color-text);
+  --abc-header-muted: var(--color-muted);
+  --abc-header-control: 40px;
   width: 100%;
-  padding: 32px 10.4vw 40px;
-  background: #ffffff;
+  padding: var(--space-6) clamp(var(--space-6), 8vw, 150px) var(--space-8);
+  background: var(--abc-header-surface);
 }
 
 .abc-header-top {
@@ -1814,11 +1837,12 @@ a.count-card:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-6);
 }
 
 .abc-logo {
-  color: #003d2d;
-  font-size: 52px;
+  color: var(--abc-header-brand);
+  font-size: clamp(2.25rem, 4vw, 3rem);
   font-weight: 900;
   line-height: 1;
   letter-spacing: 2px;
@@ -1830,21 +1854,21 @@ a.count-card:focus-visible {
   left: 50%;
   transform: translateX(-50%);
   display: grid;
-  grid-template-columns: 52px 1fr;
+  grid-template-columns: 44px 1fr;
   align-items: center;
-  width: 636px;
-  height: 52px;
+  width: min(42vw, 560px);
+  height: 44px;
   border-radius: 999px;
-  background: #d9d9d9;
+  background: var(--color-surface-muted);
   overflow: hidden;
 }
 
 .abc-search-button {
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
   border: 0;
   background: transparent;
-  color: #111111;
+  color: var(--abc-header-ink);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1860,33 +1884,33 @@ a.count-card:focus-visible {
   width: 100%;
   height: 100%;
   min-width: 0;
-  padding: 0 24px 0 0;
+  padding: 0 var(--space-6) 0 0;
   border: 0;
   outline: 0;
   background: transparent;
-  color: #111111;
-  font-size: 16px;
+  color: var(--abc-header-ink);
+  font-size: 1rem;
 }
 
 .abc-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
-  min-width: 226px;
+  gap: var(--space-2);
+  min-width: 240px;
 }
 
 .abc-attendance-link {
-  height: 36px;
+  height: var(--abc-header-control);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--abc-header-brand);
   border-radius: 999px;
-  padding: 0 17px;
+  padding: 0 var(--space-4);
   color: var(--abc-header-brand);
   background: var(--abc-header-surface);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   line-height: 1;
   text-decoration: none;
@@ -1902,10 +1926,10 @@ a.count-card:focus-visible {
 
 .abc-outline-button,
 .abc-dark-button {
-  height: 36px;
-  padding: 0 17px;
+  height: var(--abc-header-control);
+  padding: 0 var(--space-4);
   border-radius: 999px;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 500;
   line-height: 1;
   text-decoration: none;
@@ -1916,24 +1940,24 @@ a.count-card:focus-visible {
 }
 
 .abc-outline-button {
-  border: 1px solid #003d2d;
-  background: #ffffff;
-  color: #003d2d;
+  border: 1px solid var(--abc-header-brand);
+  background: var(--abc-header-surface);
+  color: var(--abc-header-brand);
 }
 
 .abc-dark-button {
-  border: 1px solid #003d2d;
-  background: #003d2d;
-  color: #ffffff;
+  border: 1px solid var(--abc-header-brand);
+  background: var(--abc-header-brand);
+  color: var(--abc-header-surface);
   cursor: pointer;
 }
 
 .abc-profile-button {
-  width: 40px;
-  height: 40px;
+  width: var(--abc-header-control);
+  height: var(--abc-header-control);
   border-radius: 50%;
-  background: #908c8c;
-  color: #ffffff;
+  background: var(--abc-header-muted);
+  color: var(--abc-header-surface);
   box-shadow: 3px 4px 9px rgba(0, 0, 0, 0.3);
   display: inline-flex;
   align-items: center;
@@ -1951,12 +1975,12 @@ a.count-card:focus-visible {
   grid-template-columns: repeat(4, 1fr);
   align-items: center;
   width: 100%;
-  margin-top: 60px;
+  margin-top: var(--space-8);
 }
 
 .abc-nav-link {
-  color: #999999;
-  font-size: 20px;
+  color: var(--abc-header-muted);
+  font-size: 1.25rem;
   font-weight: 400;
   text-align: center;
   text-decoration: none;
@@ -1971,11 +1995,26 @@ a.count-card:focus-visible {
 }
 
 .abc-nav-link.active {
-  color: #111111;
+  color: var(--abc-header-ink);
   font-weight: 1000;
 }
 
 @media (max-width: 960px) {
+  .abc-header-top {
+    flex-wrap: wrap;
+  }
+
+  .abc-search {
+    position: static;
+    order: 3;
+    width: 100%;
+    transform: none;
+  }
+
+  .abc-actions {
+    min-width: auto;
+  }
+
   .attendance-dashboard {
     grid-template-columns: 1fr;
   }
