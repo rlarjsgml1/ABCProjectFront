@@ -5,3 +5,6 @@
 *.ipr
 out/
 
+# Claude Code agent config
+.claude/
+
