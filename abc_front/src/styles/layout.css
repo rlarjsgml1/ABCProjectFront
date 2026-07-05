@@ -412,9 +412,19 @@
   gap: var(--space-6);
 }
 
+/* 도서 표지 이미지 공통 스타일 (즐겨찾기, 도서 목록/상세 등에서 재사용) */
+.book-cover-thumb {
+  width: 96px;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  background-color: var(--color-surface-muted);
+  box-shadow: var(--shadow-sm);
+}
+
 .favorites-page {
-  max-width: 860px;
-  margin: 0 auto;
+  display: grid;
+  gap: var(--space-6);
 }
 
 .favorites-title-row {
@@ -480,15 +490,6 @@
 
 .favorite-cover-link {
   flex-shrink: 0;
-}
-
-.favorite-cover-link img {
-  width: calc(var(--space-10) * 2.4);
-  height: calc(var(--space-10) * 3.4);
-  border-radius: var(--radius-md);
-  object-fit: cover;
-  background-color: var(--color-surface-muted);
-  box-shadow: var(--shadow-sm);
 }
 
 .favorite-info {
@@ -558,6 +559,7 @@
 
 .favorites-empty {
   align-items: center;
+  justify-items: center;
   text-align: center;
   gap: var(--space-4);
   padding: var(--space-8) var(--space-6);
