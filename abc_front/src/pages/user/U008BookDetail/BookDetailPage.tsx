@@ -199,16 +199,13 @@ export function BookDetailPage() {
 
     try {
       if (isTestMode) {
-        setFavoriteMessage(nextFavorite ? '관심목록에 추가되었습니다.' : '관심목록에서 해제되었습니다.');
         return;
       }
 
       if (nextFavorite) {
         await createMyFavorite(Number(bookId));
-        setFavoriteMessage('관심목록에 추가되었습니다.');
       } else {
         await deleteMyFavorite(Number(bookId));
-        setFavoriteMessage('관심목록에서 해제되었습니다.');
       }
     } catch {
       setIsFavorite(!nextFavorite);
@@ -277,7 +274,6 @@ export function BookDetailPage() {
       );
       setReviewNotice('리뷰가 정상적으로 수정되었습니다.');
       setIsReviewModalOpen(false);
-      setFavoriteMessage('리뷰가 정상적으로 수정되었습니다.');
       return;
     }
 
@@ -295,7 +291,6 @@ export function BookDetailPage() {
     ]);
     setReviewNotice('리뷰가 정상적으로 등록되었습니다.');
     setIsReviewModalOpen(false);
-    setFavoriteMessage('리뷰가 정상적으로 등록되었습니다.');
   }
 
   function handleStartEditReview(review: TestReview) {
@@ -321,7 +316,6 @@ export function BookDetailPage() {
     );
     setEditingReviewId(null);
     setEditReviewContent('');
-    setFavoriteMessage('리뷰가 정상적으로 수정되었습니다.');
   }
 
   function handleDeleteReview() {
@@ -333,7 +327,6 @@ export function BookDetailPage() {
     setIsReviewModalOpen(false);
     setReviewRating(0);
     setReviewContent('');
-    setFavoriteMessage('리뷰가 정상적으로 삭제되었습니다.');
   }
 
   function handleSubmitReport(type: 'BOOK' | 'REVIEW') {
