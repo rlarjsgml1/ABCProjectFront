@@ -10,15 +10,6 @@
   font-weight: 700;
 }
 
-.testNotice {
-  margin: var(--space-4) 0 0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-3);
-  color: var(--color-primary);
-  font-weight: 700;
-}
-
 .hero {
   display: grid;
   grid-template-columns: 240px 1fr 280px;
