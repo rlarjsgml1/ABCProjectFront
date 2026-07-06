@@ -38,6 +38,7 @@ import { PaymentsPage } from '../pages/user/U018Payments/PaymentsPage';
 import { ReportsPage } from '../pages/user/U021Reports/ReportsPage';
 import { BookRequestPage } from '../pages/user/U022BookRequest/BookRequestPage';
 import { BookRequestHistoryPage } from '../pages/user/U023BookRequestHistory/BookRequestHistoryPage';
+import { RentPaymentPage } from '../pages/user/U009RentPayment/RentPaymentPage';
 
 
 
@@ -49,6 +50,14 @@ export const router = createBrowserRouter([
       { path: '/books', element: <BooksPage /> },
       { path: '/search', element: <SearchResultsPage /> },
       { path: '/books/:bookId', element: <BookDetailPage /> },
+      {
+        path: '/books/:bookId/rent',
+        element: (
+          <ProtectedRoute>
+            <RentPaymentPage />
+          </ProtectedRoute>
+        ),
+      },
       { path: '/login', element: <LoginPage /> },
       { path: '/signup', element: <SignupPage /> },
       { path: '/find-id', element: <FindIdPage /> },
