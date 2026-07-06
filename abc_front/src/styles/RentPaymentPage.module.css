@@ -1,0 +1,212 @@
+.page {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  margin-top: var(--space-6);
+}
+
+.header h1,
+.header p {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.header p {
+  margin-top: var(--space-2);
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.error {
+  margin: var(--space-4) 0;
+  color: var(--color-danger);
+  font-weight: 700;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: var(--space-8);
+  align-items: flex-start;
+  margin-top: var(--space-8);
+}
+
+.bookPanel,
+.summaryPanel,
+.paymentPanel,
+.policyPanel,
+.optionCard {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.bookPanel {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: var(--space-8);
+  padding: var(--space-8);
+}
+
+.cover {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  overflow: hidden;
+}
+
+.cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bookInfo h2,
+.summaryPanel h2,
+.paymentPanel h2,
+.policyPanel h2,
+.optionCard h3 {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.infoList,
+.priceList {
+  display: grid;
+  gap: var(--space-4);
+  margin: var(--space-6) 0 0;
+}
+
+.infoList div,
+.priceList div {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.infoList dt,
+.priceList dt {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.infoList dd,
+.priceList dd {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.summaryPanel {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-6);
+}
+
+.totalRow {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-4);
+  font-weight: 700;
+}
+
+.agreement {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.actionMessage {
+  margin: 0;
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.paymentPanel,
+.policyPanel {
+  margin-top: var(--space-8);
+  padding: var(--space-8);
+}
+
+.optionGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+  margin-top: var(--space-6);
+}
+
+.optionCard {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-6);
+}
+
+.optionCard p {
+  margin: 0;
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.optionTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.optionTitle a,
+.optionTitle span {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.optionCard select,
+.optionCard input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font: inherit;
+}
+
+.policyPanel ul {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-4) 0 0;
+  padding-left: var(--space-6);
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+@media (max-width: 720px) {
+  .header,
+  .optionTitle {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .layout,
+  .bookPanel,
+  .optionGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .cover {
+    width: 180px;
+  }
+}
