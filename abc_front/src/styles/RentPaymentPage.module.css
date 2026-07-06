@@ -29,7 +29,7 @@
   font-weight: 700;
 }
 
-.layout {
+.heroLayout {
   display: grid;
   grid-template-columns: 1fr 320px;
   gap: var(--space-8);
@@ -37,21 +37,22 @@
   margin-top: var(--space-8);
 }
 
-.bookPanel,
+.bookPanel {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: var(--space-8);
+  align-items: flex-start;
+  padding: var(--space-8);
+}
+
 .summaryPanel,
-.paymentPanel,
-.policyPanel,
-.optionCard {
+.bookPanel,
+.rentalCard,
+.checkoutPanel,
+.policyPanel {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
-}
-
-.bookPanel {
-  display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: var(--space-8);
-  padding: var(--space-8);
 }
 
 .cover {
@@ -76,22 +77,30 @@
 
 .bookInfo h2,
 .summaryPanel h2,
-.paymentPanel h2,
-.policyPanel h2,
-.optionCard h3 {
+.rentalInfoPanel h2,
+.rentalCard h3,
+.policyPanel h2 {
   margin: 0;
   color: var(--color-text);
 }
 
+.bookMeta {
+  margin: var(--space-4) 0 var(--space-8);
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
 .infoList,
-.priceList {
+.priceList,
+.rentalCard dl {
   display: grid;
   gap: var(--space-4);
-  margin: var(--space-6) 0 0;
+  margin: 0;
 }
 
 .infoList div,
-.priceList div {
+.priceList div,
+.rentalCard dl div {
   display: grid;
   grid-template-columns: 120px 1fr;
   align-items: center;
@@ -99,89 +108,166 @@
 }
 
 .infoList dt,
-.priceList dt {
+.priceList dt,
+.rentalCard dt {
   color: var(--color-text);
   font-weight: 700;
 }
 
 .infoList dd,
-.priceList dd {
+.priceList dd,
+.rentalCard dd {
   margin: 0;
   color: var(--color-text);
+}
+
+.statusChip {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-primary);
+  font-weight: 700;
 }
 
 .summaryPanel {
-  display: grid;
-  gap: var(--space-4);
-  padding: var(--space-6);
+  overflow: hidden;
 }
 
-.totalRow {
-  border-top: 1px solid var(--color-border);
-  padding-top: var(--space-4);
-  font-weight: 700;
-}
-
-.agreement {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  color: var(--color-text);
-  font-weight: 700;
-}
-
-.actionMessage {
-  margin: 0;
-  color: var(--color-muted);
-  font-weight: 700;
-}
-
-.paymentPanel,
-.policyPanel {
-  margin-top: var(--space-8);
-  padding: var(--space-8);
-}
-
-.optionGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-6);
-  margin-top: var(--space-6);
-}
-
-.optionCard {
-  display: grid;
-  gap: var(--space-4);
-  padding: var(--space-6);
-}
-
-.optionCard p {
-  margin: 0;
-  color: var(--color-text);
-  font-weight: 700;
-}
-
-.optionTitle {
+.summaryTop {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-}
-
-.optionTitle a,
-.optionTitle span {
-  color: var(--color-primary);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-6);
+  color: var(--color-text);
   font-weight: 700;
-  text-decoration: none;
 }
 
-.optionCard select,
-.optionCard input {
+.priceList {
+  padding: var(--space-8) var(--space-6);
+}
+
+.priceList div {
+  grid-template-columns: minmax(160px, 1fr) auto;
+}
+
+.priceList dt,
+.priceList dd {
+  white-space: nowrap;
+}
+
+.totalRow {
+  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  font-weight: 700;
+}
+
+.rentalInfoPanel {
+  margin-top: var(--space-8);
+}
+
+.rentalInfoPanel h2 {
+  margin-bottom: var(--space-6);
+}
+
+.rentalGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.rentalCard {
+  display: grid;
+  align-content: flex-start;
+  gap: var(--space-6);
+  min-height: 260px;
+  padding: var(--space-8);
+}
+
+.rentalCard dd {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.rentalCard p {
+  margin: 0;
+  color: var(--color-text);
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.rentalCard select,
+.rentalCard input {
   width: 100%;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--space-3);
   font: inherit;
+}
+
+.agreement {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  color: var(--color-text);
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.agreement input {
+  flex: 0 0 auto;
+  margin-top: var(--space-2);
+}
+
+.agreement span {
+  min-width: 0;
+}
+
+.checkoutPanel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  margin-top: var(--space-8);
+  padding: var(--space-8);
+}
+
+.checkoutPanel span {
+  display: block;
+  color: var(--color-text);
+  font-weight: 700;
+  margin-bottom: var(--space-3);
+}
+
+.checkoutPanel strong {
+  color: var(--color-text);
+  font-size: 2rem;
+}
+
+.checkoutActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.checkoutActions :global(.button) {
+  min-width: 180px;
+  min-height: 48px;
+}
+
+.actionMessage {
+  margin: var(--space-4) 0 0;
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.policyPanel {
+  margin-top: var(--space-8);
+  padding: var(--space-8);
 }
 
 .policyPanel ul {
@@ -195,14 +281,15 @@
 
 @media (max-width: 720px) {
   .header,
-  .optionTitle {
+  .checkoutPanel,
+  .checkoutActions {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .layout,
+  .heroLayout,
   .bookPanel,
-  .optionGrid {
+  .rentalGrid {
     grid-template-columns: 1fr;
   }
 
