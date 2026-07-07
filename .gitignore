@@ -1,4 +1,4 @@
-﻿# Editor directories and files
+# Editor directories and files
 .idea/
 *.iml
 *.iws
@@ -7,4 +7,3 @@ out/
 
 # Claude Code agent config
 .claude/
-

@@ -205,6 +205,11 @@ export type BookCard = {
   favoriteYn: boolean;
 };
 
+export type Category = {
+  categoryId: number;
+  name: string;
+};
+
 export type FavoriteSort = 'recent' | 'title';
 
 export type FavoriteBooksQuery = {

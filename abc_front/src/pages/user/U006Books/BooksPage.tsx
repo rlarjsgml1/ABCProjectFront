@@ -1,35 +1,187 @@
-import { useEffect, useState } from 'react';
-import { getBooks } from '../../../api/bookApi';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { getBooks, getCategories, type BookListQuery } from '../../../api/bookApi';
 import { EmptyState } from '../../../components/common/EmptyState';
-import type { BookCard } from '../../../types/api';
+import type { BookCard, Category, PageResponse } from '../../../types/api';
+import '../../../styles/books.css';
 
-function formatRentalPrice(price: number) {
-  return price > 0 ? `${price.toLocaleString('ko-KR')}원` : '무료';
+const PAGE_SIZE = 15;
+
+const fallbackCategories: Category[] = [
+  { categoryId: 1, name: '소설' },
+  { categoryId: 2, name: '경제 / 경영' },
+  { categoryId: 3, name: '인문 / 사회 / 역사' },
+  { categoryId: 4, name: '컴퓨터 / IT' },
+  { categoryId: 5, name: '자기계발' },
+  { categoryId: 6, name: '에세이 / 시' },
+  { categoryId: 7, name: '자연 / 환경' },
+  { categoryId: 8, name: '전공서적' },
+  { categoryId: 9, name: '취미 / 실용 / 스포츠' },
+  { categoryId: 10, name: '취업 / 수험서' },
+];
+
+const sortOptions = [
+  { label: '인기순', value: 'popular' },
+  { label: '최신순', value: 'latest' },
+  { label: '제목순', value: 'title' },
+  { label: '평점순', value: 'rating' },
+  { label: '리뷰순', value: 'reviews' },
+];
+
+const fallbackBooks: BookCard[] = Array.from({ length: 70 }, (_, index) => {
+  const category = fallbackCategories[index % fallbackCategories.length];
+  const isFree = index % 3 !== 1;
+
+  return {
+    bookId: index + 1,
+    title: `책 제목${index + 1}`,
+    coverImageUrl: '',
+    authors: [`저자${index + 1}`],
+    publisherName: 'ABC 출판',
+    rentalType: isFree ? 'FREE' : 'PAID',
+    rentalPrice: isFree ? 0 : 3000,
+    averageRating: 3.5 + ((index % 15) / 10),
+    reviewCount: 70 - index,
+    favoriteYn: false,
+    categoryId: category.categoryId,
+    categoryName: category.name,
+    availableYn: index % 6 !== 0,
+  } as BookCard & { categoryId: number; categoryName: string; availableYn: boolean };
+});
+
+function getBookCategoryId(book: BookCard) {
+  return (book as BookCard & { categoryId?: number }).categoryId;
 }
 
-function formatRating(rating: number) {
-  return rating.toFixed(1);
+function getBookCategoryName(book: BookCard) {
+  return (book as BookCard & { categoryName?: string }).categoryName;
+}
+
+function isBookAvailable(book: BookCard) {
+  return (book as BookCard & { availableYn?: boolean }).availableYn !== false;
+}
+
+function formatRentalType(book: BookCard) {
+  if (book.rentalType === 'FREE' || book.rentalPrice === 0) return '무료';
+  return '유료';
+}
+
+function getFallbackPage(query: BookListQuery, page: number): PageResponse<BookCard> {
+  let content = [...fallbackBooks];
+
+  if (query.categoryId) {
+    content = content.filter((book) => getBookCategoryId(book) === query.categoryId);
+  }
+
+  if (query.category) {
+    content = content.filter((book) => getBookCategoryName(book) === query.category);
+  }
+
+  if (query.rentalType) {
+    content = content.filter((book) => book.rentalType === query.rentalType);
+  }
+
+  if (query.status === 'AVAILABLE') {
+    content = content.filter(isBookAvailable);
+  }
+
+  if (query.sort === 'latest') {
+    content.sort((a, b) => b.bookId - a.bookId);
+  }
+
+  if (query.sort === 'title') {
+    content.sort((a, b) => a.title.localeCompare(b.title, 'ko-KR'));
+  }
+
+  if (query.sort === 'rating') {
+    content.sort((a, b) => b.averageRating - a.averageRating);
+  }
+
+  if (query.sort === 'reviews' || query.sort === 'popular') {
+    content.sort((a, b) => b.reviewCount - a.reviewCount);
+  }
+
+  const totalElements = content.length;
+  const totalPages = Math.max(1, Math.ceil(totalElements / PAGE_SIZE));
+  const start = page * PAGE_SIZE;
+
+  return {
+    content: content.slice(start, start + PAGE_SIZE),
+    page,
+    size: PAGE_SIZE,
+    totalElements,
+    totalPages,
+    last: page >= totalPages - 1,
+  };
 }
 
 export function BooksPage() {
-  const [book, setBook] = useState<BookCard | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [bookPage, setBookPage] = useState<PageResponse<BookCard>>(() => getFallbackPage({ sort: 'popular' }, 0));
+  const [categories, setCategories] = useState<Category[]>(fallbackCategories);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+
+  const currentPage = Number(searchParams.get('page') ?? '0');
+  const sort = searchParams.get('sort') ?? (searchParams.get('section') === 'best' ? 'popular' : 'popular');
+  const categoryId = searchParams.get('categoryId') ? Number(searchParams.get('categoryId')) : undefined;
+  const categoryName = searchParams.get('category') ?? undefined;
+  const rentalType = searchParams.get('rentalType') ?? undefined;
+  const availableOnly = searchParams.get('status') === 'AVAILABLE';
+
+  const query = useMemo<BookListQuery>(
+    () => ({
+      sort,
+      categoryId,
+      category: categoryName,
+      rentalType,
+      status: availableOnly ? 'AVAILABLE' : undefined,
+      section: searchParams.get('section') ?? undefined,
+    }),
+    [availableOnly, categoryId, categoryName, rentalType, searchParams, sort],
+  );
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadCategories() {
+      try {
+        const data = await getCategories();
+        if (!ignore && data.length) {
+          setCategories(data);
+        }
+      } catch {
+        if (!ignore) {
+          setCategories(fallbackCategories);
+        }
+      }
+    }
+
+    void loadCategories();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   useEffect(() => {
     let ignore = false;
 
     async function loadBooks() {
+      setIsLoading(true);
       try {
-        const data = await getBooks(0, 1);
+        const data = await getBooks(currentPage, PAGE_SIZE, query);
+        if (!data?.content) {
+          throw new Error('Invalid books response');
+        }
         if (!ignore) {
-          setBook(data.content[0] ?? null);
+          setBookPage(data);
           setErrorMessage('');
         }
       } catch {
         if (!ignore) {
-          setBook(null);
-          setErrorMessage('도서 목록을 불러오지 못했습니다. 잠시 후 다시 시도하세요.');
+          setBookPage(getFallbackPage(query, currentPage));
+          setErrorMessage('서버 데이터 연결 전까지 임시 도서가 표시됩니다.');
         }
       } finally {
         if (!ignore) {
@@ -43,48 +195,150 @@ export function BooksPage() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [currentPage, query]);
+
+  const featuredBooks = bookPage.content.slice(0, 3);
+  const totalPages = Math.max(1, bookPage.totalPages);
+  const pageNumbers = Array.from({ length: Math.min(totalPages, 5) }, (_, index) => index);
+
+  const updateFilter = (updates: Record<string, string | undefined>) => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('page');
+
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value) {
+        next.set(key, value);
+      } else {
+        next.delete(key);
+      }
+    });
+
+    setSearchParams(next);
+  };
+
+  const movePage = (page: number) => {
+    const nextPage = Math.min(Math.max(page, 0), totalPages - 1);
+    const next = new URLSearchParams(searchParams);
+    next.set('page', String(nextPage));
+    setSearchParams(next);
+  };
 
   return (
-    <section className="page-section">
-      <div className="section-heading-row">
-        <div>
-          <h1>도서 목록</h1>
+    <div className="books-page">
+      <section className="books-featured" aria-label="도서 추천">
+        <button className="books-round-button" type="button" aria-label="이전 추천 도서">
+          {'<'}
+        </button>
+        <div className="books-featured-row">
+          {featuredBooks.map((book) => (
+            <Link className="books-featured-card" to={`/books/${book.bookId}`} key={book.bookId}>
+              {book.coverImageUrl ? <img src={book.coverImageUrl} alt="" /> : <span />}
+              <strong>{book.title}</strong>
+            </Link>
+          ))}
         </div>
-        <span>최신 도서</span>
-      </div>
-      <p>현재 등록된 도서 중 하나를 API에서 불러와 표시합니다.</p>
+        <button className="books-round-button" type="button" aria-label="다음 추천 도서">
+          {'>'}
+        </button>
+      </section>
 
-      {isLoading ? <div className="status-banner">도서 목록을 불러오는 중입니다.</div> : null}
-      {errorMessage ? <div className="status-banner status-banner-error">{errorMessage}</div> : null}
-      {!isLoading && !errorMessage && !book ? (
-        <EmptyState title="표시할 도서가 없습니다." description="등록된 도서가 생기면 이곳에 표시됩니다." />
-      ) : null}
+      <section className="books-content">
+        <aside className="books-filter" aria-label="도서 필터">
+          <div className="books-filter-heading">
+            <h2>정렬</h2>
+            <button type="button" onClick={() => setSearchParams({})}>
+              초기화
+            </button>
+          </div>
 
-      {book ? (
-        <div className="library-preview-list" aria-label="도서 목록">
-          <article className="library-preview-item">
-            <p className="eyebrow">BOOK #{book.bookId}</p>
-            <h2>{book.title}</h2>
-            <p>저자: {book.authors.join(', ')}</p>
-            <p>출판사: {book.publisherName}</p>
-            <div className="count-card-grid" aria-label="대여와 리뷰 요약">
-              <div className="count-card">
-                <strong>{book.rentalType}</strong>
-                <span>대여 유형</span>
-              </div>
-              <div className="count-card">
-                <strong>{formatRentalPrice(book.rentalPrice)}</strong>
-                <span>대여 가격</span>
-              </div>
-              <div className="count-card">
-                <strong>{formatRating(book.averageRating)}</strong>
-                <span>평점 · 리뷰 {book.reviewCount}개</span>
-              </div>
+          <div className="books-filter-list">
+            {sortOptions.map((option) => (
+              <button className={sort === option.value ? 'is-active' : ''} type="button" onClick={() => updateFilter({ sort: option.value })} key={option.value}>
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="books-filter-group">
+            <h2>카테고리</h2>
+            <button className={!categoryId && !categoryName ? 'is-active' : ''} type="button" onClick={() => updateFilter({ categoryId: undefined, category: undefined })}>
+              전체
+            </button>
+            {categories.map((category) => (
+              <button
+                className={categoryId === category.categoryId || categoryName === category.name ? 'is-active' : ''}
+                type="button"
+                onClick={() => updateFilter({ categoryId: String(category.categoryId), category: undefined })}
+                key={category.categoryId}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
+
+          <div className="books-filter-group">
+            <h2>무료 / 유료 / 대여 가능</h2>
+            <label>
+              <input checked={rentalType === 'FREE'} type="checkbox" onChange={(event) => updateFilter({ rentalType: event.target.checked ? 'FREE' : undefined })} />
+              무료
+            </label>
+            <label>
+              <input checked={rentalType === 'PAID'} type="checkbox" onChange={(event) => updateFilter({ rentalType: event.target.checked ? 'PAID' : undefined })} />
+              유료
+            </label>
+            <label>
+              <input checked={availableOnly} type="checkbox" onChange={(event) => updateFilter({ status: event.target.checked ? 'AVAILABLE' : undefined })} />
+              대여 가능
+            </label>
+          </div>
+        </aside>
+
+        <div className="books-result">
+          <div className="books-result-heading">
+            <h1>전체 {bookPage.totalElements.toLocaleString('ko-KR')}건</h1>
+            <div className="books-type-tabs" aria-label="대여 유형 빠른 필터">
+              <button className={!rentalType ? 'is-active' : ''} type="button" onClick={() => updateFilter({ rentalType: undefined })}>
+                전체
+              </button>
+              <button className={rentalType === 'FREE' ? 'is-active' : ''} type="button" onClick={() => updateFilter({ rentalType: 'FREE' })}>
+                무료
+              </button>
+              <button className={rentalType === 'PAID' ? 'is-active' : ''} type="button" onClick={() => updateFilter({ rentalType: 'PAID' })}>
+                유료
+              </button>
             </div>
-          </article>
+          </div>
+
+          {errorMessage ? <div className="status-banner">{errorMessage}</div> : null}
+          {isLoading ? <div className="status-banner">도서 목록을 불러오는 중입니다.</div> : null}
+
+          {!isLoading && !bookPage.content.length ? <EmptyState title="표시할 도서가 없습니다." description="필터를 바꾸거나 전체 도서를 확인해보세요." /> : null}
+
+          <div className="books-grid" aria-label="도서 목록">
+            {bookPage.content.map((book) => (
+              <Link className="books-card" to={`/books/${book.bookId}`} key={book.bookId}>
+                {book.coverImageUrl ? <img src={book.coverImageUrl} alt="" /> : <span />}
+                <strong>{book.title}</strong>
+                <small>{formatRentalType(book)}</small>
+              </Link>
+            ))}
+          </div>
+
+          <div className="books-pagination" aria-label="페이지 이동">
+            <button type="button" onClick={() => movePage(currentPage - 1)} disabled={currentPage <= 0}>
+              {'<'}
+            </button>
+            {pageNumbers.map((page) => (
+              <button className={currentPage === page ? 'is-active' : ''} type="button" onClick={() => movePage(page)} key={page}>
+                {page + 1}
+              </button>
+            ))}
+            <button type="button" onClick={() => movePage(currentPage + 1)} disabled={currentPage >= totalPages - 1}>
+              {'>'}
+            </button>
+          </div>
         </div>
-      ) : null}
-    </section>
+      </section>
+    </div>
   );
 }
