@@ -79,9 +79,3 @@ export async function getBookDetail(bookId: number) {
 
   return response.data.data;
 }
-
-export async function getBookDetail(bookId: number) {
-  const response = await apiClient.get(`/books/${bookId}`);
-
-  return response.data.data;
-}

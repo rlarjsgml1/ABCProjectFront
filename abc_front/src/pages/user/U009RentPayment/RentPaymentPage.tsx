@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { getBookDetail } from '../../../api/bookApi';
 import { getMyCoupons, getMyPoints } from '../../../api/pointsCouponsApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
