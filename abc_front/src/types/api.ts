@@ -276,14 +276,15 @@ export type RecentBooksQuery = {
   limit?: number;
 };
 
+// 필드명은 RecentBookResponse.java 기준.
 export type RecentBookItem = {
   rentalId: number;
   bookId: number;
   title: string;
   coverImageUrl: string;
   currentPage: number;
-  totalPage: number;
-  progressPercent: number;
+  totalPages: number;
+  progressRate: number;
   lastReadAt: string;
 };
 
@@ -295,16 +296,19 @@ export type PaymentHistoryQuery = {
   to?: string;
 };
 
+// 필드명은 MyPaymentSummaryResponse.java 기준.
 export type PaymentHistoryItem = {
   paymentId: number;
   bookId?: number;
-  bookTitle: string;
+  title: string;
+  coverImageUrl?: string;
   rentalId?: number;
   originalAmount: number;
   couponDiscountAmount: number;
   pointUsedAmount: number;
-  finalAmount: number;
-  status: string;
+  amount: number;
+  paymentMethod?: string;
+  paymentStatus: string;
   paidAt: string;
 };
 
@@ -398,3 +402,61 @@ export type BookRequestHistoryItem = {
 };
 
 export type BookRequestHistoryPage = PageResponse<BookRequestHistoryItem>;
+
+// API-RENTAL-003 (U-010 내 대여 현황). 필드명은 MyRentalSummaryResponse.java 기준.
+export type RentalStatus = 'READY' | 'READING' | 'OWNED';
+
+export type MyRentalsQuery = {
+  status?: RentalStatus;
+  page?: number;
+  size?: number;
+};
+
+export type MyRentalItem = {
+  rentalId: number;
+  bookId: number;
+  title: string;
+  coverImageUrl: string;
+  rentalStatus: RentalStatus;
+  rentalEndAt: string;
+  currentPage: number;
+  totalPages: number;
+  progressRate: number;
+};
+
+export type MyRentalsPage = PageResponse<MyRentalItem>;
+
+// API-VIEWER-001~005 (U-011 전자책 뷰어). 필드명은 ViewerPageResponse.java 등 기준.
+export type ViewerPageData = {
+  title: string;
+  pageContent: string;
+  totalPages: number;
+  progressRate: number;
+  bookmarkYn: boolean;
+};
+
+export type ProgressUpdateRequest = {
+  currentPage: number;
+  action?: string;
+};
+
+export type ProgressResult = {
+  progressId: number;
+  currentPage: number;
+  progressRate: number;
+  completedYn: boolean;
+};
+
+export type BookmarkItem = {
+  bookmarkId: number;
+  pageNo: number;
+  createdAt: string;
+};
+
+export type BookmarkCreateRequest = {
+  pageNo: number;
+};
+
+export type BookmarkDeleteResult = {
+  deleted: boolean;
+};

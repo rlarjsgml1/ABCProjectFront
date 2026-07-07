@@ -38,6 +38,8 @@ import { PaymentsPage } from '../pages/user/U018Payments/PaymentsPage';
 import { ReportsPage } from '../pages/user/U021Reports/ReportsPage';
 import { BookRequestPage } from '../pages/user/U022BookRequest/BookRequestPage';
 import { BookRequestHistoryPage } from '../pages/user/U023BookRequestHistory/BookRequestHistoryPage';
+import { MyRentalsPage } from '../pages/user/U010MyRentals/MyRentalsPage';
+import { ViewerPage } from '../pages/user/U011Viewer/ViewerPage';
 import { RentPaymentPage } from '../pages/user/U009RentPayment/RentPaymentPage';
 import { PaymentCompletePage } from '../pages/user/U030PaymentComplete/PaymentCompletePage';
 
@@ -159,7 +161,23 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      {
+        path: '/me/rentals',
+        element: (
+          <ProtectedRoute>
+            <MyRentalsPage />
+          </ProtectedRoute>
+        ),
+      },
     ],
+  },
+  {
+    path: '/rentals/:rentalId/read',
+    element: (
+      <ProtectedRoute>
+        <ViewerPage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: '/admin',

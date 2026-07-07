@@ -131,20 +131,23 @@ export function RecentBooksPage() {
                   </Link>
 
                   <p className="recent-book-progress-text">
-                    {book.currentPage} / {book.totalPage} 페이지 ({formatProgress(book.currentPage, book.totalPage)})
+                    {book.currentPage} / {book.totalPages} 페이지 ({formatProgress(book.currentPage, book.totalPages)})
                   </p>
 
                   <div className="recent-book-progress-track">
                     <span
                       className="recent-book-progress-fill"
-                      style={{ width: formatProgress(book.currentPage, book.totalPage) }}
+                      style={{ width: formatProgress(book.currentPage, book.totalPages) }}
                     />
                   </div>
 
                   <p className="recent-book-last-read">마지막 읽은 시각 {formatLastReadAt(book.lastReadAt)}</p>
                 </div>
 
-                <Link to={`/books/${book.bookId}`} className="button button-primary recent-book-continue-button">
+                <Link
+                  to={`/rentals/${book.rentalId}/read?page=${book.currentPage > 0 ? book.currentPage : 1}`}
+                  className="button button-primary recent-book-continue-button"
+                >
                   이어보기
                 </Link>
               </article>
