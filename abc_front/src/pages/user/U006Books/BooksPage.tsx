@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { getBooks, getCategories, type BookListQuery } from '../../../api/bookApi';
 import { EmptyState } from '../../../components/common/EmptyState';
@@ -48,6 +48,30 @@ const fallbackBooks: BookCard[] = Array.from({ length: 70 }, (_, index) => {
     availableYn: index % 6 !== 0,
   } as BookCard & { categoryId: number; categoryName: string; availableYn: boolean };
 });
+
+const weeklyArrivalBooks: BookCard[] = [
+  '싯다르타',
+  '나의 첫 번째 부동산 교과서',
+  '해커스 토익 기출 VOCA',
+  '유럽 도시 기행',
+  '부의 갈림길',
+  '품격 있는 대화를 위한 지식 브리핑',
+  '니체의 초월자',
+  '별별한국사 심화',
+  '안녕이라 그랬어',
+  '토익 정기시험 기출문제집',
+].map((title, index) => ({
+  bookId: index + 201,
+  title,
+  coverImageUrl: '',
+  authors: [index % 2 === 0 ? '김하늘' : '이서윤'],
+  publisherName: index % 2 === 0 ? 'ABC 출판' : '미래출판',
+  rentalType: index % 3 === 0 ? 'PAID' : 'FREE',
+  rentalPrice: index % 3 === 0 ? 3000 : 0,
+  averageRating: 4.7 - index * 0.15,
+  reviewCount: 42 - index,
+  favoriteYn: false,
+})) as BookCard[];
 
 function getBookCategoryId(book: BookCard) {
   return (book as BookCard & { categoryId?: number }).categoryId;
@@ -118,6 +142,8 @@ function getFallbackPage(query: BookListQuery, page: number): PageResponse<BookC
 export function BooksPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [bookPage, setBookPage] = useState<PageResponse<BookCard>>(() => getFallbackPage({ sort: 'popular' }, 0));
+  const [featuredBooks, setFeaturedBooks] = useState<BookCard[]>(weeklyArrivalBooks);
+  const [featuredIndex, setFeaturedIndex] = useState(0);
   const [categories, setCategories] = useState<Category[]>(fallbackCategories);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -141,6 +167,28 @@ export function BooksPage() {
     [availableOnly, categoryId, categoryName, rentalType, searchParams, sort],
   );
 
+  const getFeaturedOffset = (index: number) => {
+    const length = featuredBooks.length;
+    let offset = index - featuredIndex;
+
+    if (offset > length / 2) offset -= length;
+    if (offset < length / -2) offset += length;
+
+    return offset;
+  };
+
+  const moveFeatured = (direction: 'next' | 'prev') => {
+    if (featuredBooks.length <= 1) return;
+
+    setFeaturedIndex((currentIndex) => {
+      if (direction === 'prev') {
+        return currentIndex === 0 ? featuredBooks.length - 1 : currentIndex - 1;
+      }
+
+      return (currentIndex + 1) % featuredBooks.length;
+    });
+  };
+
   useEffect(() => {
     let ignore = false;
 
@@ -163,6 +211,37 @@ export function BooksPage() {
       ignore = true;
     };
   }, []);
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadFeaturedBooks() {
+      try {
+        const data = await getBooks(0, 10, { sort: 'popular' });
+        if (!ignore && data.content.length) {
+          setFeaturedBooks(data.content);
+        }
+      } catch {
+        if (!ignore) {
+          setFeaturedBooks(weeklyArrivalBooks);
+        }
+      }
+    }
+
+    void loadFeaturedBooks();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const timerId = window.setInterval(() => {
+      moveFeatured('next');
+    }, 5000);
+
+    return () => window.clearInterval(timerId);
+  }, [featuredBooks.length, featuredIndex]);
 
   useEffect(() => {
     let ignore = false;
@@ -197,7 +276,6 @@ export function BooksPage() {
     };
   }, [currentPage, query]);
 
-  const featuredBooks = bookPage.content.slice(0, 3);
   const totalPages = Math.max(1, bookPage.totalPages);
   const pageNumbers = Array.from({ length: Math.min(totalPages, 5) }, (_, index) => index);
 
@@ -225,21 +303,55 @@ export function BooksPage() {
 
   return (
     <div className="books-page">
-      <section className="books-featured" aria-label="도서 추천">
-        <button className="books-round-button" type="button" aria-label="이전 추천 도서">
-          {'<'}
-        </button>
-        <div className="books-featured-row">
-          {featuredBooks.map((book) => (
-            <Link className="books-featured-card" to={`/books/${book.bookId}`} key={book.bookId}>
-              {book.coverImageUrl ? <img src={book.coverImageUrl} alt="" /> : <span />}
-              <strong>{book.title}</strong>
-            </Link>
-          ))}
+      <section className="books-featured books-recommend-section" aria-label="이번 주 입고 도서">
+        <div className="books-recommend-heading">
+          <div>
+            <h2>이번 주 입고 도서</h2>
+            <p>새로 들어온 책을 ABC에서 먼저 만나보세요.</p>
+          </div>
         </div>
-        <button className="books-round-button" type="button" aria-label="다음 추천 도서">
-          {'>'}
-        </button>
+
+        <div className="books-recommend-carousel">
+          <button
+            className="books-round-button"
+            type="button"
+            onClick={() => moveFeatured('prev')}
+            aria-label="이전 입고 도서"
+          >
+            {'<'}
+          </button>
+
+          <div className="books-recommend-viewport">
+            <div className="books-recommend-track">
+              {featuredBooks.map((book, index) => {
+                const offset = getFeaturedOffset(index);
+                const isVisible = Math.abs(offset) <= 2;
+
+                return (
+                <Link
+                  className={`books-recommend-card ${offset === 0 ? 'is-featured' : ''} ${isVisible ? '' : 'is-hidden'}`}
+                  style={{ '--book-offset': offset } as CSSProperties}
+                  to={`/books/${book.bookId}`}
+                  key={book.bookId}
+                >
+                  {book.coverImageUrl ? <img src={book.coverImageUrl} alt="" /> : <span>책 표지</span>}
+                  <strong>{book.title}</strong>
+                  <small>{book.authors.join(', ') || formatRentalType(book)}</small>
+                </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          <button
+            className="books-round-button"
+            type="button"
+            onClick={() => moveFeatured('next')}
+            aria-label="다음 입고 도서"
+          >
+            {'>'}
+          </button>
+        </div>
       </section>
 
       <section className="books-content">
@@ -342,3 +454,5 @@ export function BooksPage() {
     </div>
   );
 }
+
+
