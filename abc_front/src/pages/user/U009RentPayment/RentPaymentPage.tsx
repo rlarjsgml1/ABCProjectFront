@@ -162,6 +162,13 @@ export function RentPaymentPage() {
   const finalPaymentAmount = Math.max(basePaymentAmount - couponDiscountAmount - pointDiscountAmount, 0);
   const paymentAmountLabel = formatWon(finalPaymentAmount);
   const selectedCouponName = usableCoupons.find((coupon) => String(coupon.couponId ?? coupon.id) === appliedCouponId);
+  const hasAppliedPoint = appliedPointAmount > 0;
+  const getMaxUsablePointAmount = (couponId: string) => {
+    const couponDiscount = isFreeBook ? 0 : Math.min(getCouponDiscount(couponId), basePaymentAmount);
+    const payableAmount = Math.max(basePaymentAmount - couponDiscount, 0);
+
+    return Math.min(pointBalance ?? 0, payableAmount);
+  };
 
   function handleCancel() {
     navigate(`/books/${bookId}`);
@@ -175,6 +182,19 @@ export function RentPaymentPage() {
 
     setAppliedCouponId(selectedCouponId);
     setCouponMessage('쿠폰 1,000원이 적용되었습니다.');
+
+    const maxPointAmount = getMaxUsablePointAmount(selectedCouponId);
+    if (appliedPointAmount > maxPointAmount) {
+      setAppliedPointAmount(maxPointAmount);
+      setPointInput(String(maxPointAmount));
+      setPointMessage(`쿠폰 적용으로 사용 포인트가 ${maxPointAmount.toLocaleString('ko-KR')}포인트로 조정되었습니다.`);
+    }
+  }
+
+  function handleClearCoupon() {
+    setSelectedCouponId('');
+    setAppliedCouponId('');
+    setCouponMessage('쿠폰 사용이 취소되었습니다.');
   }
 
   function handleUsePoint() {
@@ -197,8 +217,26 @@ export function RentPaymentPage() {
       return;
     }
 
-    setAppliedPointAmount(pointAmount);
-    setPointMessage(`${pointAmount.toLocaleString('ko-KR')}포인트가 적용되었습니다.`);
+    const maxPointAmount = getMaxUsablePointAmount(appliedCouponId);
+    const usablePointAmount = Math.min(pointAmount, maxPointAmount);
+
+    setAppliedPointAmount(usablePointAmount);
+    setPointInput(String(usablePointAmount));
+    setPointMessage(`${usablePointAmount.toLocaleString('ko-KR')}포인트가 적용되었습니다.`);
+  }
+
+  function handleUseAllPoints() {
+    const maxPointAmount = getMaxUsablePointAmount(appliedCouponId);
+
+    setPointInput(String(maxPointAmount));
+    setAppliedPointAmount(maxPointAmount);
+    setPointMessage(`${maxPointAmount.toLocaleString('ko-KR')}포인트가 적용되었습니다.`);
+  }
+
+  function handleClearPoint() {
+    setPointInput('');
+    setAppliedPointAmount(0);
+    setPointMessage('포인트 사용이 취소되었습니다.');
   }
 
   function handleConfirmRental() {
@@ -335,7 +373,7 @@ export function RentPaymentPage() {
                 <dt>쿠폰 할인</dt>
                 <dd>
                   <div className={styles.paymentField}>
-                    <div className={styles.paymentControl}>
+                    <div className={`${styles.paymentControl} ${styles.couponControl}`}>
                       <select value={selectedCouponId} onChange={(event) => setSelectedCouponId(event.target.value)}>
                         <option value="">쿠폰 선택</option>
                         {usableCoupons.map((coupon, index) => (
@@ -347,6 +385,9 @@ export function RentPaymentPage() {
                       <button className="button button-secondary" type="button" onClick={handleApplyCoupon}>
                         쿠폰 적용
                       </button>
+                      <button className="button button-secondary" type="button" onClick={handleClearCoupon}>
+                        사용 안함
+                      </button>
                     </div>
                     {couponMessage && <p className={styles.fieldMessage}>{couponMessage}</p>}
                   </div>
@@ -357,10 +398,13 @@ export function RentPaymentPage() {
                 <dd>
                   <div className={styles.paymentField}>
                     <span className={styles.pointBalance}>보유 {formatWon(pointBalance)}</span>
-                    <div className={styles.paymentControl}>
+                    <div className={`${styles.paymentControl} ${styles.pointControl}`}>
                       <input value={pointInput} onChange={(event) => setPointInput(event.target.value)} inputMode="numeric" placeholder="사용 포인트" />
-                      <button className="button button-secondary" type="button" onClick={handleUsePoint}>
-                        포인트 사용
+                      <button className="button button-secondary" type="button" onClick={handleUseAllPoints}>
+                        전액 사용
+                      </button>
+                      <button className="button button-secondary" type="button" onClick={hasAppliedPoint ? handleClearPoint : handleUsePoint}>
+                        {hasAppliedPoint ? '포인트 사용 취소' : '포인트 사용'}
                       </button>
                     </div>
                     {pointMessage && <p className={styles.fieldMessage}>{pointMessage}</p>}

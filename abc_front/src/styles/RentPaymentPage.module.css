@@ -228,11 +228,37 @@
   align-items: center;
 }
 
+.rentalCard .pointControl {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.rentalCard .couponControl {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.rentalCard .couponControl select {
+  grid-column: 1 / -1;
+}
+
+.rentalCard .pointControl input {
+  grid-column: 1 / -1;
+}
+
 .paymentControl :global(.button) {
   min-height: 43px;
   padding-right: var(--space-3);
   padding-left: var(--space-3);
   white-space: nowrap;
+}
+
+.pointControl :global(.button) {
+  width: 100%;
+  min-width: 0;
+}
+
+.couponControl :global(.button) {
+  width: 100%;
+  min-width: 0;
 }
 
 .pointBalance {
