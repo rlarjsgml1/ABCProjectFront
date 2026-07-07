@@ -24,6 +24,44 @@ export type PageResponse<T> = {
   last: boolean;
 };
 
+export type SignupRequest = {
+  loginId: string;
+  password: string;
+  passwordConfirm: string;
+  name: string;
+  email: string;
+  phone?: string;
+  birthDate: string;
+  gender?: string;
+};
+
+export type SignupResponse = {
+  memberId: number;
+  loginId: string;
+  name: string;
+  role: string;
+};
+
+export type LoginRequest = {
+  loginId: string;
+  password: string;
+};
+
+export type LoginMember = {
+  memberId: number;
+  loginId: string;
+  name: string;
+  role: string;
+};
+
+export type LoginResponse = {
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
+  member: LoginMember;
+};
+
+
 export type PointHistoryQuery = {
   pointType?: string;
   page?: number;
@@ -229,3 +267,106 @@ export type UserPasswordChangeRequest = {
   newPassword: string;
   newPasswordConfirm: string;
 };
+
+// API-READING-001 (U-028 최근 읽은 책)
+export type RecentBooksQuery = {
+  limit?: number;
+};
+
+export type RecentBookItem = {
+  rentalId: number;
+  bookId: number;
+  title: string;
+  coverImageUrl: string;
+  currentPage: number;
+  totalPage: number;
+  progressPercent: number;
+  lastReadAt: string;
+};
+
+// API-PAYMENT-003 (U-018 결제 내역)
+export type PaymentHistoryQuery = {
+  page?: number;
+  size?: number;
+  from?: string;
+  to?: string;
+};
+
+export type PaymentHistoryItem = {
+  paymentId: number;
+  bookId?: number;
+  bookTitle: string;
+  rentalId?: number;
+  originalAmount: number;
+  couponDiscountAmount: number;
+  pointUsedAmount: number;
+  finalAmount: number;
+  status: string;
+  paidAt: string;
+};
+
+export type PaymentHistoryPage = PageResponse<PaymentHistoryItem>;
+
+// API-REPORT-004 (U-021 내 신고 내역)
+export type ReportTargetType = 'BOOK' | 'REVIEW';
+export type ReportStatus = 'WAITING' | 'PROCESSING' | 'DONE' | 'REJECTED';
+
+export type ReportHistoryQuery = {
+  targetType?: ReportTargetType;
+  status?: ReportStatus;
+  page?: number;
+  size?: number;
+};
+
+export type ReportHistoryItem = {
+  reportId: number;
+  targetType: ReportTargetType;
+  targetTitle?: string;
+  reportType: string;
+  status: ReportStatus;
+  createdAt: string;
+  processedAt?: string;
+  content?: string;
+  resultMessage?: string;
+};
+
+export type ReportHistoryPage = PageResponse<ReportHistoryItem>;
+
+// API-REQUEST-001 (U-022 희망도서 신청)
+export type BookRequestCreateRequest = {
+  title: string;
+  author: string;
+  publisher: string;
+  reason: string;
+};
+
+export type BookRequestCreateResponse = {
+  requestId: number;
+  requestCandidateId: number;
+  requestStatus: string;
+  requestCount: number;
+};
+
+// API-REQUEST-002 (U-023 희망도서 신청 내역)
+export type BookRequestStatus = 'REQUESTED' | 'IN_REVIEW' | 'APPROVED' | 'REJECTED';
+
+export type BookRequestHistoryQuery = {
+  status?: BookRequestStatus;
+  page?: number;
+  size?: number;
+};
+
+export type BookRequestHistoryItem = {
+  requestId: number;
+  title: string;
+  author: string;
+  publisher: string;
+  reason?: string;
+  createdAt: string;
+  status: BookRequestStatus;
+  requestCount: number;
+  approvedBookId?: number;
+  rejectReason?: string;
+};
+
+export type BookRequestHistoryPage = PageResponse<BookRequestHistoryItem>;

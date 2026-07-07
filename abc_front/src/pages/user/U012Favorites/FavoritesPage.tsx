@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { deleteMyFavorite, getMyFavorites } from '../../../api/favoritesApi';
-import { getApiErrorMessage } from '../../../api/profileApi';
-import type { FavoriteBookItem, FavoriteSort } from '../../../types/api';
+import { getApiErrorMessage, getMyProfile } from '../../../api/profileApi';
+import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
+import type { FavoriteBookItem, FavoriteSort, UserProfile } from '../../../types/api';
 
 const pageSize = 20;
 
@@ -39,11 +40,43 @@ function formatRegisteredDate(book: FavoriteBookItem) {
 }
 
 export function FavoritesPage() {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState('');
   const [favoriteBooks, setFavoriteBooks] = useState<FavoriteBookItem[]>([]);
   const [sort, setSort] = useState<FavoriteSort>('recent');
   const [isLoading, setIsLoading] = useState(true);
   const [isDeletingBookId, setIsDeletingBookId] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadProfile() {
+      try {
+        const data = await getMyProfile();
+        if (!ignore) {
+          setProfile(data);
+          setProfileError('');
+        }
+      } catch (error) {
+        if (!ignore) {
+          setProfile(null);
+          setProfileError(getApiErrorMessage(error));
+        }
+      } finally {
+        if (!ignore) {
+          setIsProfileLoading(false);
+        }
+      }
+    }
+
+    void loadProfile();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -94,77 +127,78 @@ export function FavoritesPage() {
   const isEmpty = !isLoading && favoriteBooks.length === 0;
 
   return (
-    <section className="page-section favorites-page">
-      <div className="favorites-title-row">
-        <div>
-          <p className="eyebrow">U-012</p>
-          <h1>즐겨찾기</h1>
+    <MyPageLayout profile={profile} isLoading={isProfileLoading} errorMessage={profileError} titleId="favorites-title">
+      <section className="page-section favorites-page">
+        <div className="favorites-title-row">
+          <div>
+            <h2 id="favorites-title">즐겨찾기</h2>
+          </div>
         </div>
-      </div>
 
-      <p className="favorites-description">
-        내가 즐겨찾기한 도서 목록을 확인할 수 있습니다.
-      </p>
+        <p className="favorites-description">
+          내가 즐겨찾기한 도서 목록을 확인할 수 있습니다.
+        </p>
 
-      <div className="favorites-header">
-        <strong>즐겨찾기 {favoriteBooks.length}권</strong>
+        <div className="favorites-header">
+          <strong>즐겨찾기 {favoriteBooks.length}권</strong>
 
-        <select className="favorites-sort" value={sort} onChange={(event) => setSort(event.target.value as FavoriteSort)}>
-          <option value="recent">최근 등록순</option>
-          <option value="title">제목순</option>
-        </select>
-      </div>
-
-      {errorMessage ? <div className="status-banner status-banner-error">{errorMessage}</div> : null}
-      {isLoading ? <div className="status-banner">즐겨찾기 목록을 불러오는 중입니다.</div> : null}
-
-      {isEmpty ? (
-        <div className="form-card favorites-empty">
-          <p>즐겨찾기한 도서가 없습니다.</p>
-
-          <Link to="/books" className="browse-button">
-            도서 둘러보기
-          </Link>
+          <select className="favorites-sort" value={sort} onChange={(event) => setSort(event.target.value as FavoriteSort)}>
+            <option value="recent">최근 등록순</option>
+            <option value="title">제목순</option>
+          </select>
         </div>
-      ) : null}
 
-      {!isLoading && favoriteBooks.length > 0 ? (
-        <div className="favorites-list">
-          {favoriteBooks.map((book) => (
-            <article key={book.bookId} className="favorite-card">
-              <Link to={`/books/${book.bookId}`} className="favorite-cover-link">
-                <img src={book.coverImageUrl} alt={`${book.title} 표지`} />
-              </Link>
+        {errorMessage ? <div className="status-banner status-banner-error">{errorMessage}</div> : null}
+        {isLoading ? <div className="status-banner">즐겨찾기 목록을 불러오는 중입니다.</div> : null}
 
-              <div className="favorite-info">
-                <Link to={`/books/${book.bookId}`} className="favorite-title">
-                  {book.title}
+        {isEmpty ? (
+          <div className="form-card favorites-empty">
+            <p>즐겨찾기한 도서가 없습니다.</p>
+
+            <Link to="/books" className="browse-button">
+              도서 둘러보기
+            </Link>
+          </div>
+        ) : null}
+
+        {!isLoading && favoriteBooks.length > 0 ? (
+          <div className="favorites-list">
+            {favoriteBooks.map((book) => (
+              <article key={book.bookId} className="favorite-card">
+                <Link to={`/books/${book.bookId}`} className="favorite-cover-link">
+                  <img className="book-cover-thumb" src={book.coverImageUrl} alt={`${book.title} 표지`} />
                 </Link>
 
-                <p className="favorite-meta">
-                  {formatAuthors(book.authors)} | {book.publisherName}
-                </p>
+                <div className="favorite-info">
+                  <Link to={`/books/${book.bookId}`} className="favorite-title">
+                    {book.title}
+                  </Link>
 
-                <p className="favorite-date">
-                  즐겨찾기 등록일 {formatRegisteredDate(book)}
-                </p>
-              </div>
+                  <p className="favorite-meta">
+                    {formatAuthors(book.authors)} | {book.publisherName}
+                  </p>
 
-              <span className="favorite-type">{formatRentalType(book.rentalType)}</span>
+                  <p className="favorite-date">
+                    즐겨찾기 등록일 {formatRegisteredDate(book)}
+                  </p>
+                </div>
 
-              <button
-                type="button"
-                className="favorite-heart"
-                aria-label={`${book.title} 즐겨찾기 해제`}
-                disabled={isDeletingBookId === book.bookId}
-                onClick={() => void handleDeleteFavorite(book.bookId)}
-              >
-                ♡
-              </button>
-            </article>
-          ))}
-        </div>
-      ) : null}
-    </section>
+                <span className="favorite-type">{formatRentalType(book.rentalType)}</span>
+
+                <button
+                  type="button"
+                  className="favorite-heart"
+                  aria-label={`${book.title} 즐겨찾기 해제`}
+                  disabled={isDeletingBookId === book.bookId}
+                  onClick={() => void handleDeleteFavorite(book.bookId)}
+                >
+                  ♡
+                </button>
+              </article>
+            ))}
+          </div>
+        ) : null}
+      </section>
+    </MyPageLayout>
   );
 }

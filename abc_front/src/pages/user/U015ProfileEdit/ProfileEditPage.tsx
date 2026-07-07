@@ -166,7 +166,6 @@ export function ProfileEditPage() {
         <section className="page-section profile-edit-form">
           <div className="section-heading-row">
             <div>
-              <p className="eyebrow">U-015 PROFILE EDIT</p>
               <h2 id="profile-edit-title">프로필 수정</h2>
             </div>
             <Button type="button" variant="secondary" onClick={() => navigate('/me')}>

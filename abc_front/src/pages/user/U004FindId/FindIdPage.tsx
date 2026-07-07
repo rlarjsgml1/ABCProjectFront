@@ -3,9 +3,7 @@ import { Button } from '../../../components/common/Button';
 export function FindIdPage() {
   return (
     <section className="page-section form-page">
-      <p className="eyebrow">U-004</p>
-
-     <h1 className="auth-page-title">아이디 찾기</h1>
+      <h1 className="auth-page-title">아이디 찾기</h1>
 
       <form className="form-card find-id-card">
         {/* 아이디 찾기 / 비밀번호 재설정 탭 메뉴 */}

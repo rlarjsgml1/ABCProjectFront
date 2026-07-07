@@ -327,7 +327,6 @@ export function PointsCouponsPage() {
       <section className="page-section points-coupons-panel">
         <div className="section-heading-row">
           <div>
-            <p className="eyebrow">U-017 BENEFITS</p>
             <h2 id="points-coupons-title">포인트/쿠폰 내역</h2>
           </div>
           <span>혜택 이용 현황</span>

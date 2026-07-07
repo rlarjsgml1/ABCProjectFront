@@ -1,1 +1,9 @@
+# Editor directories and files
 .idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Claude Code agent config
+.claude/

@@ -138,7 +138,6 @@ export function ReadingStatsPage() {
       <section className="page-section reading-statistics-page">
         <div className="section-heading-row reading-statistics-heading">
           <div>
-            <p className="eyebrow">U-026 READING STATISTICS</p>
             <h2 id="reading-stats-title">나의 독서 통계</h2>
           </div>
           <span>독서 흐름과 환경 기여 지표</span>
