@@ -1,0 +1,53 @@
+.search-page .books-result {
+  min-height: 720px;
+}
+
+.search-request-panel {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  min-height: 520px;
+  padding: var(--space-10) var(--space-6);
+  color: var(--color-text);
+  text-align: center;
+}
+
+.search-request-panel h2 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.35rem);
+  line-height: 1.35;
+}
+
+.search-request-panel p {
+  margin: 0 0 var(--space-8);
+  font-size: clamp(2rem, 4vw, 3.35rem);
+  line-height: 1.35;
+}
+
+.search-request-panel button {
+  min-width: 300px;
+  min-height: 72px;
+  border: 0;
+  border-radius: 999px;
+  color: #ffffff;
+  background: #003d2d;
+  cursor: pointer;
+  font-size: 1.85rem;
+  font-weight: 900;
+}
+
+.search-request-panel button:disabled {
+  color: rgba(255, 255, 255, 0.48);
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .search-request-panel {
+    min-height: 420px;
+  }
+
+  .search-request-panel button {
+    width: 100%;
+    min-width: 0;
+  }
+}

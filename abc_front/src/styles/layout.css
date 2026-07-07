@@ -1954,6 +1954,8 @@ a.count-card:focus-visible {
   --abc-header-muted: var(--color-muted);
   --abc-header-control: 40px;
   width: 100%;
+  position: relative;
+  z-index: 50;
   padding: var(--space-6) clamp(var(--space-6), 8vw, 150px) var(--space-8);
   background: var(--abc-header-surface);
 }
@@ -1977,6 +1979,7 @@ a.count-card:focus-visible {
 
 .abc-search {
   position: absolute;
+  z-index: 60;
   left: 50%;
   transform: translateX(-50%);
   display: grid;
@@ -1986,7 +1989,7 @@ a.count-card:focus-visible {
   height: 44px;
   border-radius: 999px;
   background: var(--color-surface-muted);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .abc-search-button {
@@ -2016,6 +2019,77 @@ a.count-card:focus-visible {
   background: transparent;
   color: var(--abc-header-ink);
   font-size: 1rem;
+}
+
+.abc-search-suggestions {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  left: 0;
+  z-index: 80;
+  overflow: hidden;
+  display: grid;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.22);
+}
+
+.abc-search-suggestions button {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  padding: 0 var(--space-6);
+  color: var(--color-text);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font-weight: 700;
+}
+
+.abc-search-suggestions button strong {
+  margin-right: var(--space-2);
+}
+
+.abc-search-suggestions button span {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.abc-search-suggestions button:hover,
+.abc-search-suggestions button:focus-visible {
+  background: var(--color-surface-muted);
+  outline: 0;
+}
+
+.abc-search-suggestions button:active {
+  font-weight: 900;
+}
+
+.abc-search-suggestions button:active span {
+  font-weight: 900;
+}
+
+.abc-search-no-result {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  min-height: 44px;
+  background: var(--color-surface-muted);
+}
+
+.abc-search-no-result span {
+  padding: 0 var(--space-6);
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.abc-search-no-result button {
+  width: auto;
+  height: 44px;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  white-space: nowrap;
 }
 
 .abc-actions {

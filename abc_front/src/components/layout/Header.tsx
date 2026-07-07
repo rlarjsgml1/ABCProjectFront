@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, MouseEvent, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AUTH_CHANGED_EVENT } from '../../api/authApi';
 
@@ -18,11 +18,18 @@ const navItems = [
     { to: '/notices', label: '공지사항' },
 ];
 
+const searchTypeOptions = [
+    { label: '제목에서 검색', value: 'TITLE' },
+    { label: '저자에서 검색', value: 'AUTHOR' },
+    { label: '출판사에서 검색', value: 'PUBLISHER' },
+];
+
 export function Header() {
     const navigate = useNavigate();
     const location = useLocation();
     const [keyword, setKeyword] = useState('');
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isSearchFocused, setIsSearchFocused] = useState(false);
 
     useEffect(() => {
         setIsLoggedIn(hasLoginSession());
@@ -44,7 +51,7 @@ export function Header() {
 
     const isActiveNav = (to: string) => {
         if (to === '/') return location.pathname === '/';
-        if (to === '/books') return location.pathname === '/books' && location.search === '';
+        if (to === '/books') return (location.pathname === '/books' && location.search === '') || location.pathname === '/search';
         return `${location.pathname}${location.search}` === to;
     };
 
@@ -53,6 +60,23 @@ export function Header() {
         const query = keyword.trim();
         if (!query) return;
         navigate(`/search?q=${encodeURIComponent(query)}`);
+        setIsSearchFocused(false);
+    };
+
+    const handleSuggestionClick = (event: MouseEvent<HTMLButtonElement>, searchType: string) => {
+        event.preventDefault();
+        const query = keyword.trim();
+        if (!query) return;
+        navigate(`/search?q=${encodeURIComponent(query)}&type=${searchType}`);
+        setIsSearchFocused(false);
+    };
+
+    const handleNoResultClick = (event: MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+        const query = keyword.trim();
+        if (!query) return;
+        navigate(`/search?q=${encodeURIComponent(query)}&request=1`);
+        setIsSearchFocused(false);
     };
 
     const handleLogout = () => {
@@ -74,7 +98,31 @@ export function Header() {
                             <path d="m16 16 4 4" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
                         </svg>
                     </button>
-                    <input className="abc-search-input" value={keyword} onChange={(event) => setKeyword(event.target.value)} aria-label="도서 검색" />
+                    <input
+                        className="abc-search-input"
+                        value={keyword}
+                        onChange={(event) => setKeyword(event.target.value)}
+                        onClick={() => setIsSearchFocused(true)}
+                        onFocus={() => setIsSearchFocused(true)}
+                        onBlur={() => window.setTimeout(() => setIsSearchFocused(false), 120)}
+                        aria-label="도서 검색"
+                    />
+                    {isSearchFocused && keyword.trim() ? (
+                        <div className="abc-search-suggestions">
+                            {searchTypeOptions.map((option) => (
+                                <button type="button" onMouseDown={(event) => handleSuggestionClick(event, option.value)} key={option.value}>
+                                    <strong>{keyword.trim()}</strong>
+                                    <span>{option.label}</span>
+                                </button>
+                            ))}
+                            <div className="abc-search-no-result">
+                                <span>검색 결과 없음</span>
+                                <button type="button" onMouseDown={handleNoResultClick}>
+                                    희망 도서 신청
+                                </button>
+                            </div>
+                        </div>
+                    ) : null}
                 </form>
 
                 <div className="abc-actions">

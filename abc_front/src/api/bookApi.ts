@@ -11,6 +11,11 @@ export type BookListQuery = {
   section?: string;
 };
 
+export type BookSearchQuery = BookListQuery & {
+  q: string;
+  searchType?: 'ALL' | 'TITLE' | 'AUTHOR' | 'PUBLISHER';
+};
+
 export async function getBooks(page = 0, size = 20, query: BookListQuery = {}) {
   const response = await apiClient.get<ApiResponse<PageResponse<BookCard>>>('/books', {
     params: { page, size, ...query },
@@ -69,6 +74,19 @@ export async function getCategories() {
   const data = response.data.data;
   if (!Array.isArray(data)) {
     throw new Error('Invalid categories response');
+  }
+
+  return data;
+}
+
+export async function searchBooks(page = 0, size = 20, query: BookSearchQuery) {
+  const response = await apiClient.get<ApiResponse<PageResponse<BookCard>>>('/books/search', {
+    params: { page, size, ...query },
+  });
+
+  const data = response.data.data;
+  if (!data?.content) {
+    throw new Error('Invalid search response');
   }
 
   return data;
