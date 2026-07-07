@@ -4,6 +4,10 @@ import { AUTH_CHANGED_EVENT } from '../../api/authApi';
 
 const authStorageKeys = ['accessToken', 'memberRole', 'memberId', 'loginId', 'memberName'];
 
+function hasLoginSession() {
+    return Boolean(localStorage.getItem('accessToken'));
+}
+
 const navItems = [
     { to: '/', label: 'HOME' },
     { to: '/books', label: '도서' },
@@ -21,12 +25,12 @@ export function Header() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     useEffect(() => {
-        setIsLoggedIn(Boolean(localStorage.getItem('accessToken')));
+        setIsLoggedIn(hasLoginSession());
     }, [location.pathname, location.search]);
 
     useEffect(() => {
         const syncAuthState = () => {
-            setIsLoggedIn(Boolean(localStorage.getItem('accessToken')));
+            setIsLoggedIn(hasLoginSession());
         };
 
         window.addEventListener('storage', syncAuthState);
@@ -53,7 +57,7 @@ export function Header() {
 
     const handleLogout = () => {
         authStorageKeys.forEach((key) => localStorage.removeItem(key));
-        setIsLoggedIn(false);
+        setIsLoggedIn(hasLoginSession());
         window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
         navigate('/');
     };

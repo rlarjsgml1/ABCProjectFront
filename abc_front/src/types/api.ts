@@ -104,6 +104,9 @@ export type CouponHistoryItem = {
   name?: string;
   detail?: string;
   description?: string;
+  discountAmount?: number;
+  discountPrice?: number;
+  amount?: number;
   issuedAt?: string;
   createdAt?: string;
   validFrom?: string;
@@ -306,6 +309,31 @@ export type PaymentHistoryItem = {
 };
 
 export type PaymentHistoryPage = PageResponse<PaymentHistoryItem>;
+
+export type RentalPaymentRequest = {
+  bookId: number;
+  couponId?: number;
+  pointAmount: number;
+  paymentMethod: 'CARD';
+};
+
+export type RentalPaymentResult = {
+  paymentId?: number;
+  paymentNumber?: string;
+  rentalId?: number;
+  bookId?: number;
+  bookTitle?: string;
+  paymentType?: string;
+  originalAmount?: number;
+  saleAmount?: number;
+  couponName?: string;
+  usedCouponName?: string;
+  couponDiscountAmount?: number;
+  pointUsedAmount?: number;
+  usedPointAmount?: number;
+  finalAmount?: number;
+  finalPaymentAmount?: number;
+};
 
 // API-REPORT-004 (U-021 내 신고 내역)
 export type ReportTargetType = 'BOOK' | 'REVIEW';
