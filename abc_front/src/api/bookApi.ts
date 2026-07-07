@@ -2,12 +2,26 @@ import { apiClient } from './apiClient';
 import type { ApiResponse, BookCard, Category, PageResponse } from '../types/api';
 import type { BookDetail } from '../types/book';
 
-export async function getBooks(page = 0, size = 20) {
+export type BookListQuery = {
+  sort?: string;
+  categoryId?: number;
+  category?: string;
+  rentalType?: string;
+  status?: string;
+  section?: string;
+};
+
+export async function getBooks(page = 0, size = 20, query: BookListQuery = {}) {
   const response = await apiClient.get<ApiResponse<PageResponse<BookCard>>>('/books', {
-    params: { page, size },
+    params: { page, size, ...query },
   });
 
-  return response.data.data;
+  const data = response.data.data;
+  if (!data?.content) {
+    throw new Error('Invalid books response');
+  }
+
+  return data;
 }
 
 export async function getRecommendedBooks(size = 5) {
@@ -15,7 +29,12 @@ export async function getRecommendedBooks(size = 5) {
     params: { size },
   });
 
-  return response.data.data;
+  const data = response.data.data;
+  if (!Array.isArray(data)) {
+    throw new Error('Invalid recommended books response');
+  }
+
+  return data;
 }
 
 export async function getLatestBooks(size = 5) {
@@ -23,7 +42,12 @@ export async function getLatestBooks(size = 5) {
     params: { page: 0, size, sort: 'latest' },
   });
 
-  return response.data.data.content;
+  const data = response.data.data;
+  if (!data?.content) {
+    throw new Error('Invalid latest books response');
+  }
+
+  return data.content;
 }
 
 export async function getBestBooks(size = 10) {
@@ -31,13 +55,23 @@ export async function getBestBooks(size = 10) {
     params: { page: 0, size, section: 'best', sort: 'popular' },
   });
 
-  return response.data.data.content;
+  const data = response.data.data;
+  if (!data?.content) {
+    throw new Error('Invalid best books response');
+  }
+
+  return data.content;
 }
 
 export async function getCategories() {
   const response = await apiClient.get<ApiResponse<Category[]>>('/categories');
 
-  return response.data.data;
+  const data = response.data.data;
+  if (!Array.isArray(data)) {
+    throw new Error('Invalid categories response');
+  }
+
+  return data;
 }
 
 export async function getBookDetail(bookId: number) {
