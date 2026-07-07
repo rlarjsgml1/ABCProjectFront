@@ -52,7 +52,11 @@ export const router = createBrowserRouter([
       { path: '/books/:bookId', element: <BookDetailPage /> },
       {
         path: '/books/:bookId/rent',
-        element: <RentPaymentPage />,
+        element: (
+          <ProtectedRoute>
+            <RentPaymentPage />
+          </ProtectedRoute>
+        ),
       },
       { path: '/login', element: <LoginPage /> },
       { path: '/signup', element: <SignupPage /> },

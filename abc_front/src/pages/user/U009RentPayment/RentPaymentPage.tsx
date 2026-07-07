@@ -41,7 +41,9 @@ export function RentPaymentPage() {
   const [isAgreed, setIsAgreed] = useState(false);
   const [selectedCouponId, setSelectedCouponId] = useState('');
   const [pointInput, setPointInput] = useState('');
-  const [actionMessage, setActionMessage] = useState('');
+  const [couponMessage, setCouponMessage] = useState('');
+  const [pointMessage, setPointMessage] = useState('');
+  const [checkoutMessage, setCheckoutMessage] = useState('');
 
   useEffect(() => {
     let ignore = false;
@@ -99,24 +101,38 @@ export function RentPaymentPage() {
 
   function handleApplyCoupon() {
     if (!selectedCouponId) {
-      setActionMessage('사용할 쿠폰을 선택해 주세요.');
+      setCouponMessage('사용할 쿠폰을 선택해 주세요.');
       return;
     }
 
-    setActionMessage('쿠폰 적용 API 연결 후 계산됩니다.');
+    setCouponMessage('쿠폰 적용 API 연결 후 계산됩니다.');
   }
 
   function handleUsePoint() {
-    if (!pointInput) {
-      setActionMessage('사용할 포인트를 입력해 주세요.');
+    const trimmedPointInput = pointInput.trim();
+
+    if (!trimmedPointInput) {
+      setPointMessage('사용할 포인트를 입력해 주세요.');
       return;
     }
 
-    setActionMessage('포인트 사용 API 연결 후 계산됩니다.');
+    const pointAmount = Number(trimmedPointInput);
+
+    if (!Number.isInteger(pointAmount) || pointAmount < 0) {
+      setPointMessage('포인트는 0 이상의 숫자로 입력해 주세요.');
+      return;
+    }
+
+    if (typeof pointBalance === 'number' && pointAmount > pointBalance) {
+      setPointMessage('보유 포인트 이하로 입력해 주세요.');
+      return;
+    }
+
+    setPointMessage('포인트 사용 API 연결 후 계산됩니다.');
   }
 
   function handleConfirmRental() {
-    setActionMessage(isFreeBook ? '무료 대여 API 연결 후 처리됩니다.' : '결제 API 연결 후 처리됩니다.');
+    setCheckoutMessage(isFreeBook ? '무료 대여 API 연결 후 처리됩니다.' : '결제 API 연결 후 처리됩니다.');
   }
 
   return (
@@ -229,30 +245,40 @@ export function RentPaymentPage() {
                 <dt>결제 수단</dt>
                 <dd>카드 결제</dd>
               </div>
-              <div>
+              <div className={styles.paymentOptionRow}>
                 <dt>쿠폰 할인</dt>
                 <dd>
-                  <select value={selectedCouponId} onChange={(event) => setSelectedCouponId(event.target.value)}>
-                    <option value="">쿠폰 선택</option>
-                    {usableCoupons.map((coupon, index) => (
-                      <option value={String(coupon.couponId ?? coupon.id ?? index)} key={coupon.couponId ?? coupon.id ?? index}>
-                        {getCouponName(coupon)}
-                      </option>
-                    ))}
-                  </select>
-                  <button className="button button-secondary" type="button" onClick={handleApplyCoupon}>
-                    쿠폰 적용
-                  </button>
+                  <div className={styles.paymentField}>
+                    <div className={styles.paymentControl}>
+                      <select value={selectedCouponId} onChange={(event) => setSelectedCouponId(event.target.value)}>
+                        <option value="">쿠폰 선택</option>
+                        {usableCoupons.map((coupon, index) => (
+                          <option value={String(coupon.couponId ?? coupon.id ?? index)} key={coupon.couponId ?? coupon.id ?? index}>
+                            {getCouponName(coupon)}
+                          </option>
+                        ))}
+                      </select>
+                      <button className="button button-secondary" type="button" onClick={handleApplyCoupon}>
+                        쿠폰 적용
+                      </button>
+                    </div>
+                    {couponMessage && <p className={styles.fieldMessage}>{couponMessage}</p>}
+                  </div>
                 </dd>
               </div>
-              <div>
+              <div className={styles.paymentOptionRow}>
                 <dt>포인트 사용</dt>
                 <dd>
-                  <span>보유 {formatWon(pointBalance)}</span>
-                  <input value={pointInput} onChange={(event) => setPointInput(event.target.value)} inputMode="numeric" placeholder="사용 포인트" />
-                  <button className="button button-secondary" type="button" onClick={handleUsePoint}>
-                    포인트 사용
-                  </button>
+                  <div className={styles.paymentField}>
+                    <span className={styles.pointBalance}>보유 {formatWon(pointBalance)}</span>
+                    <div className={styles.paymentControl}>
+                      <input value={pointInput} onChange={(event) => setPointInput(event.target.value)} inputMode="numeric" placeholder="사용 포인트" />
+                      <button className="button button-secondary" type="button" onClick={handleUsePoint}>
+                        포인트 사용
+                      </button>
+                    </div>
+                    {pointMessage && <p className={styles.fieldMessage}>{pointMessage}</p>}
+                  </div>
                 </dd>
               </div>
               <div>
@@ -265,38 +291,41 @@ export function RentPaymentPage() {
           <section className={styles.rentalCard}>
             <h3>무료 / 유료 대여 확정</h3>
             <p>대여 확정 후 내 서재에서 바로 확인할 수 있습니다.</p>
-            <label className={styles.agreement}>
-              <input type="checkbox" checked={isAgreed} onChange={(event) => setIsAgreed(event.target.checked)} />
-              <span>대여 및 결제 내용을 확인했습니다.</span>
-            </label>
           </section>
         </div>
       </section>
 
-      <section className={styles.checkoutPanel} aria-label="최종 결제">
-        <div>
-          <span>최종 결제 금액</span>
-          <strong>{paymentAmountLabel}</strong>
-        </div>
-        <div className={styles.checkoutActions}>
-          <button className="button button-primary" type="button" onClick={handleConfirmRental} disabled={!book || !isAgreed}>
-            {isFreeBook ? '무료 대여 확정' : '결제하기'}
-          </button>
-          <button className="button button-secondary" type="button" onClick={handleCancel}>
-            취소
-          </button>
-        </div>
-      </section>
-
-      {actionMessage && <p className={styles.actionMessage}>{actionMessage}</p>}
-
       <section className={styles.policyPanel} aria-labelledby="rent-policy-title">
         <h2 id="rent-policy-title">대여 정책</h2>
         <ul>
-          <li>대여 확정 후 내 서재에서 도서를 확인할 수 있습니다.</li>
-          <li>첫 읽기 시작 전에는 READY 상태로 표시됩니다.</li>
-          <li>결제 완료 전에는 취소하여 도서 상세로 돌아갈 수 있습니다.</li>
+          <li>대여가 확정되면 내 서재에서 바로 도서를 열람할 수 있습니다.</li>
+          <li>대여 기간이 끝나면 도서는 자동 반납되며, 기간 만료 후에는 다시 대여해야 합니다.</li>
+          <li>쿠폰과 포인트는 결제 확정 전에만 적용할 수 있으니 최종 결제 금액을 확인해 주세요.</li>
+          <li>무료 도서는 결제 없이 대여 확정만으로 이용할 수 있습니다.</li>
         </ul>
+      </section>
+
+      {checkoutMessage && <p className={styles.actionMessage}>{checkoutMessage}</p>}
+
+      <section className={styles.checkoutPanel} aria-label="최종 결제">
+        <div>
+          <span className={styles.checkoutLabel}>최종 결제 금액</span>
+          <strong>{paymentAmountLabel}</strong>
+        </div>
+        <div className={styles.checkoutControl}>
+          <label className={styles.agreement}>
+            <input type="checkbox" checked={isAgreed} onChange={(event) => setIsAgreed(event.target.checked)} />
+            <span>대여 및 결제 내용을 확인했습니다.</span>
+          </label>
+          <div className={styles.checkoutActions}>
+            <button className="button button-primary" type="button" onClick={handleConfirmRental} disabled={!book || !isAgreed}>
+              {isFreeBook ? '무료 대여 확정' : '결제하기'}
+            </button>
+            <button className="button button-secondary" type="button" onClick={handleCancel}>
+              취소
+            </button>
+          </div>
+        </div>
       </section>
     </section>
   );

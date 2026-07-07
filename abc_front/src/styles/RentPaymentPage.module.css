@@ -98,9 +98,9 @@
   margin: 0;
 }
 
-.infoList div,
-.priceList div,
-.rentalCard dl div {
+.infoList > div,
+.priceList > div,
+.rentalCard dl > div {
   display: grid;
   grid-template-columns: 120px 1fr;
   align-items: center;
@@ -150,7 +150,7 @@
   padding: var(--space-8) var(--space-6);
 }
 
-.priceList div {
+.priceList > div {
   grid-template-columns: minmax(160px, 1fr) auto;
 }
 
@@ -208,22 +208,69 @@
   font: inherit;
 }
 
+.rentalCard dl > .paymentOptionRow {
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  gap: var(--space-2);
+}
+
+.rentalCard .paymentField {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  gap: var(--space-2);
+}
+
+.rentalCard .paymentControl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.paymentControl :global(.button) {
+  min-height: 43px;
+  padding-right: var(--space-3);
+  padding-left: var(--space-3);
+  white-space: nowrap;
+}
+
+.pointBalance {
+  color: var(--color-muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.rentalCard .fieldMessage {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--color-primary);
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
 .agreement {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-3);
   color: var(--color-text);
   font-weight: 700;
-  line-height: 1.6;
+  line-height: 1.4;
+  white-space: nowrap;
 }
 
 .agreement input {
   flex: 0 0 auto;
-  margin-top: var(--space-2);
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--color-primary);
 }
 
 .agreement span {
   min-width: 0;
+  line-height: 1;
 }
 
 .checkoutPanel {
@@ -235,16 +282,22 @@
   padding: var(--space-8);
 }
 
-.checkoutPanel span {
-  display: block;
-  color: var(--color-text);
-  font-weight: 700;
-  margin-bottom: var(--space-3);
-}
-
 .checkoutPanel strong {
   color: var(--color-text);
   font-size: 2rem;
+}
+
+.checkoutLabel {
+  display: block;
+  margin-bottom: var(--space-3);
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.checkoutControl {
+  display: grid;
+  justify-items: end;
+  gap: var(--space-4);
 }
 
 .checkoutActions {
@@ -261,13 +314,22 @@
 
 .actionMessage {
   margin: var(--space-4) 0 0;
-  color: var(--color-muted);
+  border: 1px solid rgba(0, 61, 45, 0.16);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-text);
+  background: rgba(0, 61, 45, 0.06);
   font-weight: 700;
 }
 
 .policyPanel {
   margin-top: var(--space-8);
   padding: var(--space-8);
+}
+
+.policyPanel + .checkoutPanel,
+.actionMessage + .checkoutPanel {
+  margin-top: var(--space-4);
 }
 
 .policyPanel ul {
@@ -282,9 +344,15 @@
 @media (max-width: 720px) {
   .header,
   .checkoutPanel,
+  .checkoutControl,
   .checkoutActions {
     align-items: stretch;
     flex-direction: column;
+    justify-items: stretch;
+  }
+
+  .agreement {
+    white-space: normal;
   }
 
   .heroLayout,
