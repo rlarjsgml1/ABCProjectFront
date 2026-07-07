@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getMyCoupons, getMyPoints } from '../../../api/pointsCouponsApi';
-import { getApiErrorMessage, getMyProfile } from '../../../api/profileApi';
+import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
+import { useMyProfile } from '../../../context/MyProfileContext';
 import type { CouponHistoryItem, CouponHistoryPage, PointHistoryItem, PointHistoryPage, UserProfile } from '../../../types/api';
 
 type ActiveTab = 'points' | 'coupons';
@@ -196,9 +197,7 @@ function getExpiringThisMonthCount(couponsPage: CouponHistoryPage | null) {
 }
 
 export function PointsCouponsPage() {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isProfileLoading, setIsProfileLoading] = useState(true);
-  const [profileError, setProfileError] = useState('');
+  const { profile } = useMyProfile();
   const [activeTab, setActiveTab] = useState<ActiveTab>('points');
   const [pointType, setPointType] = useState('');
   const [pointsPage, setPointsPage] = useState<PointHistoryPage | null>(null);
@@ -209,35 +208,6 @@ export function PointsCouponsPage() {
   const [couponsPage, setCouponsPage] = useState<CouponHistoryPage | null>(null);
   const [isCouponsLoading, setIsCouponsLoading] = useState(true);
   const [couponsError, setCouponsError] = useState('');
-
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadProfile() {
-      try {
-        const data = await getMyProfile();
-        if (!ignore) {
-          setProfile(data);
-          setProfileError('');
-        }
-      } catch (error) {
-        if (!ignore) {
-          setProfile(null);
-          setProfileError(getApiErrorMessage(error));
-        }
-      } finally {
-        if (!ignore) {
-          setIsProfileLoading(false);
-        }
-      }
-    }
-
-    void loadProfile();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -323,7 +293,7 @@ export function PointsCouponsPage() {
   const expiringThisMonthCount = getExpiringThisMonthCount(couponsPage);
 
   return (
-    <MyPageLayout profile={profile} isLoading={isProfileLoading} errorMessage={profileError} titleId="points-coupons-title">
+    <MyPageLayout titleId="points-coupons-title">
       <section className="page-section points-coupons-panel">
         <div className="section-heading-row">
           <div>

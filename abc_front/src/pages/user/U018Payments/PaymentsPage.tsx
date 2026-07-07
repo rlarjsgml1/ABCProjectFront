@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getMyPayments } from '../../../api/paymentsApi';
 import { getMyRentals } from '../../../api/myRentalsApi';
-import { getApiErrorMessage, getMyProfile } from '../../../api/profileApi';
+import { getApiErrorMessage } from '../../../api/profileApi';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
-import type { PaymentHistoryItem, PaymentHistoryPage, UserProfile } from '../../../types/api';
+import type { PaymentHistoryItem, PaymentHistoryPage } from '../../../types/api';
 
 const pageSize = 10;
 
@@ -59,9 +59,6 @@ function getPaymentStatusLabel(status: string) {
 }
 
 export function PaymentsPage() {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isProfileLoading, setIsProfileLoading] = useState(true);
-  const [profileError, setProfileError] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [paymentsPage, setPaymentsPage] = useState<PaymentHistoryPage | null>(null);
@@ -88,35 +85,6 @@ export function PaymentsPage() {
     }
 
     void loadOwnedRentals();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadProfile() {
-      try {
-        const data = await getMyProfile();
-        if (!ignore) {
-          setProfile(data);
-          setProfileError('');
-        }
-      } catch (error) {
-        if (!ignore) {
-          setProfile(null);
-          setProfileError(getApiErrorMessage(error));
-        }
-      } finally {
-        if (!ignore) {
-          setIsProfileLoading(false);
-        }
-      }
-    }
-
-    void loadProfile();
 
     return () => {
       ignore = true;
@@ -163,7 +131,7 @@ export function PaymentsPage() {
   const payments = (paymentsPage?.content ?? []).filter((payment) => matchesPaymentTypeFilter(payment, paymentTypeFilter));
 
   return (
-    <MyPageLayout profile={profile} isLoading={isProfileLoading} errorMessage={profileError} titleId="payments-title">
+    <MyPageLayout titleId="payments-title">
       <section className="page-section payments-page">
         <div className="section-heading-row">
           <div>
