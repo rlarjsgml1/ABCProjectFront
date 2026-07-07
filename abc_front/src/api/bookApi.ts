@@ -1,5 +1,6 @@
 import { apiClient } from './apiClient';
 import type { ApiResponse, BookCard, Category, PageResponse } from '../types/api';
+import type { BookDetail } from '../types/book';
 
 export async function getBooks(page = 0, size = 20) {
   const response = await apiClient.get<ApiResponse<PageResponse<BookCard>>>('/books', {
@@ -35,6 +36,12 @@ export async function getBestBooks(size = 10) {
 
 export async function getCategories() {
   const response = await apiClient.get<ApiResponse<Category[]>>('/categories');
+
+  return response.data.data;
+}
+
+export async function getBookDetail(bookId: number) {
+  const response = await apiClient.get<ApiResponse<BookDetail>>(`/books/${bookId}`);
 
   return response.data.data;
 }

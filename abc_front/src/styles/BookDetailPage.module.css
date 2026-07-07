@@ -1,0 +1,523 @@
+.page {
+  max-width: 1120px;
+  margin: 0 auto;
+  scroll-behavior: smooth;
+}
+
+.error {
+  margin: var(--space-4) 0;
+  color: var(--color-danger);
+  font-weight: 700;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 240px 1fr 280px;
+  gap: var(--space-8);
+  align-items: flex-start;
+  margin-top: var(--space-8);
+}
+
+.left {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.cover {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-muted);
+  font-weight: 700;
+  overflow: hidden;
+}
+
+.cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.favorite {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: var(--space-3);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.favorite.active {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.favoriteMessage {
+  margin: 0;
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.info h1 {
+  margin: 0 0 var(--space-4);
+  color: var(--color-text);
+}
+
+.meta,
+.spec {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.meta div,
+.spec div {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.meta dt,
+.spec dt {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.meta dd,
+.spec dd {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.inlineValue {
+  display: flex;
+  align-items: center;
+}
+
+.chip,
+.tags span {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.intro {
+  margin-top: var(--space-6);
+}
+
+.intro strong {
+  display: block;
+  margin-bottom: var(--space-3);
+  color: var(--color-text);
+}
+
+.intro p {
+  margin: 0;
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.actionPanel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  display: grid;
+  gap: var(--space-3);
+}
+
+.actionPanel :global(.button) {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  text-align: center;
+}
+
+.sideLinks {
+  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  display: grid;
+  gap: var(--space-4);
+}
+
+.sideLinks a,
+.sideLinks button {
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: var(--space-2) 0;
+  font: inherit;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.sideLinks span {
+  display: block;
+  line-height: 1.4;
+}
+
+.tabs {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  margin: var(--space-8) 0 0;
+}
+
+.tabs a {
+  padding: var(--space-4);
+  color: var(--color-text);
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+}
+
+.tabs a.tabActive {
+  border-bottom: 3px solid var(--color-text);
+}
+
+.section {
+  scroll-margin-top: 80px;
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-8) 0;
+}
+
+.section h2,
+.section h3 {
+  margin: 0 0 var(--space-6);
+  color: var(--color-text);
+}
+
+.rowTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.rowTitle a {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.bookGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-6);
+}
+
+.bookCard {
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  display: grid;
+  gap: var(--space-2);
+  padding: 0;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.bookCard strong,
+.bookCard span {
+  color: var(--color-text);
+}
+
+.bookThumb {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.reviewSummary {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.reviewList {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin-top: var(--space-8);
+  padding: var(--space-6);
+}
+
+.reviewRows {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.reviewRow {
+  position: relative;
+  display: grid;
+  grid-template-columns: 48px 1fr auto min-content;
+  align-items: center;
+  gap: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-4) 0;
+}
+
+.reviewRow :global(.button) {
+  white-space: nowrap;
+}
+
+.reviewProfile {
+  width: 48px;
+  aspect-ratio: 1;
+  border-radius: var(--radius-lg);
+  background: var(--color-border);
+}
+
+.reviewBody {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.reviewBody strong,
+.reviewBody p {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.stars {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.starPicker {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+.starPicker button {
+  border: 0;
+  background: transparent;
+  color: var(--color-border);
+  cursor: pointer;
+  font: inherit;
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: var(--space-2);
+}
+
+.starPicker button.starActive {
+  color: var(--color-primary);
+}
+
+.reviewDate {
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.reviewMenu {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.reviewMenu > button {
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.reviewMenuPanel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 10;
+  min-width: 96px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  display: grid;
+}
+
+.reviewMenuPanel button {
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: var(--space-2) var(--space-3);
+  text-align: center;
+}
+
+.reviewEditInput {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font: inherit;
+}
+
+.reviewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.reviewHeader h2 {
+  margin: 0;
+}
+
+.reviewHeader :global(.button) {
+  min-height: 40px;
+}
+
+.emptyState {
+  margin: 0;
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: transparent;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--space-6);
+  padding-top: var(--space-8);
+}
+
+.modal {
+  width: min(520px, 100%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  padding: var(--space-8);
+  display: grid;
+  gap: var(--space-4);
+}
+
+.modal h2 {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.modalHeader button {
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.modalMessage {
+  margin: 0;
+  color: var(--color-text);
+  text-align: center;
+}
+
+.modal label {
+  display: grid;
+  gap: var(--space-2);
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.modal input,
+.modal select,
+.modal textarea {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font: inherit;
+}
+
+.modal textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+@media (max-width: 720px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .cover {
+    width: 180px;
+  }
+
+  .bookGrid,
+  .reviewRow {
+    grid-template-columns: 1fr;
+  }
+
+  .reviewHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
