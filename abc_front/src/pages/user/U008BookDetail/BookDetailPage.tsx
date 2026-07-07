@@ -9,19 +9,6 @@ import styles from '../../../styles/BookDetailPage.module.css';
 type DetailTab = 'description' | 'recommendations' | 'reviews';
 type ModalType = 'login' | 'bookReport' | 'reviewReport' | null;
 
-const TEMP_RENT_PAYMENT_TEST_DETAIL = true;
-
-const testDetailBook: BookDetail = {
-  bookId: 1,
-  title: '대여/결제 테스트 도서',
-  author: 'ABC',
-  publisher: 'ABC 출판',
-  description: 'U-008 도서 상세에서 U-009 대여/결제 화면으로 이어지는 흐름을 확인하기 위한 테스트 도서입니다.',
-  coverImageUrl: '',
-  rentalType: 'PAID',
-  status: 'AVAILABLE',
-};
-
 function ModalShell({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
   return (
     <div className={styles.modalBackdrop}>
@@ -59,7 +46,7 @@ function StarPicker({ value, onChange }: { value: number; onChange: (rating: num
 export function BookDetailPage() {
   const { bookId } = useParams();
   const navigate = useNavigate();
-  const isSignedIn = TEMP_RENT_PAYMENT_TEST_DETAIL || Boolean(localStorage.getItem('accessToken'));
+  const isSignedIn = Boolean(localStorage.getItem('accessToken'));
   const [book, setBook] = useState<BookDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -79,13 +66,6 @@ export function BookDetailPage() {
     async function loadBookDetail() {
       if (!bookId) {
         setErrorMessage('도서 ID가 없습니다.');
-        setLoading(false);
-        return;
-      }
-
-      if (TEMP_RENT_PAYMENT_TEST_DETAIL) {
-        setBook(testDetailBook);
-        setIsFavorite(false);
         setLoading(false);
         return;
       }
