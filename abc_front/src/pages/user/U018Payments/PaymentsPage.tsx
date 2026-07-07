@@ -1,14 +1,43 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getMyPayments } from '../../../api/paymentsApi';
+import { getMyRentals } from '../../../api/myRentalsApi';
 import { getApiErrorMessage, getMyProfile } from '../../../api/profileApi';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
 import type { PaymentHistoryItem, PaymentHistoryPage, UserProfile } from '../../../types/api';
 
 const pageSize = 10;
 
+type PaymentTypeFilter = 'ALL' | 'FREE' | 'PAID';
+
+const paymentTypeTabs: Array<{ label: string; value: PaymentTypeFilter }> = [
+  { label: '전체', value: 'ALL' },
+  { label: '무료', value: 'FREE' },
+  { label: '유료', value: 'PAID' },
+];
+
+function matchesPaymentTypeFilter(payment: PaymentHistoryItem, filter: PaymentTypeFilter) {
+  if (filter === 'FREE') {
+    return payment.originalAmount === 0;
+  }
+
+  if (filter === 'PAID') {
+    return payment.originalAmount > 0;
+  }
+
+  return true;
+}
+
 function formatWon(value: number) {
   return `${value.toLocaleString('ko-KR')}원`;
+}
+
+function getPaymentTypeLabel(rentalId: number | undefined, ownedRentalIds: Set<number>) {
+  if (rentalId !== undefined && ownedRentalIds.has(rentalId)) {
+    return '소장';
+  }
+
+  return '대여';
 }
 
 function formatDate(value: string) {
@@ -39,6 +68,31 @@ export function PaymentsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedPayment, setSelectedPayment] = useState<PaymentHistoryItem | null>(null);
+  const [ownedRentalIds, setOwnedRentalIds] = useState<Set<number>>(new Set());
+  const [paymentTypeFilter, setPaymentTypeFilter] = useState<PaymentTypeFilter>('ALL');
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadOwnedRentals() {
+      try {
+        const data = await getMyRentals({ status: 'OWNED', page: 0, size: 100 });
+        if (!ignore) {
+          setOwnedRentalIds(new Set(data.content.map((item) => item.rentalId)));
+        }
+      } catch {
+        if (!ignore) {
+          setOwnedRentalIds(new Set());
+        }
+      }
+    }
+
+    void loadOwnedRentals();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -106,7 +160,7 @@ export function PaymentsPage() {
     };
   }, [fromDate, toDate]);
 
-  const payments = paymentsPage?.content ?? [];
+  const payments = (paymentsPage?.content ?? []).filter((payment) => matchesPaymentTypeFilter(payment, paymentTypeFilter));
 
   return (
     <MyPageLayout profile={profile} isLoading={isProfileLoading} errorMessage={profileError} titleId="payments-title">
@@ -115,7 +169,21 @@ export function PaymentsPage() {
           <div>
             <h2 id="payments-title">결제 내역</h2>
           </div>
-          <span>유료 대여 결제만 표시</span>
+        </div>
+
+        <div className="points-coupons-tabs" role="tablist" aria-label="결제 유형 필터">
+          {paymentTypeTabs.map((tab) => (
+            <button
+              key={tab.value}
+              type="button"
+              role="tab"
+              className={`points-coupons-tab${paymentTypeFilter === tab.value ? ' is-active' : ''}`}
+              aria-selected={paymentTypeFilter === tab.value}
+              onClick={() => setPaymentTypeFilter(tab.value)}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         <div className="payments-toolbar">
@@ -137,19 +205,17 @@ export function PaymentsPage() {
               <tr>
                 <th scope="col">결제번호</th>
                 <th scope="col">도서명</th>
-                <th scope="col">할인 전 금액</th>
-                <th scope="col">쿠폰 할인</th>
-                <th scope="col">포인트 차감</th>
-                <th scope="col">최종 결제 금액</th>
-                <th scope="col">상태</th>
+                <th scope="col">금액</th>
+                <th scope="col">결제 유형</th>
                 <th scope="col">결제일</th>
-                <th scope="col">상세</th>
+                <th scope="col">상태</th>
+                <th scope="col">상세보기</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={9}>결제 내역을 불러오는 중입니다.</td>
+                  <td colSpan={7}>결제 내역을 불러오는 중입니다.</td>
                 </tr>
               ) : payments.length > 0 ? (
                 payments.map((payment) => (
@@ -157,17 +223,15 @@ export function PaymentsPage() {
                     <td>{payment.paymentId}</td>
                     <td>
                       {payment.bookId ? (
-                        <Link to={`/books/${payment.bookId}`}>{payment.bookTitle}</Link>
+                        <Link to={`/books/${payment.bookId}`}>{payment.title}</Link>
                       ) : (
-                        payment.bookTitle
+                        payment.title
                       )}
                     </td>
-                    <td>{formatWon(payment.originalAmount)}</td>
-                    <td>{formatWon(payment.couponDiscountAmount)}</td>
-                    <td>{formatWon(payment.pointUsedAmount)}</td>
-                    <td>{formatWon(payment.finalAmount)}</td>
-                    <td>{getPaymentStatusLabel(payment.status)}</td>
+                    <td>{formatWon(payment.amount)}</td>
+                    <td>{getPaymentTypeLabel(payment.rentalId, ownedRentalIds)}</td>
                     <td>{formatDate(payment.paidAt)}</td>
+                    <td>{getPaymentStatusLabel(payment.paymentStatus)}</td>
                     <td>
                       <button type="button" className="button button-secondary" onClick={() => setSelectedPayment(payment)}>
                         상세보기
@@ -177,7 +241,7 @@ export function PaymentsPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={9}>결제 내역이 없습니다.</td>
+                  <td colSpan={7}>결제 내역이 없습니다.</td>
                 </tr>
               )}
             </tbody>
@@ -197,7 +261,7 @@ export function PaymentsPage() {
             <div className="membership-modal-header">
               <div>
                 <p className="eyebrow">PAYMENT DETAIL</p>
-                <h2 id="payment-detail-title">결제 상세</h2>
+                <h2 id="payment-detail-title">결제 내역 상세보기</h2>
               </div>
               <button
                 className="membership-modal-close"
@@ -211,11 +275,17 @@ export function PaymentsPage() {
 
             <div className="membership-modal-body">
               <p>결제번호 {selectedPayment.paymentId}</p>
-              <p>도서 {selectedPayment.bookTitle}</p>
-              <p>관련 대여번호 {selectedPayment.rentalId ?? '-'}</p>
-              <p>쿠폰 할인 {formatWon(selectedPayment.couponDiscountAmount)}</p>
-              <p>포인트 차감 {formatWon(selectedPayment.pointUsedAmount)}</p>
-              <p>최종 결제 금액 {formatWon(selectedPayment.finalAmount)}</p>
+              <p>결제일자 {formatDate(selectedPayment.paidAt)}</p>
+              <p>도서명 {selectedPayment.title}</p>
+              <p>결제 유형 {getPaymentTypeLabel(selectedPayment.rentalId, ownedRentalIds)}</p>
+
+              <div className="payment-detail-breakdown">
+                <p className="eyebrow">결제 내역</p>
+                <p>판매 금액 {formatWon(selectedPayment.originalAmount)}</p>
+                <p>사용 포인트 {formatWon(selectedPayment.pointUsedAmount)}</p>
+                <p>할인 금액 {formatWon(selectedPayment.couponDiscountAmount)}</p>
+                <p>결제 금액 {formatWon(selectedPayment.amount)}</p>
+              </div>
             </div>
           </section>
         </div>
