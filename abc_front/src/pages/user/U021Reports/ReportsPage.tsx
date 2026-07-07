@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { getMyReports } from '../../../api/reportsApi';
-import { getApiErrorMessage, getMyProfile } from '../../../api/profileApi';
+import { getApiErrorMessage } from '../../../api/profileApi';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
-import type { ReportHistoryItem, ReportHistoryPage, ReportStatus, ReportTargetType, UserProfile } from '../../../types/api';
+import type { ReportHistoryItem, ReportHistoryPage, ReportStatus, ReportTargetType } from '../../../types/api';
 
 const pageSize = 10;
 
@@ -44,44 +44,12 @@ function getStatusLabel(value: ReportStatus) {
 }
 
 export function ReportsPage() {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isProfileLoading, setIsProfileLoading] = useState(true);
-  const [profileError, setProfileError] = useState('');
   const [targetType, setTargetType] = useState<ReportTargetType | ''>('');
   const [status, setStatus] = useState<ReportStatus | ''>('');
   const [reportsPage, setReportsPage] = useState<ReportHistoryPage | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedReport, setSelectedReport] = useState<ReportHistoryItem | null>(null);
-
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadProfile() {
-      try {
-        const data = await getMyProfile();
-        if (!ignore) {
-          setProfile(data);
-          setProfileError('');
-        }
-      } catch (error) {
-        if (!ignore) {
-          setProfile(null);
-          setProfileError(getApiErrorMessage(error));
-        }
-      } finally {
-        if (!ignore) {
-          setIsProfileLoading(false);
-        }
-      }
-    }
-
-    void loadProfile();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -123,7 +91,7 @@ export function ReportsPage() {
   const reports = reportsPage?.content ?? [];
 
   return (
-    <MyPageLayout profile={profile} isLoading={isProfileLoading} errorMessage={profileError} titleId="reports-title">
+    <MyPageLayout titleId="reports-title">
       <section className="page-section reports-page">
         <div className="section-heading-row">
           <div>

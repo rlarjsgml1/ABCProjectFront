@@ -38,6 +38,7 @@ import { PaymentsPage } from '../pages/user/U018Payments/PaymentsPage';
 import { ReportsPage } from '../pages/user/U021Reports/ReportsPage';
 import { BookRequestPage } from '../pages/user/U022BookRequest/BookRequestPage';
 import { BookRequestHistoryPage } from '../pages/user/U023BookRequestHistory/BookRequestHistoryPage';
+import { MyPageProfileLayout } from '../components/mypage/MyPageProfileLayout';
 import { MyRentalsPage } from '../pages/user/U010MyRentals/MyRentalsPage';
 import { ViewerPage } from '../pages/user/U011Viewer/ViewerPage';
 import { RentPaymentPage } from '../pages/user/U009RentPayment/RentPaymentPage';
@@ -75,99 +76,21 @@ export const router = createBrowserRouter([
 
       {
         path: '/me',
-        element: (
-          <ProtectedRoute>
-            <MyPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/me/profile',
-        element: (
-          <ProtectedRoute>
-            <ProfileEditPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/me/attendance',
-        element: (
-          <ProtectedRoute>
-            <AttendancePage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/me/points-coupons',
-        element: (
-          <ProtectedRoute>
-            <PointsCouponsPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/me/statistics',
-        element: (
-          <ProtectedRoute>
-            <ReadingStatsPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/me/favorites',
-        element: (
-          <ProtectedRoute>
-            <FavoritesPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/me/recent-books',
-        element: (
-          <ProtectedRoute>
-            <RecentBooksPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/me/payments',
-        element: (
-          <ProtectedRoute>
-            <PaymentsPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/me/reports',
-        element: (
-          <ProtectedRoute>
-            <ReportsPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/me/book-requests',
-        element: (
-          <ProtectedRoute>
-            <BookRequestPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/me/book-requests/history',
-        element: (
-          <ProtectedRoute>
-            <BookRequestHistoryPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/me/rentals',
-        element: (
-          <ProtectedRoute>
-            <MyRentalsPage />
-          </ProtectedRoute>
-        ),
+        element: <MyPageProfileLayout />,
+        children: [
+          { index: true, element: <MyPage /> },
+          { path: 'profile', element: <ProfileEditPage /> },
+          { path: 'attendance', element: <AttendancePage /> },
+          { path: 'points-coupons', element: <PointsCouponsPage /> },
+          { path: 'statistics', element: <ReadingStatsPage /> },
+          { path: 'favorites', element: <FavoritesPage /> },
+          { path: 'recent-books', element: <RecentBooksPage /> },
+          { path: 'payments', element: <PaymentsPage /> },
+          { path: 'reports', element: <ReportsPage /> },
+          { path: 'book-requests', element: <BookRequestPage /> },
+          { path: 'book-requests/history', element: <BookRequestHistoryPage /> },
+          { path: 'rentals', element: <MyRentalsPage /> },
+        ],
       },
     ],
   },

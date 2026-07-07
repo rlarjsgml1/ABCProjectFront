@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { TooltipContentProps } from 'recharts';
 import { getFallbackReadingStatistics, getMyReadingStatistics } from '../../../api/statisticsApi';
-import { getApiErrorMessage, getMyProfile } from '../../../api/profileApi';
+import { getApiErrorMessage } from '../../../api/profileApi';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
-import type { ReadingStatisticsData, ReadingStatisticsPeriodType, UserProfile } from '../../../types/api';
+import type { ReadingStatisticsData, ReadingStatisticsPeriodType } from '../../../types/api';
 
 const periodTabs: Array<{ label: string; value: ReadingStatisticsPeriodType }> = [
   { label: '전체', value: 'TOTAL' },
@@ -52,9 +52,6 @@ function ReadingStatisticsTooltip({ active, label, payload }: TooltipContentProp
 }
 
 export function ReadingStatsPage() {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isProfileLoading, setIsProfileLoading] = useState(true);
-  const [profileError, setProfileError] = useState('');
   const [activePeriod, setActivePeriod] = useState<ReadingStatisticsPeriodType>('TOTAL');
   const [baseDate, setBaseDate] = useState(() => formatDateInputValue(new Date()));
   const [statistics, setStatistics] = useState<ReadingStatisticsData>(() =>
@@ -62,35 +59,6 @@ export function ReadingStatsPage() {
   );
   const [isStatisticsLoading, setIsStatisticsLoading] = useState(true);
   const [statisticsError, setStatisticsError] = useState('');
-
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadProfile() {
-      try {
-        const data = await getMyProfile();
-        if (!ignore) {
-          setProfile(data);
-          setProfileError('');
-        }
-      } catch (error) {
-        if (!ignore) {
-          setProfile(null);
-          setProfileError(getApiErrorMessage(error));
-        }
-      } finally {
-        if (!ignore) {
-          setIsProfileLoading(false);
-        }
-      }
-    }
-
-    void loadProfile();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -134,7 +102,7 @@ export function ReadingStatsPage() {
     { label: '즐겨찾기 수', value: `${formatNumber(statistics.summary.favoriteCount)}권` },
   ];
   return (
-    <MyPageLayout profile={profile} isLoading={isProfileLoading} errorMessage={profileError} titleId="reading-stats-title">
+    <MyPageLayout titleId="reading-stats-title">
       <section className="page-section reading-statistics-page">
         <div className="section-heading-row reading-statistics-heading">
           <div>

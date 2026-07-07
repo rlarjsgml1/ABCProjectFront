@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getMyRentals } from '../../../api/myRentalsApi';
 import { getBookDetail } from '../../../api/bookApi';
-import { getApiErrorMessage, getMyProfile } from '../../../api/profileApi';
+import { getApiErrorMessage } from '../../../api/profileApi';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
-import type { MyRentalItem, RentalStatus, UserProfile } from '../../../types/api';
+import type { MyRentalItem, RentalStatus } from '../../../types/api';
 
 type RentalCardData = MyRentalItem & {
   author?: string;
@@ -68,41 +68,9 @@ function getContinueLabel(item: MyRentalItem) {
 }
 
 export function MyRentalsPage() {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isProfileLoading, setIsProfileLoading] = useState(true);
-  const [profileError, setProfileError] = useState('');
   const [rentals, setRentals] = useState<RentalCardData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadProfile() {
-      try {
-        const data = await getMyProfile();
-        if (!ignore) {
-          setProfile(data);
-          setProfileError('');
-        }
-      } catch (error) {
-        if (!ignore) {
-          setProfile(null);
-          setProfileError(getApiErrorMessage(error));
-        }
-      } finally {
-        if (!ignore) {
-          setIsProfileLoading(false);
-        }
-      }
-    }
-
-    void loadProfile();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -155,7 +123,7 @@ export function MyRentalsPage() {
   const isActiveEmpty = !isLoading && activeRentals.length === 0;
 
   return (
-    <MyPageLayout profile={profile} isLoading={isProfileLoading} errorMessage={profileError} titleId="my-rentals-title">
+    <MyPageLayout titleId="my-rentals-title">
       <section className="page-section my-rentals-page">
         <div className="section-heading-row">
           <div>
