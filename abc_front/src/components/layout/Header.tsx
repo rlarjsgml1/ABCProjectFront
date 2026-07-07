@@ -3,6 +3,11 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AUTH_CHANGED_EVENT } from '../../api/authApi';
 
 const authStorageKeys = ['accessToken', 'memberRole', 'memberId', 'loginId', 'memberName'];
+const TEMP_RENT_PAYMENT_TEST_LOGIN = true;
+
+function hasLoginSession() {
+    return TEMP_RENT_PAYMENT_TEST_LOGIN || Boolean(localStorage.getItem('accessToken'));
+}
 
 const navItems = [
     { to: '/', label: 'HOME' },
@@ -21,12 +26,12 @@ export function Header() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     useEffect(() => {
-        setIsLoggedIn(Boolean(localStorage.getItem('accessToken')));
+        setIsLoggedIn(hasLoginSession());
     }, [location.pathname, location.search]);
 
     useEffect(() => {
         const syncAuthState = () => {
-            setIsLoggedIn(Boolean(localStorage.getItem('accessToken')));
+            setIsLoggedIn(hasLoginSession());
         };
 
         window.addEventListener('storage', syncAuthState);
@@ -53,7 +58,7 @@ export function Header() {
 
     const handleLogout = () => {
         authStorageKeys.forEach((key) => localStorage.removeItem(key));
-        setIsLoggedIn(false);
+        setIsLoggedIn(hasLoginSession());
         window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
         navigate('/');
     };

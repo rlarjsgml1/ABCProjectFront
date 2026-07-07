@@ -12,6 +12,55 @@ type RentBookDetail = BookDetail & {
   price?: number;
   rentalPeriodDays?: number;
   defaultRentalDays?: number;
+  pageCount?: number;
+  categoryName?: string;
+  publishedAt?: string;
+  fileFormat?: string;
+};
+
+const TEMP_RENT_PAYMENT_TEST_PREVIEW = true;
+
+const testPreviewBook: RentBookDetail = {
+  bookId: 1,
+  title: '대여/결제 테스트 도서',
+  author: 'ABC',
+  publisher: 'ABC 출판',
+  description: 'U-009 대여/결제 화면 테스트용 도서 정보입니다.',
+  coverImageUrl: '',
+  rentalType: 'PAID',
+  status: 'AVAILABLE',
+  rentalPrice: 4500,
+  rentalPeriodDays: 14,
+  pageCount: 328,
+  categoryName: '경제 / 경영',
+  publishedAt: '2026-07-01',
+  fileFormat: 'EPUB',
+};
+
+const testPreviewPointsPage: PointHistoryPage = {
+  content: [],
+  page: 0,
+  size: 1,
+  totalElements: 0,
+  totalPages: 0,
+  last: true,
+  currentPoint: 12000,
+};
+
+const testPreviewCouponsPage: CouponHistoryPage = {
+  content: [
+    {
+      couponId: 1,
+      couponName: '테스트용 1,000원 할인 쿠폰',
+      status: 'ISSUED',
+    },
+  ],
+  page: 0,
+  size: 20,
+  totalElements: 1,
+  totalPages: 1,
+  last: true,
+  availableCouponCount: 1,
 };
 
 function formatWon(value: number | undefined) {
@@ -30,6 +79,10 @@ function getCouponName(coupon: CouponHistoryItem) {
   return coupon.couponName ?? coupon.name ?? coupon.detail ?? coupon.description ?? '-';
 }
 
+function getCouponDiscount(couponId: string) {
+  return couponId ? 1000 : 0;
+}
+
 export function RentPaymentPage() {
   const { bookId } = useParams();
   const navigate = useNavigate();
@@ -40,6 +93,8 @@ export function RentPaymentPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [isAgreed, setIsAgreed] = useState(false);
   const [selectedCouponId, setSelectedCouponId] = useState('');
+  const [appliedCouponId, setAppliedCouponId] = useState('');
+  const [appliedPointAmount, setAppliedPointAmount] = useState(0);
   const [pointInput, setPointInput] = useState('');
   const [couponMessage, setCouponMessage] = useState('');
   const [pointMessage, setPointMessage] = useState('');
@@ -57,6 +112,14 @@ export function RentPaymentPage() {
 
       setIsLoading(true);
       setErrorMessage('');
+
+      if (TEMP_RENT_PAYMENT_TEST_PREVIEW) {
+        setBook(testPreviewBook);
+        setPointsPage(testPreviewPointsPage);
+        setCouponsPage(testPreviewCouponsPage);
+        setIsLoading(false);
+        return;
+      }
 
       try {
         const [bookDetail, points, coupons] = await Promise.all([
@@ -93,7 +156,12 @@ export function RentPaymentPage() {
   const isFreeBook = book?.rentalType === 'FREE';
   const pointBalance = pointsPage?.currentPoint ?? pointsPage?.balance ?? pointsPage?.totalPoint;
   const usableCoupons = useMemo(() => (couponsPage?.content ?? []).filter(isUsableCoupon), [couponsPage]);
-  const paymentAmountLabel = isFreeBook ? '0원' : formatWon(rentalPrice);
+  const basePaymentAmount = isFreeBook ? 0 : rentalPrice ?? 0;
+  const couponDiscountAmount = isFreeBook ? 0 : Math.min(getCouponDiscount(appliedCouponId), basePaymentAmount);
+  const pointDiscountAmount = isFreeBook ? 0 : Math.min(appliedPointAmount, Math.max(basePaymentAmount - couponDiscountAmount, 0));
+  const finalPaymentAmount = Math.max(basePaymentAmount - couponDiscountAmount - pointDiscountAmount, 0);
+  const paymentAmountLabel = formatWon(finalPaymentAmount);
+  const selectedCouponName = usableCoupons.find((coupon) => String(coupon.couponId ?? coupon.id) === appliedCouponId);
 
   function handleCancel() {
     navigate(`/books/${bookId}`);
@@ -105,7 +173,8 @@ export function RentPaymentPage() {
       return;
     }
 
-    setCouponMessage('쿠폰 적용 API 연결 후 계산됩니다.');
+    setAppliedCouponId(selectedCouponId);
+    setCouponMessage('쿠폰 1,000원이 적용되었습니다.');
   }
 
   function handleUsePoint() {
@@ -128,11 +197,28 @@ export function RentPaymentPage() {
       return;
     }
 
-    setPointMessage('포인트 사용 API 연결 후 계산됩니다.');
+    setAppliedPointAmount(pointAmount);
+    setPointMessage(`${pointAmount.toLocaleString('ko-KR')}포인트가 적용되었습니다.`);
   }
 
   function handleConfirmRental() {
-    setCheckoutMessage(isFreeBook ? '무료 대여 API 연결 후 처리됩니다.' : '결제 API 연결 후 처리됩니다.');
+    if (!isAgreed) {
+      setCheckoutMessage('약관에 동의해 주세요.');
+      return;
+    }
+
+    navigate(`/books/${bookId}/rent/complete`, {
+      state: {
+        paymentNumber: `PAY-TEST-${Date.now()}`,
+        paymentType: isFreeBook ? '무료 대여' : '카드 결제',
+        bookTitle: book?.title ?? '-',
+        saleAmount: basePaymentAmount,
+        usedPointAmount: pointDiscountAmount,
+        usedCouponName: selectedCouponName ? getCouponName(selectedCouponName) : '-',
+        couponDiscountAmount,
+        finalPaymentAmount,
+      },
+    });
   }
 
   return (
@@ -162,19 +248,19 @@ export function RentPaymentPage() {
             <dl className={styles.infoList}>
               <div>
                 <dt>파일 형식</dt>
-                <dd>-</dd>
+                <dd>{book?.fileFormat ?? '-'}</dd>
               </div>
               <div>
                 <dt>페이지 수</dt>
-                <dd>-</dd>
+                <dd>{typeof book?.pageCount === 'number' ? `${book.pageCount}쪽` : '-'}</dd>
               </div>
               <div>
                 <dt>출간일</dt>
-                <dd>-</dd>
+                <dd>{book?.publishedAt ?? '-'}</dd>
               </div>
               <div>
                 <dt>카테고리</dt>
-                <dd>-</dd>
+                <dd>{book?.categoryName ?? '-'}</dd>
               </div>
               <div>
                 <dt>대여 가능 여부</dt>
@@ -193,16 +279,16 @@ export function RentPaymentPage() {
           </div>
           <dl className={styles.priceList}>
             <div>
-              <dt>최종 결제 금액</dt>
-              <dd>{paymentAmountLabel}</dd>
+              <dt>판매 금액</dt>
+              <dd>{isFreeBook ? '0원' : formatWon(rentalPrice)}</dd>
             </div>
             <div>
               <dt>쿠폰 할인</dt>
-              <dd>-</dd>
+              <dd>{formatWon(couponDiscountAmount)}</dd>
             </div>
             <div>
               <dt>포인트 차감</dt>
-              <dd>-</dd>
+              <dd>{formatWon(pointDiscountAmount)}</dd>
             </div>
             <div className={styles.totalRow}>
               <dt>최종 카드 결제 금액</dt>
@@ -221,7 +307,7 @@ export function RentPaymentPage() {
             <dl>
               <div>
                 <dt>대여 시작 예정일</dt>
-                <dd>-</dd>
+                <dd>결제 완료 즉시</dd>
               </div>
               <div>
                 <dt>대여 기간</dt>
@@ -229,7 +315,7 @@ export function RentPaymentPage() {
               </div>
               <div>
                 <dt>반납 예정일</dt>
-                <dd>-</dd>
+                <dd>{typeof rentalDays === 'number' ? `대여 시작일로부터 ${rentalDays}일 후` : '-'}</dd>
               </div>
               <div>
                 <dt>무료 대여 여부</dt>
@@ -318,7 +404,7 @@ export function RentPaymentPage() {
             <span>대여 및 결제 내용을 확인했습니다.</span>
           </label>
           <div className={styles.checkoutActions}>
-            <button className="button button-primary" type="button" onClick={handleConfirmRental} disabled={!book || !isAgreed}>
+            <button className="button button-primary" type="button" onClick={handleConfirmRental} disabled={!book}>
               {isFreeBook ? '무료 대여 확정' : '결제하기'}
             </button>
             <button className="button button-secondary" type="button" onClick={handleCancel}>
