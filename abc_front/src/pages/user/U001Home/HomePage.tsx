@@ -117,9 +117,10 @@ function getCategoryLink(category: HomeCategory) {
 }
 
 export function HomePage() {
+  const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
   const [categories, setCategories] = useState<HomeCategory[]>(fallbackCategories);
-  const [recommendedBooks, setRecommendedBooks] = useState<BookItem[]>(fallbackRecommendedBooks);
+  const [recommendedBooks, setRecommendedBooks] = useState<BookItem[]>(isLoggedIn ? fallbackRecommendedBooks : fallbackBestBooks);
   const [newBooks, setNewBooks] = useState<BookItem[]>(fallbackNewBooks);
   const [bestBooks, setBestBooks] = useState<BookItem[]>(fallbackBestBooks);
   const memberName = localStorage.getItem('memberName');
@@ -138,7 +139,7 @@ export function HomePage() {
     async function loadHomeData() {
       const [categoriesResult, recommendedResult, latestResult, bestResult] = await Promise.allSettled([
         getCategories(),
-        getRecommendedBooks(5),
+        isLoggedIn ? getRecommendedBooks(5) : getBestBooks(5),
         getLatestBooks(5),
         getBestBooks(10),
       ]);
@@ -150,7 +151,7 @@ export function HomePage() {
       }
 
       if (recommendedResult.status === 'fulfilled') {
-        setRecommendedBooks(toBookItems(recommendedResult.value, fallbackRecommendedBooks));
+        setRecommendedBooks(toBookItems(recommendedResult.value, isLoggedIn ? fallbackRecommendedBooks : fallbackBestBooks));
       }
 
       if (latestResult.status === 'fulfilled') {
@@ -167,23 +168,23 @@ export function HomePage() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [isLoggedIn]);
 
   const bookSections: BookSection[] = useMemo(
     () => [
       {
         title: memberName ? `${memberName}님을 위한 ABC 추천 도서` : 'ABC 추천 도서',
-        moreTo: '/books?section=recommend',
+        moreTo: '/books?section=recommend&source=home',
         books: recommendedBooks,
       },
       {
         title: 'NEW 신간',
-        moreTo: '/books?sort=latest',
+        moreTo: '/books?section=latest&source=home',
         books: newBooks,
       },
       {
         title: 'BEST 작품',
-        moreTo: '/books?section=best',
+        moreTo: '/books?section=best&source=home',
         books: bestBooks,
         ranked: true,
       },
