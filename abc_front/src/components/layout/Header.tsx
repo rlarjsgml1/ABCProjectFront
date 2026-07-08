@@ -3,10 +3,9 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AUTH_CHANGED_EVENT } from '../../api/authApi';
 
 const authStorageKeys = ['accessToken', 'memberRole', 'memberId', 'loginId', 'memberName'];
-const TEMP_PAYMENT_COMPLETE_PREVIEW_LOGIN = true;
 
 function hasLoginSession() {
-    return TEMP_PAYMENT_COMPLETE_PREVIEW_LOGIN || Boolean(localStorage.getItem('accessToken'));
+    return Boolean(localStorage.getItem('accessToken'));
 }
 
 const navItems = [

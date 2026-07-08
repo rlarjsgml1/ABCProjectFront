@@ -6,11 +6,9 @@ type ProtectedRouteProps = {
   requireAdmin?: boolean;
 };
 
-const TEMP_PAYMENT_COMPLETE_PREVIEW_LOGIN = true;
-
 export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
-  const role = localStorage.getItem('memberRole') ?? (TEMP_PAYMENT_COMPLETE_PREVIEW_LOGIN ? 'USER' : null);
-  const token = localStorage.getItem('accessToken') ?? (TEMP_PAYMENT_COMPLETE_PREVIEW_LOGIN ? 'payment-complete-preview-token' : null);
+  const role = localStorage.getItem('memberRole');
+  const token = localStorage.getItem('accessToken');
 
   if (!token) {
     return <Navigate to="/login" replace />;

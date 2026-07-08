@@ -19,54 +19,6 @@ type RentBookDetail = BookDetail & {
   fileFormat?: string;
 };
 
-const TEMP_PAYMENT_COMPLETE_PREVIEW = true;
-
-function getPreviewRentBook(bookId: string): RentBookDetail {
-  return {
-    bookId: Number(bookId),
-    title: `책 제목${bookId}`,
-    author: `저자${bookId}`,
-    publisher: 'ABC 출판',
-    description: '대여와 결제 완료 흐름을 확인하기 위한 임시 대여 도서입니다.',
-    coverImageUrl: '',
-    rentalType: 'PAID',
-    status: 'AVAILABLE',
-    rentalPrice: 26500,
-    rentalPeriodDays: 14,
-    pageCount: 320,
-    categoryName: '소설',
-    publishedAt: '2026-07-07',
-    fileFormat: 'EPUB',
-  };
-}
-
-const previewPointsPage: PointHistoryPage = {
-  content: [],
-  page: 0,
-  size: 1,
-  totalElements: 0,
-  totalPages: 0,
-  last: true,
-  currentPoint: 12000,
-};
-
-const previewCouponsPage: CouponHistoryPage = {
-  content: [
-    {
-      couponId: 1,
-      couponName: '30일 연속 출석 10% 할인 쿠폰',
-      status: 'ISSUED',
-      discountAmount: 2650,
-    },
-  ],
-  page: 0,
-  size: 20,
-  totalElements: 1,
-  totalPages: 1,
-  last: true,
-  availableCouponCount: 1,
-};
-
 function formatWon(value: number | undefined) {
   if (typeof value !== 'number') {
     return '-';
@@ -125,14 +77,6 @@ export function RentPaymentPage() {
 
       setIsLoading(true);
       setErrorMessage('');
-
-      if (TEMP_PAYMENT_COMPLETE_PREVIEW) {
-        setBook(getPreviewRentBook(bookId));
-        setPointsPage(previewPointsPage);
-        setCouponsPage(previewCouponsPage);
-        setIsLoading(false);
-        return;
-      }
 
       try {
         const [bookDetail, points, coupons] = await Promise.all([
@@ -269,23 +213,6 @@ export function RentPaymentPage() {
 
     setIsSubmitting(true);
     setCheckoutMessage('');
-
-    if (TEMP_PAYMENT_COMPLETE_PREVIEW) {
-      navigate(`/books/${bookId}/rent/complete`, {
-        state: {
-          paymentNumber: '12345678',
-          rentalId: 1,
-          paymentType: isFreeBook ? '무료 대여' : '카드 결제',
-          bookTitle: book.title,
-          saleAmount: basePaymentAmount,
-          usedPointAmount: pointDiscountAmount,
-          usedCouponName: appliedCoupon ? getCouponName(appliedCoupon) : '-',
-          couponDiscountAmount,
-          finalPaymentAmount,
-        },
-      });
-      return;
-    }
 
     try {
       const numericBookId = Number(bookId);

@@ -9,21 +9,6 @@ import styles from '../../../styles/BookDetailPage.module.css';
 type DetailTab = 'description' | 'recommendations' | 'reviews';
 type ModalType = 'login' | 'bookReport' | 'reviewReport' | null;
 
-const TEMP_PAYMENT_COMPLETE_PREVIEW = true;
-
-function getPreviewBook(bookId: string): BookDetail {
-  return {
-    bookId: Number(bookId),
-    title: `책 제목${bookId}`,
-    author: `저자${bookId}`,
-    publisher: 'ABC 출판',
-    description: '대여와 결제 완료 흐름을 확인하기 위한 임시 도서 상세입니다.',
-    coverImageUrl: '',
-    rentalType: 'PAID',
-    status: 'AVAILABLE',
-  };
-}
-
 function ModalShell({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
   return (
     <div className={styles.modalBackdrop}>
@@ -61,7 +46,7 @@ function StarPicker({ value, onChange }: { value: number; onChange: (rating: num
 export function BookDetailPage() {
   const { bookId } = useParams();
   const navigate = useNavigate();
-  const isSignedIn = TEMP_PAYMENT_COMPLETE_PREVIEW || Boolean(localStorage.getItem('accessToken'));
+  const isSignedIn = Boolean(localStorage.getItem('accessToken'));
   const [book, setBook] = useState<BookDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -90,12 +75,6 @@ export function BookDetailPage() {
         setBook(bookDetail);
         setIsFavorite(false);
       } catch {
-        if (TEMP_PAYMENT_COMPLETE_PREVIEW) {
-          setBook(getPreviewBook(bookId));
-          setIsFavorite(false);
-          setErrorMessage('');
-          return;
-        }
         setErrorMessage('도서 정보를 불러오지 못했습니다.');
       } finally {
         setLoading(false);
