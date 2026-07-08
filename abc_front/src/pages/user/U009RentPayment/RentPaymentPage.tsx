@@ -126,6 +126,14 @@ export function RentPaymentPage() {
       setIsLoading(true);
       setErrorMessage('');
 
+      if (TEMP_PAYMENT_COMPLETE_PREVIEW) {
+        setBook(getPreviewRentBook(bookId));
+        setPointsPage(previewPointsPage);
+        setCouponsPage(previewCouponsPage);
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const [bookDetail, points, coupons] = await Promise.all([
           getBookDetail(Number(bookId)),
@@ -140,13 +148,6 @@ export function RentPaymentPage() {
         }
       } catch (error) {
         if (!ignore) {
-          if (TEMP_PAYMENT_COMPLETE_PREVIEW) {
-            setBook(getPreviewRentBook(bookId));
-            setPointsPage(previewPointsPage);
-            setCouponsPage(previewCouponsPage);
-            setErrorMessage('');
-            return;
-          }
           setErrorMessage(getApiErrorMessage(error));
         }
       } finally {
