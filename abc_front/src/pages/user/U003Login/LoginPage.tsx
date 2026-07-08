@@ -5,29 +5,12 @@ import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
 import type { LoginRequest } from '../../../types/api';
 
-const devLoginMember = {
-  accessToken: 'dev-access-token',
-  role: 'USER',
-  memberId: '1',
-  loginId: 'dev-user',
-  name: '개발용 회원',
-};
-
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const signupComplete = Boolean((location.state as { signupComplete?: boolean } | null)?.signupComplete);
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  function saveLoginSession(session: typeof devLoginMember) {
-    localStorage.setItem('accessToken', session.accessToken);
-    localStorage.setItem('memberRole', session.role);
-    localStorage.setItem('memberId', session.memberId);
-    localStorage.setItem('loginId', session.loginId);
-    localStorage.setItem('memberName', session.name);
-    window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
-  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -42,13 +25,12 @@ export function LoginPage() {
 
     try {
       const response = await login(payload);
-      saveLoginSession({
-        accessToken: response.accessToken,
-        role: response.member.role,
-        memberId: String(response.member.memberId),
-        loginId: response.member.loginId,
-        name: response.member.name,
-      });
+      localStorage.setItem('accessToken', response.accessToken);
+      localStorage.setItem('memberRole', response.member.role);
+      localStorage.setItem('memberId', String(response.member.memberId));
+      localStorage.setItem('loginId', response.member.loginId);
+      localStorage.setItem('memberName', response.member.name);
+      window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
       navigate('/');
     } catch (error) {
       setErrorMessage(getApiErrorMessage(error));
@@ -56,11 +38,6 @@ export function LoginPage() {
       setIsSubmitting(false);
     }
   };
-
-  function handleDevLogin() {
-    saveLoginSession(devLoginMember);
-    navigate('/');
-  }
 
   return (
     <section className="page-section form-page">
@@ -98,12 +75,6 @@ export function LoginPage() {
         <button type="button" className="google-login-btn">
           Google로 로그인하기
         </button>
-
-        {import.meta.env.DEV ? (
-          <button type="button" className="dev-login-btn" onClick={handleDevLogin}>
-            개발용 회원으로 로그인
-          </button>
-        ) : null}
 
         <div className="login-option-row">
           <label className="keep-login">
