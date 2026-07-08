@@ -2345,12 +2345,15 @@ a.count-card:focus-visible {
 }
 
 .abc-logo {
-  color: var(--abc-header-brand);
-  font-size: clamp(2.25rem, 4vw, 3rem);
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: 2px;
+  display: inline-flex;
+  align-items: center;
   text-decoration: none;
+}
+
+.abc-logo img {
+  display: block;
+  width: clamp(92px, 8vw, 118px);
+  height: auto;
 }
 
 .abc-search {
@@ -2557,7 +2560,7 @@ a.count-card:focus-visible {
 .abc-nav-link {
   color: var(--abc-header-muted);
   font-size: 1.25rem;
-  font-weight: 400;
+  font-weight: 700;
   text-align: center;
   text-decoration: none;
 }
@@ -2572,7 +2575,6 @@ a.count-card:focus-visible {
 
 .abc-nav-link.active {
   color: var(--abc-header-ink);
-  font-weight: 700;
 }
 
 @media (max-width: 960px) {
