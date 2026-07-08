@@ -51,8 +51,11 @@ export function Header() {
     }, []);
 
     const isActiveNav = (to: string) => {
-        if (to === '/') return location.pathname === '/';
-        if (to === '/books') return (location.pathname === '/books' && location.search !== '?section=best') || location.pathname === '/search';
+        const searchParams = new URLSearchParams(location.search);
+        const isHomeMorePage = location.pathname === '/books' && searchParams.get('source') === 'home';
+
+        if (to === '/') return location.pathname === '/' || isHomeMorePage;
+        if (to === '/books') return !isHomeMorePage && ((location.pathname === '/books' && searchParams.get('section') !== 'best') || location.pathname === '/search');
         return `${location.pathname}${location.search}` === to;
     };
 

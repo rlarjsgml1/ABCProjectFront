@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Footer } from './Footer';
 import { Header } from './Header';
 
 export function UserLayout() {
+    const location = useLocation();
     const [showScrollTop, setShowScrollTop] = useState(false);
+
+    useEffect(() => {
+        window.scrollTo({ top: 0, left: 0 });
+    }, [location.pathname, location.search]);
 
     useEffect(() => {
         const handleScroll = () => {

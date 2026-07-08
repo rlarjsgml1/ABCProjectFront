@@ -1,11 +1,12 @@
 ﻿import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { getBooks, getCategories, type BookListQuery } from '../../../api/bookApi';
+import { getBooks, getCategories, getRecommendedBooks, type BookListQuery } from '../../../api/bookApi';
 import { EmptyState } from '../../../components/common/EmptyState';
 import type { BookCard, Category, PageResponse } from '../../../types/api';
 import '../../../styles/books.css';
 
 const PAGE_SIZE = 15;
+const SECTION_PAGE_SIZE = 16;
 
 const fallbackCategories: Category[] = [
   { categoryId: 1, name: '소설' },
@@ -73,6 +74,36 @@ const weeklyArrivalBooks: BookCard[] = [
   favoriteYn: false,
 })) as BookCard[];
 
+type SectionKey = 'recommend' | 'latest' | 'best';
+
+type SectionConfig = {
+  title: string;
+  count: number;
+  query: BookListQuery;
+  emptyTitle: string;
+};
+
+const sectionConfigs: Record<SectionKey, SectionConfig> = {
+  recommend: {
+    title: '추천 도서',
+    count: 16,
+    query: { section: 'recommend', sort: 'popular' },
+    emptyTitle: '추천 도서가 없습니다.',
+  },
+  latest: {
+    title: '새로 나온 작품',
+    count: 16,
+    query: { sort: 'latest' },
+    emptyTitle: '신간 도서가 없습니다.',
+  },
+  best: {
+    title: '베스트 작품',
+    count: 16,
+    query: { section: 'best', sort: 'popular' },
+    emptyTitle: '베스트 도서가 없습니다.',
+  },
+};
+
 function getBookCategoryId(book: BookCard) {
   return (book as BookCard & { categoryId?: number }).categoryId;
 }
@@ -139,8 +170,44 @@ function getFallbackPage(query: BookListQuery, page: number): PageResponse<BookC
   };
 }
 
+function getSectionKey(section: string | null): SectionKey | null {
+  if (section === 'recommend' || section === 'latest' || section === 'best') {
+    return section;
+  }
+
+  return null;
+}
+
+function getFallbackSectionPage(section: SectionKey, page: number): PageResponse<BookCard> {
+  const config = sectionConfigs[section];
+  const query = config.query;
+  let content = [...fallbackBooks].slice(0, config.count);
+
+  if (query.sort === 'latest') {
+    content.sort((a, b) => b.bookId - a.bookId);
+  }
+
+  if (query.sort === 'popular' || query.section === 'best') {
+    content.sort((a, b) => b.reviewCount - a.reviewCount);
+  }
+
+  const totalElements = content.length;
+  const totalPages = Math.max(1, Math.ceil(totalElements / SECTION_PAGE_SIZE));
+  const start = page * SECTION_PAGE_SIZE;
+
+  return {
+    content: content.slice(start, start + SECTION_PAGE_SIZE),
+    page,
+    size: SECTION_PAGE_SIZE,
+    totalElements,
+    totalPages,
+    last: page >= totalPages - 1,
+  };
+}
+
 export function BooksPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
   const [bookPage, setBookPage] = useState<PageResponse<BookCard>>(() => getFallbackPage({ sort: 'popular' }, 0));
   const [featuredBooks, setFeaturedBooks] = useState<BookCard[]>(weeklyArrivalBooks);
   const [featuredIndex, setFeaturedIndex] = useState(0);
@@ -149,6 +216,8 @@ export function BooksPage() {
   const [errorMessage, setErrorMessage] = useState('');
 
   const currentPage = Number(searchParams.get('page') ?? '0');
+  const sectionKey = getSectionKey(searchParams.get('section'));
+  const sectionConfig = sectionKey ? sectionConfigs[sectionKey] : null;
   const sort = searchParams.get('sort') ?? (searchParams.get('section') === 'best' ? 'popular' : 'popular');
   const categoryId = searchParams.get('categoryId') ? Number(searchParams.get('categoryId')) : undefined;
   const categoryName = searchParams.get('category') ?? undefined;
@@ -249,7 +318,23 @@ export function BooksPage() {
     async function loadBooks() {
       setIsLoading(true);
       try {
-        const data = await getBooks(currentPage, PAGE_SIZE, query);
+        let data: PageResponse<BookCard>;
+
+        if (sectionKey === 'recommend' && isLoggedIn) {
+          const content = await getRecommendedBooks(SECTION_PAGE_SIZE);
+          data = {
+            content,
+            page: 0,
+            size: SECTION_PAGE_SIZE,
+            totalElements: content.length,
+            totalPages: 1,
+            last: true,
+          };
+        } else {
+          const sectionQuery = sectionKey === 'recommend' && !isLoggedIn ? sectionConfigs.best.query : sectionConfig?.query;
+          data = await getBooks(currentPage, sectionKey ? SECTION_PAGE_SIZE : PAGE_SIZE, sectionQuery ?? query);
+        }
+
         if (!data?.content) {
           throw new Error('Invalid books response');
         }
@@ -259,7 +344,8 @@ export function BooksPage() {
         }
       } catch {
         if (!ignore) {
-          setBookPage(getFallbackPage(query, currentPage));
+          const fallbackSectionKey = sectionKey === 'recommend' && !isLoggedIn ? 'best' : sectionKey;
+          setBookPage(fallbackSectionKey ? getFallbackSectionPage(fallbackSectionKey, currentPage) : getFallbackPage(query, currentPage));
           setErrorMessage('서버 데이터 연결 전까지 임시 도서가 표시됩니다.');
         }
       } finally {
@@ -274,7 +360,7 @@ export function BooksPage() {
     return () => {
       ignore = true;
     };
-  }, [currentPage, query]);
+  }, [currentPage, isLoggedIn, query, sectionConfig, sectionKey]);
 
   const totalPages = Math.max(1, bookPage.totalPages);
   const pageNumbers = Array.from({ length: Math.min(totalPages, 5) }, (_, index) => index);
@@ -300,6 +386,57 @@ export function BooksPage() {
     next.set('page', String(nextPage));
     setSearchParams(next);
   };
+
+  if (sectionKey && sectionConfig) {
+    return (
+      <div className="books-page">
+        <section className="books-section-more-hero" aria-label={sectionConfig.title}>
+          <div>
+            <h1>{sectionConfig.title}</h1>
+          </div>
+          <div className="books-section-more-visual" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
+        </section>
+
+        <section className="books-section-more-content">
+          <h2>전체 {bookPage.totalElements.toLocaleString('ko-KR')}건</h2>
+
+          {errorMessage ? <div className="status-banner">{errorMessage}</div> : null}
+          {isLoading ? <div className="status-banner">도서 목록을 불러오는 중입니다.</div> : null}
+
+          {!isLoading && !bookPage.content.length ? <EmptyState title={sectionConfig.emptyTitle} description="다른 도서 목록을 확인해보세요." /> : null}
+
+          <div className="books-section-more-grid" aria-label={`${sectionConfig.title} 목록`}>
+            {bookPage.content.map((book) => (
+              <Link className="books-section-more-card" to={`/books/${book.bookId}`} key={book.bookId}>
+                {book.coverImageUrl ? <img src={book.coverImageUrl} alt="" /> : <span />}
+                <strong>{book.title}</strong>
+                <small>{book.authors.join(', ') || book.publisherName || formatRentalType(book)}</small>
+              </Link>
+            ))}
+          </div>
+
+          <div className="books-pagination" aria-label="페이지 이동">
+            <button type="button" onClick={() => movePage(currentPage - 1)} disabled={currentPage <= 0}>
+              {'<'}
+            </button>
+            {pageNumbers.map((page) => (
+              <button className={currentPage === page ? 'is-active' : ''} type="button" onClick={() => movePage(page)} key={page}>
+                {page + 1}
+              </button>
+            ))}
+            <button type="button" onClick={() => movePage(currentPage + 1)} disabled={currentPage >= totalPages - 1}>
+              {'>'}
+            </button>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="books-page">
