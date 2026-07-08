@@ -1,6 +1,7 @@
 import { FormEvent, MouseEvent, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AUTH_CHANGED_EVENT } from '../../api/authApi';
+import abcLogo from '../../assets/abc-logo.png';
 
 const authStorageKeys = ['accessToken', 'memberRole', 'memberId', 'loginId', 'memberName'];
 
@@ -51,7 +52,7 @@ export function Header() {
 
     const isActiveNav = (to: string) => {
         if (to === '/') return location.pathname === '/';
-        if (to === '/books') return location.pathname === '/books' || location.pathname === '/search';
+        if (to === '/books') return (location.pathname === '/books' && location.search !== '?section=best') || location.pathname === '/search';
         return `${location.pathname}${location.search}` === to;
     };
 
@@ -90,7 +91,9 @@ export function Header() {
         <header className="abc-header">
             <div className="abc-header-inner">
             <div className="abc-header-top">
-                <Link className="abc-logo" to="/">ABC</Link>
+                <Link className="abc-logo" to="/">
+                    <img src={abcLogo} alt="ABC" />
+                </Link>
 
                 <form className="abc-search" onSubmit={handleSearch}>
                     <button className="abc-search-button" type="submit" aria-label="검색">
