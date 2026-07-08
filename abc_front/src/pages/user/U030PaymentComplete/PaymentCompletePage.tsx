@@ -126,7 +126,7 @@ export function PaymentCompletePage() {
             결제 내역 가기
           </Link>
           {state.rentalId ? (
-            <Link className="button button-secondary" to={`/viewer/${state.rentalId}`}>
+            <Link className="button button-secondary" to={`/rentals/${state.rentalId}/read`}>
               뷰어 보기
             </Link>
           ) : (

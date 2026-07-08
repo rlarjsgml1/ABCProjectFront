@@ -47,6 +47,22 @@ function getPaymentNumber(result: RentalPaymentResult) {
   return result.paymentNumber ?? (typeof result.paymentId === 'number' ? String(result.paymentId) : '-');
 }
 
+function isRentableStatus(status: string | undefined) {
+  return status === 'AVAILABLE' || status === 'RENTABLE';
+}
+
+function getRentalStatusLabel(status: string | undefined) {
+  if (isRentableStatus(status)) {
+    return '대여 가능';
+  }
+
+  if (status === 'RENTED' || status === 'UNAVAILABLE') {
+    return '대여 불가';
+  }
+
+  return '대여 가능 여부 확인 필요';
+}
+
 export function RentPaymentPage() {
   const { bookId } = useParams();
   const navigate = useNavigate();
@@ -111,20 +127,23 @@ export function RentPaymentPage() {
   const rentalPrice = book?.rentalPrice ?? book?.price;
   const rentalDays = book?.rentalPeriodDays ?? book?.defaultRentalDays;
   const isFreeBook = book?.rentalType === 'FREE';
+  const hasPaymentAmount = isFreeBook || typeof rentalPrice === 'number';
+  const canRentBook = Boolean(book && isRentableStatus(book.status) && hasPaymentAmount);
   const pointBalance = pointsPage?.currentPoint ?? pointsPage?.balance ?? pointsPage?.totalPoint;
   const usableCoupons = useMemo(() => (couponsPage?.content ?? []).filter(isUsableCoupon), [couponsPage]);
   const selectableCoupons = useMemo(() => usableCoupons.filter((coupon) => typeof getCouponId(coupon) === 'number'), [usableCoupons]);
-  const basePaymentAmount = isFreeBook ? 0 : rentalPrice ?? 0;
+  const basePaymentAmount = isFreeBook ? 0 : rentalPrice;
+  const calculablePaymentAmount = basePaymentAmount ?? 0;
   const appliedCoupon = selectableCoupons.find((coupon) => String(getCouponId(coupon)) === appliedCouponId);
-  const couponDiscountAmount = isFreeBook ? 0 : Math.min(getCouponDiscountAmount(appliedCoupon), basePaymentAmount);
-  const pointDiscountAmount = isFreeBook ? 0 : Math.min(appliedPointAmount, Math.max(basePaymentAmount - couponDiscountAmount, 0));
-  const finalPaymentAmount = Math.max(basePaymentAmount - couponDiscountAmount - pointDiscountAmount, 0);
+  const couponDiscountAmount = isFreeBook || !hasPaymentAmount ? 0 : Math.min(getCouponDiscountAmount(appliedCoupon), calculablePaymentAmount);
+  const pointDiscountAmount = isFreeBook || !hasPaymentAmount ? 0 : Math.min(appliedPointAmount, Math.max(calculablePaymentAmount - couponDiscountAmount, 0));
+  const finalPaymentAmount = hasPaymentAmount ? Math.max(calculablePaymentAmount - couponDiscountAmount - pointDiscountAmount, 0) : undefined;
   const paymentAmountLabel = formatWon(finalPaymentAmount);
   const hasAppliedPoint = appliedPointAmount > 0;
   const getMaxUsablePointAmount = (couponId: string) => {
     const coupon = selectableCoupons.find((item) => String(getCouponId(item)) === couponId);
-    const couponDiscount = isFreeBook ? 0 : Math.min(getCouponDiscountAmount(coupon), basePaymentAmount);
-    const payableAmount = Math.max(basePaymentAmount - couponDiscount, 0);
+    const couponDiscount = isFreeBook || !hasPaymentAmount ? 0 : Math.min(getCouponDiscountAmount(coupon), calculablePaymentAmount);
+    const payableAmount = Math.max(calculablePaymentAmount - couponDiscount, 0);
 
     return Math.min(pointBalance ?? 0, payableAmount);
   };
@@ -140,7 +159,7 @@ export function RentPaymentPage() {
     }
 
     const selectedCoupon = selectableCoupons.find((coupon) => String(getCouponId(coupon)) === selectedCouponId);
-    const selectedCouponDiscountAmount = Math.min(getCouponDiscountAmount(selectedCoupon), basePaymentAmount);
+    const selectedCouponDiscountAmount = hasPaymentAmount ? Math.min(getCouponDiscountAmount(selectedCoupon), calculablePaymentAmount) : 0;
 
     setAppliedCouponId(selectedCouponId);
     setCouponMessage(`쿠폰이 적용되었습니다. -${selectedCouponDiscountAmount.toLocaleString('ko-KR')}원 할인`);
@@ -206,6 +225,11 @@ export function RentPaymentPage() {
       return;
     }
 
+    if (!canRentBook) {
+      setCheckoutMessage('대여 가능 여부와 결제 금액을 확인한 후 다시 시도해 주세요.');
+      return;
+    }
+
     if (!isAgreed) {
       setCheckoutMessage('약관에 동의해 주세요.');
       return;
@@ -231,11 +255,11 @@ export function RentPaymentPage() {
           rentalId: result.rentalId,
           paymentType: result.paymentType ?? (isFreeBook ? '무료 대여' : '카드 결제'),
           bookTitle: result.bookTitle ?? book.title,
-          saleAmount: result.saleAmount ?? result.originalAmount ?? basePaymentAmount,
+          saleAmount: result.saleAmount ?? result.originalAmount ?? calculablePaymentAmount,
           usedPointAmount: result.usedPointAmount ?? result.pointUsedAmount ?? pointDiscountAmount,
           usedCouponName: result.usedCouponName ?? result.couponName ?? (appliedCoupon ? getCouponName(appliedCoupon) : '-'),
           couponDiscountAmount: result.couponDiscountAmount ?? couponDiscountAmount,
-          finalPaymentAmount: result.finalPaymentAmount ?? result.finalAmount ?? finalPaymentAmount,
+          finalPaymentAmount: result.finalPaymentAmount ?? result.finalAmount ?? finalPaymentAmount ?? 0,
         },
       });
     } catch (error) {
@@ -287,7 +311,7 @@ export function RentPaymentPage() {
               <div>
                 <dt>대여 가능 여부</dt>
                 <dd>
-                  <span className={styles.statusChip}>대여 가능</span>
+                  <span className={styles.statusChip}>{getRentalStatusLabel(book?.status)}</span>
                 </dd>
               </div>
             </dl>
@@ -432,7 +456,7 @@ export function RentPaymentPage() {
             <span>대여 및 결제 내용을 확인했습니다.</span>
           </label>
           <div className={styles.checkoutActions}>
-            <button className="button button-primary" type="button" onClick={handleConfirmRental} disabled={!book || isSubmitting}>
+            <button className="button button-primary" type="button" onClick={handleConfirmRental} disabled={!canRentBook || isSubmitting}>
               {isSubmitting ? '처리 중' : isFreeBook ? '무료 대여 확정' : '결제하기'}
             </button>
             <button className="button button-secondary" type="button" onClick={handleCancel}>
