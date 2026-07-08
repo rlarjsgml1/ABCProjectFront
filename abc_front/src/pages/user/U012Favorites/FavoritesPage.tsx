@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { deleteMyFavorite, getMyFavorites } from '../../../api/favoritesApi';
-import { getApiErrorMessage, getMyProfile } from '../../../api/profileApi';
+import { getApiErrorMessage } from '../../../api/profileApi';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
-import type { FavoriteBookItem, FavoriteSort, UserProfile } from '../../../types/api';
+import type { FavoriteBookItem, FavoriteSort } from '../../../types/api';
 
 const pageSize = 20;
 
@@ -40,43 +40,11 @@ function formatRegisteredDate(book: FavoriteBookItem) {
 }
 
 export function FavoritesPage() {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isProfileLoading, setIsProfileLoading] = useState(true);
-  const [profileError, setProfileError] = useState('');
   const [favoriteBooks, setFavoriteBooks] = useState<FavoriteBookItem[]>([]);
   const [sort, setSort] = useState<FavoriteSort>('recent');
   const [isLoading, setIsLoading] = useState(true);
   const [isDeletingBookId, setIsDeletingBookId] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
-
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadProfile() {
-      try {
-        const data = await getMyProfile();
-        if (!ignore) {
-          setProfile(data);
-          setProfileError('');
-        }
-      } catch (error) {
-        if (!ignore) {
-          setProfile(null);
-          setProfileError(getApiErrorMessage(error));
-        }
-      } finally {
-        if (!ignore) {
-          setIsProfileLoading(false);
-        }
-      }
-    }
-
-    void loadProfile();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -127,7 +95,7 @@ export function FavoritesPage() {
   const isEmpty = !isLoading && favoriteBooks.length === 0;
 
   return (
-    <MyPageLayout profile={profile} isLoading={isProfileLoading} errorMessage={profileError} titleId="favorites-title">
+    <MyPageLayout titleId="favorites-title">
       <section className="page-section favorites-page">
         <div className="favorites-title-row">
           <div>

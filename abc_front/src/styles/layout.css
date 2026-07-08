@@ -692,9 +692,333 @@
 /* U-018 결제 내역 / U-021 신고 내역 공통 툴바 */
 .payments-page,
 .reports-page,
-.book-request-history-page {
+.book-request-history-page,
+.my-rentals-page {
   display: grid;
   gap: var(--space-6);
+}
+
+.my-rentals-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.my-rentals-subtitle {
+  margin: var(--space-2) 0 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.my-rentals-section-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+/* U-011 전자책 뷰어 (사이트 헤더/푸터 없이 화면 전체를 차지) */
+.viewer-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: var(--space-6) var(--space-8);
+  background: var(--color-background);
+}
+
+.viewer-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.viewer-title-block {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+.viewer-title {
+  margin: 0;
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.viewer-page-label {
+  margin: var(--space-1) 0 0;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.viewer-completed-badge {
+  margin-left: var(--space-2);
+  padding: 2px var(--space-2);
+  border-radius: 999px;
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  font-weight: 800;
+  font-size: 0.75rem;
+}
+
+.viewer-tool-buttons {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.viewer-icon-button {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.viewer-icon-button:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.viewer-body {
+  display: flex;
+  flex: 1;
+  gap: var(--space-4);
+  align-items: stretch;
+  min-height: 0;
+}
+
+.viewer-content {
+  flex: 1;
+  min-height: calc(var(--space-10) * 10);
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.viewer-page-text {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.8;
+  color: var(--color-text);
+}
+
+.viewer-bookmark-panel {
+  width: calc(var(--space-10) * 6);
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.viewer-bookmark-panel h3 {
+  margin: 0 0 var(--space-3);
+  font-size: 0.95rem;
+}
+
+.viewer-bookmark-panel ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.viewer-bookmark-empty {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.viewer-bookmark-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+}
+
+.viewer-bookmark-page-button {
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.viewer-bookmark-delete-button {
+  border: 0;
+  background: none;
+  color: var(--color-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.viewer-bookmark-confirm {
+  display: grid;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+}
+
+.viewer-bookmark-confirm-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.viewer-page-indicator {
+  align-self: center;
+  border-radius: var(--radius-md);
+  padding: var(--space-1) var(--space-4);
+  background: var(--color-surface-muted);
+  color: var(--color-muted);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.viewer-scrub-bar {
+  display: flex;
+  align-items: center;
+}
+
+.viewer-scrub-slider {
+  width: 100%;
+  accent-color: var(--color-primary);
+}
+
+.viewer-edge-nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: calc(var(--space-10) * 1.2);
+  height: calc(var(--space-10) * 1.2);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
+  font-size: 1.3rem;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.viewer-edge-nav:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.viewer-edge-nav-prev {
+  left: var(--space-4);
+}
+
+.viewer-edge-nav-next {
+  right: var(--space-4);
+}
+
+.viewer-settings-modal {
+  width: min(420px, 90vw);
+}
+
+.viewer-settings-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.viewer-settings-body {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.viewer-settings-group {
+  display: grid;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.viewer-settings-group:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.viewer-settings-group-title {
+  margin: 0;
+  font-weight: 800;
+}
+
+.viewer-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.viewer-stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-weight: 700;
+}
+
+.viewer-stepper button {
+  width: calc(var(--space-8) * 1);
+  height: calc(var(--space-8) * 1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.viewer-stepper button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.viewer-mode-toggle {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-surface);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.viewer-search-field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+}
+
+.viewer-search-field input {
+  border: 0;
+  padding: 0;
+}
+
+.viewer-search-field button {
+  border: 0;
+  background: none;
+  color: var(--color-muted);
+  cursor: pointer;
+  font-size: 1rem;
 }
 
 .payments-toolbar {
@@ -707,6 +1031,14 @@
   display: grid;
   gap: var(--space-2);
   font-weight: 700;
+}
+
+.payment-detail-breakdown {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  display: grid;
+  gap: var(--space-2);
 }
 
 /* U-022 희망도서 신청 */
@@ -1956,8 +2288,14 @@ a.count-card:focus-visible {
   width: 100%;
   position: relative;
   z-index: 50;
-  padding: var(--space-6) clamp(var(--space-6), 8vw, 150px) var(--space-8);
+  padding: var(--space-6) 0 var(--space-8);
   background: var(--abc-header-surface);
+}
+
+.abc-header-inner {
+  width: min(1440px, 100%);
+  margin: 0 auto;
+  padding: 0 var(--space-8);
 }
 
 .abc-header-top {
@@ -2196,7 +2534,7 @@ a.count-card:focus-visible {
 
 .abc-nav-link.active {
   color: var(--abc-header-ink);
-  font-weight: 1000;
+  font-weight: 700;
 }
 
 @media (max-width: 960px) {

@@ -1,8 +1,5 @@
-import { useEffect, useState } from 'react';
-import { getApiErrorMessage, getMyProfile } from '../../../api/profileApi';
 import { EmptyState } from '../../../components/common/EmptyState';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
-import type { UserProfile } from '../../../types/api';
 
 const libraryItems = [
   { title: '대여 중인 도서', description: '현재 읽고 있는 전자책 목록이 연결될 영역입니다.' },
@@ -11,41 +8,8 @@ const libraryItems = [
 ];
 
 export function MyPage() {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState('');
-
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadProfile() {
-      try {
-        const data = await getMyProfile();
-        if (!ignore) {
-          setProfile(data);
-          setErrorMessage('');
-        }
-      } catch (error) {
-        if (!ignore) {
-          setProfile(null);
-          setErrorMessage(getApiErrorMessage(error));
-        }
-      } finally {
-        if (!ignore) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    void loadProfile();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
   return (
-    <MyPageLayout profile={profile} isLoading={isLoading} errorMessage={errorMessage} titleId="mypage-library-title">
+    <MyPageLayout titleId="mypage-library-title">
       <section className="page-section usage-history-panel">
         <div className="section-heading-row">
           <div>

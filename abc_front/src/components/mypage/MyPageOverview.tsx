@@ -111,8 +111,8 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
     { label: '포인트', value: formatPoint(displayProfile.point), to: '/me/points-coupons' },
     { label: '쿠폰', value: valueOrDash(displayProfile.couponCount), to: '/me/points-coupons' },
   ];
-  const bottomStats = [
-    { label: '대여', value: valueOrDash(displayProfile.rentalCount) },
+  const bottomStats: TopStat[] = [
+    { label: '대여', value: valueOrDash(displayProfile.rentalCount), to: '/me/rentals' },
     { label: '완독', value: valueOrDash(displayProfile.completedBookCount) },
     { label: '즐겨찾기', value: valueOrDash(displayProfile.favoriteCount) },
   ];
@@ -180,12 +180,19 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
             </div>
           </div>
           <div className="count-card-grid count-card-grid-bottom" aria-label="대여 완독 즐겨찾기 요약">
-            {bottomStats.map((card) => (
-              <div className="count-card" key={card.label}>
-                <strong>{card.value}</strong>
-                <span>{card.label}</span>
-              </div>
-            ))}
+            {bottomStats.map((card) =>
+              card.to ? (
+                <Link className="count-card" key={card.label} to={card.to}>
+                  <strong>{card.value}</strong>
+                  <span>{card.label}</span>
+                </Link>
+              ) : (
+                <div className="count-card" key={card.label}>
+                  <strong>{card.value}</strong>
+                  <span>{card.label}</span>
+                </div>
+              ),
+            )}
           </div>
         </section>
 

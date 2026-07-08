@@ -1,8 +1,9 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { changeMyPassword, getApiErrorMessage, getMyProfile, updateMyProfile } from '../../../api/profileApi';
+import { changeMyPassword, getApiErrorMessage, updateMyProfile } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
+import { useMyProfile } from '../../../context/MyProfileContext';
 import type { UserPasswordChangeRequest, UserProfile, UserProfileUpdateRequest } from '../../../types/api';
 
 const emptyProfile: UserProfile = {
@@ -62,46 +63,21 @@ function validatePasswordForm(form: UserPasswordChangeRequest) {
 
 export function ProfileEditPage() {
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const { profile, isLoading, refetchProfile } = useMyProfile();
   const [form, setForm] = useState<UserProfileUpdateRequest>({ name: '', email: '', phone: '', gender: '' });
   const [passwordForm, setPasswordForm] = useState<UserPasswordChangeRequest>(initialPasswordForm);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [profileMessage, setProfileMessage] = useState('');
   const [profileError, setProfileError] = useState('');
-  const [loadError, setLoadError] = useState('');
   const [passwordMessage, setPasswordMessage] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
   useEffect(() => {
-    let ignore = false;
-
-    async function loadProfile() {
-      try {
-        const data = await getMyProfile();
-        if (!ignore) {
-          setProfile(data);
-          setForm({ name: data.name, email: data.email, phone: data.phone, gender: data.gender });
-          setLoadError('');
-        }
-      } catch (error) {
-        if (!ignore) {
-          setLoadError(getApiErrorMessage(error));
-        }
-      } finally {
-        if (!ignore) {
-          setIsLoading(false);
-        }
-      }
+    if (profile) {
+      setForm({ name: profile.name, email: profile.email, phone: profile.phone, gender: profile.gender });
     }
-
-    void loadProfile();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
+  }, [profile]);
 
   async function handleProfileSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -119,13 +95,13 @@ export function ProfileEditPage() {
 
     try {
       const updatedProfile = await updateMyProfile(form);
-      setProfile(updatedProfile);
       setForm({
         name: updatedProfile.name,
         email: updatedProfile.email,
         phone: updatedProfile.phone,
         gender: updatedProfile.gender,
       });
+      refetchProfile();
       setProfileMessage('회원정보가 저장되었습니다.');
     } catch (error) {
       setProfileError(getApiErrorMessage(error));
@@ -162,7 +138,7 @@ export function ProfileEditPage() {
   const displayProfile = profile ?? emptyProfile;
 
   return (
-    <MyPageLayout profile={profile} isLoading={isLoading} errorMessage={loadError} titleId="profile-edit-title">
+    <MyPageLayout titleId="profile-edit-title">
         <section className="page-section profile-edit-form">
           <div className="section-heading-row">
             <div>

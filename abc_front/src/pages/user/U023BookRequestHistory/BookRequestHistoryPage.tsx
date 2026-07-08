@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getMyBookRequests } from '../../../api/bookRequestsApi';
-import { getApiErrorMessage, getMyProfile } from '../../../api/profileApi';
+import { getApiErrorMessage } from '../../../api/profileApi';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
-import type { BookRequestHistoryItem, BookRequestHistoryPage as BookRequestHistoryPageType, BookRequestStatus, UserProfile } from '../../../types/api';
+import type { BookRequestHistoryItem, BookRequestHistoryPage as BookRequestHistoryPageType, BookRequestStatus } from '../../../types/api';
 
 const pageSize = 10;
 
@@ -31,43 +31,11 @@ function getStatusLabel(value: BookRequestStatus) {
 }
 
 export function BookRequestHistoryPage() {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isProfileLoading, setIsProfileLoading] = useState(true);
-  const [profileError, setProfileError] = useState('');
   const [status, setStatus] = useState<BookRequestStatus | ''>('');
   const [requestsPage, setRequestsPage] = useState<BookRequestHistoryPageType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedRequest, setSelectedRequest] = useState<BookRequestHistoryItem | null>(null);
-
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadProfile() {
-      try {
-        const data = await getMyProfile();
-        if (!ignore) {
-          setProfile(data);
-          setProfileError('');
-        }
-      } catch (error) {
-        if (!ignore) {
-          setProfile(null);
-          setProfileError(getApiErrorMessage(error));
-        }
-      } finally {
-        if (!ignore) {
-          setIsProfileLoading(false);
-        }
-      }
-    }
-
-    void loadProfile();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -103,7 +71,7 @@ export function BookRequestHistoryPage() {
   const requests = requestsPage?.content ?? [];
 
   return (
-    <MyPageLayout profile={profile} isLoading={isProfileLoading} errorMessage={profileError} titleId="book-request-history-title">
+    <MyPageLayout titleId="book-request-history-title">
       <section className="page-section book-request-history-page">
         <div className="section-heading-row">
           <div>

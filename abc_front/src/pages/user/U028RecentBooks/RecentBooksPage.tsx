@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getRecentBooks } from '../../../api/recentBooksApi';
-import { getApiErrorMessage, getMyProfile } from '../../../api/profileApi';
+import { getApiErrorMessage } from '../../../api/profileApi';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
-import type { RecentBookItem, UserProfile } from '../../../types/api';
+import type { RecentBookItem } from '../../../types/api';
 
 function formatProgress(current: number, total: number) {
   if (total <= 0) {
@@ -24,41 +24,9 @@ function formatLastReadAt(value: string) {
 }
 
 export function RecentBooksPage() {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isProfileLoading, setIsProfileLoading] = useState(true);
-  const [profileError, setProfileError] = useState('');
   const [recentBooks, setRecentBooks] = useState<RecentBookItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadProfile() {
-      try {
-        const data = await getMyProfile();
-        if (!ignore) {
-          setProfile(data);
-          setProfileError('');
-        }
-      } catch (error) {
-        if (!ignore) {
-          setProfile(null);
-          setProfileError(getApiErrorMessage(error));
-        }
-      } finally {
-        if (!ignore) {
-          setIsProfileLoading(false);
-        }
-      }
-    }
-
-    void loadProfile();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -94,7 +62,7 @@ export function RecentBooksPage() {
   const isEmpty = !isLoading && recentBooks.length === 0;
 
   return (
-    <MyPageLayout profile={profile} isLoading={isProfileLoading} errorMessage={profileError} titleId="recent-books-title">
+    <MyPageLayout titleId="recent-books-title">
       <section className="page-section recent-books-page">
         <div className="section-heading-row">
           <div>
@@ -131,20 +99,23 @@ export function RecentBooksPage() {
                   </Link>
 
                   <p className="recent-book-progress-text">
-                    {book.currentPage} / {book.totalPage} 페이지 ({formatProgress(book.currentPage, book.totalPage)})
+                    {book.currentPage} / {book.totalPages} 페이지 ({formatProgress(book.currentPage, book.totalPages)})
                   </p>
 
                   <div className="recent-book-progress-track">
                     <span
                       className="recent-book-progress-fill"
-                      style={{ width: formatProgress(book.currentPage, book.totalPage) }}
+                      style={{ width: formatProgress(book.currentPage, book.totalPages) }}
                     />
                   </div>
 
                   <p className="recent-book-last-read">마지막 읽은 시각 {formatLastReadAt(book.lastReadAt)}</p>
                 </div>
 
-                <Link to={`/books/${book.bookId}`} className="button button-primary recent-book-continue-button">
+                <Link
+                  to={`/rentals/${book.rentalId}/read?page=${book.currentPage > 0 ? book.currentPage : 1}`}
+                  className="button button-primary recent-book-continue-button"
+                >
                   이어보기
                 </Link>
               </article>
