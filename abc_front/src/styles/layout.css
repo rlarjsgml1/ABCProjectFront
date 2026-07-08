@@ -2288,8 +2288,14 @@ a.count-card:focus-visible {
   width: 100%;
   position: relative;
   z-index: 50;
-  padding: var(--space-6) clamp(var(--space-6), 8vw, 150px) var(--space-8);
+  padding: var(--space-6) 0 var(--space-8);
   background: var(--abc-header-surface);
+}
+
+.abc-header-inner {
+  width: min(1440px, 100%);
+  margin: 0 auto;
+  padding: 0 var(--space-8);
 }
 
 .abc-header-top {
@@ -2528,7 +2534,7 @@ a.count-card:focus-visible {
 
 .abc-nav-link.active {
   color: var(--abc-header-ink);
-  font-weight: 1000;
+  font-weight: 700;
 }
 
 @media (max-width: 960px) {
