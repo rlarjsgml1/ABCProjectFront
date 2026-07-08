@@ -27,7 +27,7 @@ function getPreviewRentBook(bookId: string): RentBookDetail {
     title: `책 제목${bookId}`,
     author: `저자${bookId}`,
     publisher: 'ABC 출판',
-    description: 'U-030 결제완료 화면까지 이어지는 흐름을 확인하기 위한 임시 대여 도서입니다.',
+    description: '대여와 결제 완료 흐름을 확인하기 위한 임시 대여 도서입니다.',
     coverImageUrl: '',
     rentalType: 'PAID',
     status: 'AVAILABLE',
@@ -195,8 +195,11 @@ export function RentPaymentPage() {
       return;
     }
 
+    const selectedCoupon = selectableCoupons.find((coupon) => String(getCouponId(coupon)) === selectedCouponId);
+    const selectedCouponDiscountAmount = Math.min(getCouponDiscountAmount(selectedCoupon), basePaymentAmount);
+
     setAppliedCouponId(selectedCouponId);
-    setCouponMessage('쿠폰이 적용되었습니다.');
+    setCouponMessage(`쿠폰이 적용되었습니다. -${selectedCouponDiscountAmount.toLocaleString('ko-KR')}원 할인`);
 
     const maxPointAmount = getMaxUsablePointAmount(selectedCouponId);
     if (appliedPointAmount > maxPointAmount) {
@@ -317,8 +320,6 @@ export function RentPaymentPage() {
 
   return (
     <section className={`page-section ${styles.page}`}>
-      <p className="eyebrow">U-009</p>
-
       <div className={styles.header}>
         <div>
           <h1>대여/결제 확인</h1>

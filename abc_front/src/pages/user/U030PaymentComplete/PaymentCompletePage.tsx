@@ -44,7 +44,6 @@ export function PaymentCompletePage() {
     return (
       <section className={`page-section ${styles.page}`}>
         <div className={styles.emptyState}>
-          <p className="eyebrow">U-030</p>
           <h1>결제 완료 정보를 확인할 수 없습니다.</h1>
           <p>결제 완료된 도서만 이 화면에서 확인할 수 있습니다.</p>
 
@@ -64,7 +63,6 @@ export function PaymentCompletePage() {
   return (
     <section className={`page-section ${styles.page}`}>
       <header className={styles.header}>
-        <p className="eyebrow">U-030</p>
         <h1>결제 완료</h1>
         <p>다음과 같이 결제가 완료되었습니다. 감사합니다.</p>
       </header>
@@ -100,20 +98,20 @@ export function PaymentCompletePage() {
           </dl>
         </section>
 
-        <section className={styles.confirmPanel} aria-labelledby="rental-confirm-title">
-          <h2 id="rental-confirm-title">대여 완료 정보</h2>
+        <section className={styles.confirmPanel} aria-labelledby="rental-guide-title">
+          <h2 id="rental-guide-title">대여 이용 안내</h2>
           <dl>
             <div>
-              <dt>결제번호</dt>
-              <dd>{state.paymentNumber}</dd>
+              <dt>이용 위치</dt>
+              <dd>내 서재</dd>
             </div>
             <div>
-              <dt>결제 유형</dt>
-              <dd>{state.paymentType}</dd>
+              <dt>이용 상태</dt>
+              <dd>대여 완료</dd>
             </div>
             <div>
-              <dt>도서명</dt>
-              <dd>{state.bookTitle}</dd>
+              <dt>뷰어 이용</dt>
+              <dd>전자책 뷰어에서 바로 열람할 수 있습니다.</dd>
             </div>
           </dl>
         </section>
