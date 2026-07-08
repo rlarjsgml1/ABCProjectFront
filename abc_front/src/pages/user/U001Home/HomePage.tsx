@@ -56,6 +56,8 @@ const fallbackCategories: HomeCategory[] = [
   { name: '전공서적' },
 ];
 
+const categoryIcons = ['📖', '💼', '🏛', '💻', '🌱', '✒️', '🌿', '⭐'];
+
 const fallbackRecommendedBooks: BookItem[] = [
   { id: 1, title: '바람의 문장', author: '김하늘', tone: '#eda0a4' },
   { id: 2, title: '작은 도서관', author: '이서윤', tone: '#e8989d' },
@@ -246,9 +248,9 @@ export function HomePage() {
           <Link to="/books">더보기 &gt;</Link>
         </div>
         <div className="home-category-grid">
-          {categories.map((category) => (
+          {categories.map((category, index) => (
             <Link className="home-category-item" to={getCategoryLink(category)} key={category.id ?? category.name}>
-              <span aria-hidden="true" />
+              <span aria-hidden="true">{categoryIcons[index % categoryIcons.length]}</span>
               <strong>{category.name}</strong>
             </Link>
           ))}

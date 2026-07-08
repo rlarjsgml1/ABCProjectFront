@@ -3,6 +3,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: var(--color-surface);
 }
 
 .site-header,
@@ -42,6 +43,43 @@
 .site-footer {
   padding: var(--space-4) var(--space-8);
   color: var(--color-muted);
+}
+
+.scroll-top-button {
+  position: fixed;
+  right: clamp(var(--space-4), 3vw, var(--space-8));
+  bottom: clamp(var(--space-4), 3vw, var(--space-8));
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  color: var(--color-surface);
+  background: #003d2d;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.24);
+  cursor: pointer;
+  font-size: 1.25rem;
+  font-weight: 900;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.scroll-top-button.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.scroll-top-button:hover,
+.scroll-top-button:focus-visible {
+  background: #002f23;
+  outline: 0;
 }
 
 .admin-shell {
@@ -2307,12 +2345,15 @@ a.count-card:focus-visible {
 }
 
 .abc-logo {
-  color: var(--abc-header-brand);
-  font-size: clamp(2.25rem, 4vw, 3rem);
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: 2px;
+  display: inline-flex;
+  align-items: center;
   text-decoration: none;
+}
+
+.abc-logo img {
+  display: block;
+  width: clamp(92px, 8vw, 118px);
+  height: auto;
 }
 
 .abc-search {
@@ -2519,7 +2560,7 @@ a.count-card:focus-visible {
 .abc-nav-link {
   color: var(--abc-header-muted);
   font-size: 1.25rem;
-  font-weight: 400;
+  font-weight: 700;
   text-align: center;
   text-decoration: none;
 }
@@ -2534,7 +2575,6 @@ a.count-card:focus-visible {
 
 .abc-nav-link.active {
   color: var(--abc-header-ink);
-  font-weight: 700;
 }
 
 @media (max-width: 960px) {
