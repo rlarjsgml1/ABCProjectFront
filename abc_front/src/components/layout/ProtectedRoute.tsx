@@ -7,11 +7,10 @@ type ProtectedRouteProps = {
 };
 
 export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
-  const isPreviewLogin = true; // U-027 화면 확인용 임시 로그인 처리. PR 전 제거 필요.
   const role = localStorage.getItem('memberRole');
   const token = localStorage.getItem('accessToken');
 
-  if (!token && !isPreviewLogin) {
+  if (!token) {
     return <Navigate to="/login" replace />;
   }
 

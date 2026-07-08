@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { claimChallengeReward, fallbackChallenges, getMyChallenges } from '../../../api/challengesApi';
+import { claimChallengeReward, getMyChallenges } from '../../../api/challengesApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
 import type { ChallengeItem, ChallengeListResponse, ChallengeRewardStatus, ChallengeType } from '../../../types/api';
@@ -12,7 +12,6 @@ const tabs: Array<{ label: string; value: ChallengeTab }> = [
   { label: '일일 챌린지', value: 'DAILY' },
   { label: '전체', value: 'ALL' },
 ];
-const isPreviewChallengeData = true; // U-027 화면 확인용 임시 데이터 처리. PR 전 제거 필요.
 
 function normalizeChallenges(data: ChallengeListResponse | null | undefined) {
   if (!data) {
@@ -135,7 +134,7 @@ function getEndDate(challenge: ChallengeItem) {
 
 export function ChallengesPage() {
   const [activeTab, setActiveTab] = useState<ChallengeTab>('DAILY');
-  const [challenges, setChallenges] = useState<ChallengeItem[]>(fallbackChallenges);
+  const [challenges, setChallenges] = useState<ChallengeItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [expandedChallengeId, setExpandedChallengeId] = useState<number | null>(null);
@@ -156,12 +155,12 @@ export function ChallengesPage() {
             const type = getChallengeType(challenge);
             return type === 'DAILY' || type === 'TOTAL';
           });
-          setChallenges(nextChallenges.length > 0 || !isPreviewChallengeData ? nextChallenges : fallbackChallenges);
+          setChallenges(nextChallenges);
         }
-      } catch (error) {
+      } catch {
         if (!ignore) {
-          setChallenges(fallbackChallenges);
-          setErrorMessage('현재 챌린지 정보를 불러올 수 없어 미리보기 챌린지로 표시합니다.');
+          setChallenges([]);
+          setErrorMessage('현재 챌린지 정보를 불러오지 못했습니다.');
         }
       } finally {
         if (!ignore) {
