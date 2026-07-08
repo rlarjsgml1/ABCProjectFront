@@ -139,8 +139,11 @@ export function RentPaymentPage() {
       return;
     }
 
+    const selectedCoupon = selectableCoupons.find((coupon) => String(getCouponId(coupon)) === selectedCouponId);
+    const selectedCouponDiscountAmount = Math.min(getCouponDiscountAmount(selectedCoupon), basePaymentAmount);
+
     setAppliedCouponId(selectedCouponId);
-    setCouponMessage('쿠폰이 적용되었습니다.');
+    setCouponMessage(`쿠폰이 적용되었습니다. -${selectedCouponDiscountAmount.toLocaleString('ko-KR')}원 할인`);
 
     const maxPointAmount = getMaxUsablePointAmount(selectedCouponId);
     if (appliedPointAmount > maxPointAmount) {
@@ -225,6 +228,7 @@ export function RentPaymentPage() {
       navigate(`/books/${bookId}/rent/complete`, {
         state: {
           paymentNumber: getPaymentNumber(result),
+          rentalId: result.rentalId,
           paymentType: result.paymentType ?? (isFreeBook ? '무료 대여' : '카드 결제'),
           bookTitle: result.bookTitle ?? book.title,
           saleAmount: result.saleAmount ?? result.originalAmount ?? basePaymentAmount,
@@ -243,8 +247,6 @@ export function RentPaymentPage() {
 
   return (
     <section className={`page-section ${styles.page}`}>
-      <p className="eyebrow">U-009</p>
-
       <div className={styles.header}>
         <div>
           <h1>대여/결제 확인</h1>

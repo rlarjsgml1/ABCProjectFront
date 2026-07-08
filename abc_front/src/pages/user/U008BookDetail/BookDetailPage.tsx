@@ -178,8 +178,6 @@ export function BookDetailPage() {
 
   return (
     <section className={`page-section ${styles.page}`}>
-      <p className="eyebrow">U-008</p>
-
       {errorMessage && <p className={styles.error}>{errorMessage}</p>}
 
       <section className={styles.hero} aria-labelledby="book-detail-title">

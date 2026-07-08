@@ -1,0 +1,166 @@
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.header {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  padding: var(--space-8) 0 var(--space-6);
+  text-align: center;
+}
+
+.header h1 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 2.25rem;
+  line-height: 1.2;
+}
+
+.header p {
+  margin: 0;
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.completeCard {
+  width: min(680px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: var(--space-8);
+}
+
+.orderSummary,
+.amountPanel,
+.confirmPanel {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-6);
+}
+
+.orderSummary h2,
+.amountPanel h2,
+.confirmPanel h2 {
+  margin: 0 0 var(--space-4);
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.orderSummary dl,
+.amountPanel dl,
+.confirmPanel dl {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.orderSummary dl > div,
+.amountPanel dl > div,
+.confirmPanel dl > div {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: var(--space-3);
+  align-items: baseline;
+}
+
+.orderSummary dt,
+.amountPanel dt,
+.confirmPanel dt {
+  color: var(--color-text);
+  font-weight: 800;
+}
+
+.orderSummary dd,
+.amountPanel dd,
+.confirmPanel dd {
+  margin: 0;
+  color: var(--color-muted);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.totalRow {
+  margin-top: var(--space-2);
+}
+
+.totalRow dt,
+.totalRow dd {
+  color: var(--color-text);
+  font-size: 1.06rem;
+}
+
+.notice {
+  margin: var(--space-6) 0 0;
+  color: var(--color-muted);
+  text-align: center;
+  font-weight: 700;
+}
+
+.actions,
+.emptyActions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.actions :global(.button),
+.emptyActions :global(.button) {
+  min-width: 120px;
+  text-align: center;
+}
+
+.emptyState {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-4);
+  min-height: 320px;
+  align-content: center;
+  text-align: center;
+}
+
+.emptyState h1,
+.emptyState p {
+  margin: 0;
+}
+
+.emptyState p:not(:global(.eyebrow)) {
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: var(--space-6);
+  }
+
+  .header {
+    padding-top: var(--space-4);
+  }
+
+  .header h1 {
+    font-size: 1.8rem;
+  }
+
+  .completeCard {
+    gap: var(--space-6);
+  }
+
+  .orderSummary dl > div,
+  .amountPanel dl > div,
+  .confirmPanel dl > div {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
+
+  .actions,
+  .emptyActions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .actions :global(.button),
+  .emptyActions :global(.button) {
+    width: 100%;
+  }
+}
