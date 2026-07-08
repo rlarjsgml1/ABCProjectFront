@@ -51,7 +51,7 @@ export function Header() {
 
     const isActiveNav = (to: string) => {
         if (to === '/') return location.pathname === '/';
-        if (to === '/books') return (location.pathname === '/books' && location.search === '') || location.pathname === '/search';
+        if (to === '/books') return location.pathname === '/books' || location.pathname === '/search';
         return `${location.pathname}${location.search}` === to;
     };
 

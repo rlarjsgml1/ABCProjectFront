@@ -217,10 +217,14 @@
 }
 
 .home-category-item span {
+  display: grid;
+  place-items: center;
   width: 64px;
   aspect-ratio: 1;
   border-radius: var(--radius-md);
   background: #eeeeee;
+  font-size: 1.65rem;
+  line-height: 1;
 }
 
 .home-category-item strong {
