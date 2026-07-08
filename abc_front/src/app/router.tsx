@@ -43,6 +43,7 @@ import { MyRentalsPage } from '../pages/user/U010MyRentals/MyRentalsPage';
 import { ViewerPage } from '../pages/user/U011Viewer/ViewerPage';
 import { RentPaymentPage } from '../pages/user/U009RentPayment/RentPaymentPage';
 import { PaymentCompletePage } from '../pages/user/U030PaymentComplete/PaymentCompletePage';
+import { ChallengesPage } from '../pages/user/U027Challenges/ChallengesPage';
 
 
 
@@ -81,6 +82,7 @@ export const router = createBrowserRouter([
           { index: true, element: <MyPage /> },
           { path: 'profile', element: <ProfileEditPage /> },
           { path: 'attendance', element: <AttendancePage /> },
+          { path: 'challenges', element: <ChallengesPage /> },
           { path: 'points-coupons', element: <PointsCouponsPage /> },
           { path: 'statistics', element: <ReadingStatsPage /> },
           { path: 'favorites', element: <FavoritesPage /> },

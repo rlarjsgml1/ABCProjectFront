@@ -227,7 +227,7 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
               ))}
             </div>
           </Link>
-          <article className="activity-card overview-widget">
+          <Link className="activity-card overview-widget overview-widget-link" to="/me/challenges" aria-label="챌린지 현황 페이지로 이동">
             <h2>챌린지 현황</h2>
             <div className="overview-trophy-row" aria-label={`챌린지 트로피 ${challengeCount}개`}>
               {Array.from({ length: 6 }, (_, index) => (
@@ -240,7 +240,7 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
                 </span>
               ))}
             </div>
-          </article>
+          </Link>
         </section>
 
         <section className="reading-stats" aria-label="독서 통계">
