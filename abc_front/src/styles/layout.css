@@ -345,6 +345,17 @@
   font-weight: 600;
 }
 
+.dev-login-btn {
+  width: 100%;
+  height: 44px;
+  border: 1px dashed var(--color-primary);
+  border-radius: var(--radius-md);
+  color: var(--color-primary);
+  background-color: rgba(37, 99, 235, 0.08);
+  cursor: pointer;
+  font-weight: 700;
+}
+
 .find-id-card {
   gap: 14px;
 }
@@ -2613,4 +2624,3 @@ a.count-card:focus-visible {
     padding: var(--space-4);
   }
 }
-
