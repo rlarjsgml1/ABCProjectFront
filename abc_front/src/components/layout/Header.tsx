@@ -88,6 +88,7 @@ export function Header() {
 
     return (
         <header className="abc-header">
+            <div className="abc-header-inner">
             <div className="abc-header-top">
                 <Link className="abc-logo" to="/">ABC</Link>
 
@@ -158,6 +159,7 @@ export function Header() {
                     </Link>
                 ))}
             </nav>
+            </div>
         </header>
     );
 }
