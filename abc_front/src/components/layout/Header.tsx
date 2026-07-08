@@ -3,9 +3,10 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AUTH_CHANGED_EVENT } from '../../api/authApi';
 
 const authStorageKeys = ['accessToken', 'memberRole', 'memberId', 'loginId', 'memberName'];
+const isPreviewLogin = true; // U-027 화면 확인용 임시 로그인 처리. PR 전 제거 필요.
 
 function hasLoginSession() {
-    return Boolean(localStorage.getItem('accessToken'));
+    return isPreviewLogin || Boolean(localStorage.getItem('accessToken'));
 }
 
 const navItems = [

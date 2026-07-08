@@ -339,6 +339,45 @@ export type RentalPaymentResult = {
   finalPaymentAmount?: number;
 };
 
+export type ChallengeType = 'DAILY' | 'TOTAL';
+
+export type ChallengeRewardStatus = 'AVAILABLE' | 'RECEIVED' | 'NOT_AVAILABLE' | 'EXPIRED';
+
+export type ChallengeItem = {
+  challengeId?: number;
+  id?: number;
+  title?: string;
+  name?: string;
+  description?: string;
+  challengeType?: ChallengeType;
+  type?: ChallengeType;
+  goalAction?: string;
+  currentCount?: number;
+  goalCount?: number;
+  progressRate?: number;
+  progressPercent?: number;
+  rewardName?: string;
+  rewardType?: string;
+  rewardAmount?: number;
+  rewardStatus?: ChallengeRewardStatus;
+  status?: string;
+  startedAt?: string;
+  startDate?: string;
+  endsAt?: string;
+  endDate?: string;
+};
+
+export type ChallengeListResponse = PageResponse<ChallengeItem> | ChallengeItem[];
+
+export type ChallengeRewardResult = {
+  challengeId?: number;
+  rewardName?: string;
+  rewardType?: string;
+  rewardAmount?: number;
+  rewardStatus?: ChallengeRewardStatus;
+  message?: string;
+};
+
 // API-REPORT-004 (U-021 내 신고 내역)
 export type ReportTargetType = 'BOOK' | 'REVIEW';
 export type ReportStatus = 'WAITING' | 'PROCESSING' | 'DONE' | 'REJECTED';
