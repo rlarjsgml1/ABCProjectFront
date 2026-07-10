@@ -167,7 +167,6 @@ export function AttendancePage() {
           <ul>
             <li>출석체크는 계정당 하루 한 번만 참여할 수 있습니다.</li>
             <li>연속 출석 보상 쿠폰은 조건 달성 시 쿠폰함에서 확인할 수 있습니다.</li>
-            <li>현재 화면은 backend controller 연결 전 front-only 미리보기입니다.</li>
           </ul>
         </section>
       </section>

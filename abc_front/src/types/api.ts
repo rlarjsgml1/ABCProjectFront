@@ -195,6 +195,24 @@ export type AttendanceCheckInResult = {
   issuedReward?: string;
 };
 
+// API-ATTEND-001~002 실제 백엔드 응답 DTO 기준 (AttendanceMonthResponse.java, AttendanceCheckResponse.java).
+export type AttendanceMonthApiResponse = {
+  attendanceDates: string[];
+  todayCheckedYn: boolean;
+  consecutiveDays: number;
+};
+
+export type IssuedCoupon = {
+  memberCouponId: number;
+  couponName: string;
+};
+
+export type AttendanceCheckApiResponse = {
+  attendanceDate: string;
+  consecutiveDays: number;
+  issuedCoupons: IssuedCoupon[];
+};
+
 export type BookCard = {
   bookId: number;
   title: string;
