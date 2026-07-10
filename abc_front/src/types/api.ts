@@ -68,26 +68,19 @@ export type PointHistoryQuery = {
   size?: number;
 };
 
+// API-POINT-001 (U-017). 필드명은 PointHistoryResponse.java 기준.
 export type PointHistoryItem = {
-  pointHistoryId?: number;
-  pointId?: number;
-  id?: number;
-  detail?: string;
-  description?: string;
-  detailContent?: string;
-  earnedAt?: string;
-  createdAt?: string;
-  pointType?: string;
-  usageType?: string;
-  useType?: string;
-  amount?: number;
-  pointAmount?: number;
+  pointHistoryId: number;
+  pointType: string;
+  pointAmount: number;
+  description: string;
+  createdAt: string;
 };
 
-export type PointHistoryPage = PageResponse<PointHistoryItem> & {
-  currentPoint?: number;
-  balance?: number;
-  totalPoint?: number;
+// PointSummaryResponse.java 기준. 포인트 잔액과 페이지네이션된 이력이 함께 내려온다.
+export type PointSummary = {
+  pointBalance: number;
+  history: PageResponse<PointHistoryItem>;
 };
 
 export type CouponHistoryQuery = {
@@ -97,29 +90,23 @@ export type CouponHistoryQuery = {
   size?: number;
 };
 
+export type CouponStatus = 'ISSUED' | 'USED' | 'EXPIRED';
+
+// API-COUPON-001 (U-017). 필드명은 MyCouponResponse.java 기준.
 export type CouponHistoryItem = {
-  couponId?: number;
-  id?: number;
-  couponName?: string;
-  name?: string;
-  detail?: string;
-  description?: string;
-  discountAmount?: number;
-  discountPrice?: number;
-  amount?: number;
-  issuedAt?: string;
-  createdAt?: string;
-  validFrom?: string;
-  validUntil?: string;
-  expiredAt?: string;
-  status?: string;
-  usableBookCount?: number;
+  memberCouponId: number;
+  couponName: string;
+  couponType: string;
+  benefitValue: number;
+  benefitUnit: string;
+  couponStatus: CouponStatus;
+  issuedAt: string;
+  expiresAt: string;
+  usedAt?: string;
+  expiringYn: boolean;
 };
 
-export type CouponHistoryPage = PageResponse<CouponHistoryItem> & {
-  availableCouponCount?: number;
-  expiringThisMonthCount?: number;
-};
+export type CouponHistoryPage = PageResponse<CouponHistoryItem>;
 
 export type ReadingStatisticsPeriodType = 'WEEKLY' | 'MONTHLY' | 'YEARLY' | 'TOTAL';
 
