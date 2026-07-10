@@ -44,6 +44,8 @@ import { ViewerPage } from '../pages/user/U011Viewer/ViewerPage';
 import { RentPaymentPage } from '../pages/user/U009RentPayment/RentPaymentPage';
 import { PaymentCompletePage } from '../pages/user/U030PaymentComplete/PaymentCompletePage';
 import { ChallengesPage } from '../pages/user/U027Challenges/ChallengesPage';
+import { NoticeListPage } from '../pages/user/U029Notices/NoticeListPage';
+import { NoticeDetailPage } from '../pages/user/U029Notices/NoticeDetailPage';
 
 
 
@@ -54,6 +56,8 @@ export const router = createBrowserRouter([
       { path: '/', element: <HomePage /> },
       { path: '/books', element: <BooksPage /> },
       { path: '/search', element: <SearchResultsPage /> },
+      { path: '/notices', element: <NoticeListPage /> },
+      { path: '/notices/:noticeId', element: <NoticeDetailPage /> },
       { path: '/books/:bookId', element: <BookDetailPage /> },
       {
         path: '/books/:bookId/rent',

@@ -504,3 +504,27 @@ export type BookmarkCreateRequest = {
 export type BookmarkDeleteResult = {
   deleted: boolean;
 };
+
+// API-NOTICE-001 (공지 목록 조회, GET /api/v1/notices). Query: page?, size?.
+// 응답: 활성(noticeStatus=ACTIVE) 공지 목록과 내용.
+// 상세 페이지의 이전글/다음글 탐색은 문서 스펙에 없는 프론트 자체 UI 요구사항.
+export type NoticeListQuery = {
+  page?: number;
+  size?: number;
+};
+
+export type NoticeItem = {
+  noticeId: number;
+  title: string;
+  content: string;
+  createdAt: string;
+};
+
+export type NoticePage = PageResponse<NoticeItem>;
+
+export type NoticeNeighbor = Pick<NoticeItem, 'noticeId' | 'title'>;
+
+export type NoticeDetail = NoticeItem & {
+  prevNotice: NoticeNeighbor | null;
+  nextNotice: NoticeNeighbor | null;
+};
