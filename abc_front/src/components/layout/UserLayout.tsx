@@ -8,6 +8,11 @@ export function UserLayout() {
     const [showScrollTop, setShowScrollTop] = useState(false);
 
     useEffect(() => {
+        // 마이페이지 내부 이동은 사이드바/헤더가 고정된 대시보드형 화면이라 스크롤 위치를 유지한다.
+        if (location.pathname.startsWith('/me')) {
+            return;
+        }
+
         window.scrollTo({ top: 0, left: 0 });
     }, [location.pathname, location.search]);
 

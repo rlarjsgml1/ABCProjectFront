@@ -5,7 +5,7 @@ import { getMyCoupons, getMyPoints } from '../../../api/pointsCouponsApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { createFreeRental, createPaidRental } from '../../../api/rentalsApi';
 import type { BookDetail } from '../../../types/book';
-import type { CouponHistoryItem, CouponHistoryPage, PointHistoryPage, RentalPaymentResult } from '../../../types/api';
+import type { CouponHistoryItem, CouponHistoryPage, PointSummary, RentalPaymentResult } from '../../../types/api';
 import styles from '../../../styles/RentPaymentPage.module.css';
 
 type RentBookDetail = BookDetail & {
@@ -28,19 +28,28 @@ function formatWon(value: number | undefined) {
 }
 
 function isUsableCoupon(coupon: CouponHistoryItem) {
-  return coupon.status === 'ISSUED' || coupon.status === 'AVAILABLE';
+  return coupon.couponStatus === 'ISSUED';
 }
 
 function getCouponName(coupon: CouponHistoryItem) {
-  return coupon.couponName ?? coupon.name ?? coupon.detail ?? coupon.description ?? '-';
+  return coupon.couponName;
 }
 
 function getCouponId(coupon: CouponHistoryItem) {
-  return coupon.couponId ?? coupon.id;
+  return coupon.memberCouponId;
 }
 
-function getCouponDiscountAmount(coupon?: CouponHistoryItem) {
-  return coupon?.discountAmount ?? coupon?.discountPrice ?? coupon?.amount ?? 0;
+// coupon.benefitUnit이 PERCENT면 정률 할인, AMOUNT면 정액 할인이다. baseAmount(할인 적용 전 금액) 기준으로 계산한다.
+function getCouponDiscountAmount(coupon: CouponHistoryItem | undefined, baseAmount: number) {
+  if (!coupon || baseAmount <= 0) {
+    return 0;
+  }
+
+  if (coupon.benefitUnit === 'PERCENT') {
+    return Math.floor((baseAmount * coupon.benefitValue) / 100);
+  }
+
+  return coupon.benefitValue;
 }
 
 function getPaymentNumber(result: RentalPaymentResult) {
@@ -67,7 +76,7 @@ export function RentPaymentPage() {
   const { bookId } = useParams();
   const navigate = useNavigate();
   const [book, setBook] = useState<RentBookDetail | null>(null);
-  const [pointsPage, setPointsPage] = useState<PointHistoryPage | null>(null);
+  const [pointsPage, setPointsPage] = useState<PointSummary | null>(null);
   const [couponsPage, setCouponsPage] = useState<CouponHistoryPage | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -129,20 +138,20 @@ export function RentPaymentPage() {
   const isFreeBook = book?.rentalType === 'FREE';
   const hasPaymentAmount = isFreeBook || typeof rentalPrice === 'number';
   const canRentBook = Boolean(book && isRentableStatus(book.status) && hasPaymentAmount);
-  const pointBalance = pointsPage?.currentPoint ?? pointsPage?.balance ?? pointsPage?.totalPoint;
+  const pointBalance = pointsPage?.pointBalance;
   const usableCoupons = useMemo(() => (couponsPage?.content ?? []).filter(isUsableCoupon), [couponsPage]);
   const selectableCoupons = useMemo(() => usableCoupons.filter((coupon) => typeof getCouponId(coupon) === 'number'), [usableCoupons]);
   const basePaymentAmount = isFreeBook ? 0 : rentalPrice;
   const calculablePaymentAmount = basePaymentAmount ?? 0;
   const appliedCoupon = selectableCoupons.find((coupon) => String(getCouponId(coupon)) === appliedCouponId);
-  const couponDiscountAmount = isFreeBook || !hasPaymentAmount ? 0 : Math.min(getCouponDiscountAmount(appliedCoupon), calculablePaymentAmount);
+  const couponDiscountAmount = isFreeBook || !hasPaymentAmount ? 0 : Math.min(getCouponDiscountAmount(appliedCoupon, calculablePaymentAmount), calculablePaymentAmount);
   const pointDiscountAmount = isFreeBook || !hasPaymentAmount ? 0 : Math.min(appliedPointAmount, Math.max(calculablePaymentAmount - couponDiscountAmount, 0));
   const finalPaymentAmount = hasPaymentAmount ? Math.max(calculablePaymentAmount - couponDiscountAmount - pointDiscountAmount, 0) : undefined;
   const paymentAmountLabel = formatWon(finalPaymentAmount);
   const hasAppliedPoint = appliedPointAmount > 0;
   const getMaxUsablePointAmount = (couponId: string) => {
     const coupon = selectableCoupons.find((item) => String(getCouponId(item)) === couponId);
-    const couponDiscount = isFreeBook || !hasPaymentAmount ? 0 : Math.min(getCouponDiscountAmount(coupon), calculablePaymentAmount);
+    const couponDiscount = isFreeBook || !hasPaymentAmount ? 0 : Math.min(getCouponDiscountAmount(coupon, calculablePaymentAmount), calculablePaymentAmount);
     const payableAmount = Math.max(calculablePaymentAmount - couponDiscount, 0);
 
     return Math.min(pointBalance ?? 0, payableAmount);
@@ -159,7 +168,7 @@ export function RentPaymentPage() {
     }
 
     const selectedCoupon = selectableCoupons.find((coupon) => String(getCouponId(coupon)) === selectedCouponId);
-    const selectedCouponDiscountAmount = hasPaymentAmount ? Math.min(getCouponDiscountAmount(selectedCoupon), calculablePaymentAmount) : 0;
+    const selectedCouponDiscountAmount = hasPaymentAmount ? Math.min(getCouponDiscountAmount(selectedCoupon, calculablePaymentAmount), calculablePaymentAmount) : 0;
 
     setAppliedCouponId(selectedCouponId);
     setCouponMessage(`쿠폰이 적용되었습니다. -${selectedCouponDiscountAmount.toLocaleString('ko-KR')}원 할인`);

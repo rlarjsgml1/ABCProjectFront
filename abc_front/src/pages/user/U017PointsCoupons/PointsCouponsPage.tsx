@@ -4,7 +4,7 @@ import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
 import { useMyProfile } from '../../../context/MyProfileContext';
-import type { CouponHistoryItem, CouponHistoryPage, PointHistoryItem, PointHistoryPage, UserProfile } from '../../../types/api';
+import type { CouponHistoryItem, CouponHistoryPage, CouponStatus, PointHistoryItem, PointSummary } from '../../../types/api';
 
 type ActiveTab = 'points' | 'coupons';
 type CouponSort = 'RECENT_ISSUED' | 'EXPIRING_SOON';
@@ -61,19 +61,7 @@ function formatDate(value: string | undefined) {
   return new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).format(time);
 }
 
-function getPointDetail(item: PointHistoryItem) {
-  return item.detailContent ?? item.detail ?? item.description ?? '-';
-}
-
-function getPointDate(item: PointHistoryItem) {
-  return item.earnedAt ?? item.createdAt;
-}
-
-function getPointAmount(item: PointHistoryItem) {
-  return item.amount ?? item.pointAmount ?? 0;
-}
-
-function getPointTypeLabel(value: string | undefined) {
+function getPointTypeLabel(value: string) {
   if (value === 'CHALLENGE_REWARD') {
     return '챌린지 보상';
   }
@@ -98,39 +86,18 @@ function getPointTypeLabel(value: string | undefined) {
     return '관리자 조정';
   }
 
-  return value ?? '-';
+  return value;
 }
 
 function getUsageTypeLabel(item: PointHistoryItem) {
-  const value = item.usageType ?? item.useType;
-  if (value === 'SAVE') {
-    return '적립';
-  }
-
-  if (value === 'SPEND') {
-    return '차감';
-  }
-
-  if (item.pointType === 'PAYMENT_USE' || getPointAmount(item) < 0) {
+  if (item.pointType === 'PAYMENT_USE' || item.pointAmount < 0) {
     return '사용';
   }
 
   return '적립';
 }
 
-function getCouponName(item: CouponHistoryItem) {
-  return item.couponName ?? item.name ?? item.detail ?? item.description ?? '-';
-}
-
-function getCouponIssuedDate(item: CouponHistoryItem) {
-  return item.issuedAt ?? item.createdAt;
-}
-
-function getCouponValidUntil(item: CouponHistoryItem) {
-  return item.validUntil ?? item.expiredAt;
-}
-
-function getCouponStatusLabel(value: string | undefined) {
+function getCouponStatusLabel(value: CouponStatus) {
   if (value === 'ISSUED') {
     return '사용 가능';
   }
@@ -139,54 +106,33 @@ function getCouponStatusLabel(value: string | undefined) {
     return '사용 완료';
   }
 
-  if (value === 'EXPIRED') {
-    return '기간 만료';
-  }
-
-  return value ?? '-';
+  return '기간 만료';
 }
 
-function isCouponUsable(value: string | undefined) {
+function isCouponUsable(value: CouponStatus) {
   return value === 'ISSUED';
-}
-
-function getPointRowKey(item: PointHistoryItem, index: number) {
-  return item.pointHistoryId ?? item.pointId ?? item.id ?? `point-${index}`;
-}
-
-function getCouponRowKey(item: CouponHistoryItem, index: number) {
-  return item.couponId ?? item.id ?? `coupon-${index}`;
 }
 
 function getCouponSortValue(value: string): CouponSort {
   return value === 'EXPIRING_SOON' ? 'EXPIRING_SOON' : 'RECENT_ISSUED';
 }
 
-function getAvailableCouponCount(couponsPage: CouponHistoryPage | null, profile: UserProfile | null) {
-  if (typeof couponsPage?.availableCouponCount === 'number') {
-    return couponsPage.availableCouponCount;
+function getAvailableCouponCount(couponsPage: CouponHistoryPage | null, fallback: number | undefined) {
+  if (!couponsPage) {
+    return fallback ?? 0;
   }
 
-  if (couponsPage) {
-    return couponsPage.content.filter((coupon) => isCouponUsable(coupon.status)).length;
-  }
-
-  return profile?.couponCount ?? 0;
+  return couponsPage.content.filter((coupon) => isCouponUsable(coupon.couponStatus)).length;
 }
 
 function getExpiringThisMonthCount(couponsPage: CouponHistoryPage | null) {
-  if (typeof couponsPage?.expiringThisMonthCount === 'number') {
-    return couponsPage.expiringThisMonthCount;
-  }
-
   if (!couponsPage) {
     return 0;
   }
 
   const now = new Date();
   return couponsPage.content.filter((coupon) => {
-    const validUntil = getCouponValidUntil(coupon);
-    const time = getDateValue(validUntil);
+    const time = getDateValue(coupon.expiresAt);
     if (!time) {
       return false;
     }
@@ -200,7 +146,7 @@ export function PointsCouponsPage() {
   const { profile } = useMyProfile();
   const [activeTab, setActiveTab] = useState<ActiveTab>('points');
   const [pointType, setPointType] = useState('');
-  const [pointsPage, setPointsPage] = useState<PointHistoryPage | null>(null);
+  const [pointSummary, setPointSummary] = useState<PointSummary | null>(null);
   const [isPointsLoading, setIsPointsLoading] = useState(true);
   const [pointsError, setPointsError] = useState('');
   const [couponStatus, setCouponStatus] = useState('ISSUED');
@@ -219,11 +165,11 @@ export function PointsCouponsPage() {
       try {
         const data = await getMyPoints({ pointType: pointType || undefined, page: 0, size: pageSize });
         if (!ignore) {
-          setPointsPage(data);
+          setPointSummary(data);
         }
       } catch (error) {
         if (!ignore) {
-          setPointsPage(null);
+          setPointSummary(null);
           setPointsError(getApiErrorMessage(error));
         }
       } finally {
@@ -275,21 +221,21 @@ export function PointsCouponsPage() {
     };
   }, [couponStatus]);
 
-  const pointBalance = pointsPage?.currentPoint ?? pointsPage?.balance ?? pointsPage?.totalPoint ?? profile?.point;
-  const pointItems = pointsPage?.content ?? [];
+  const pointBalance = pointSummary?.pointBalance ?? profile?.point;
+  const pointItems = pointSummary?.history.content ?? [];
   const couponItems = useMemo(() => {
     const items = couponStatus === 'COMPLETED_OR_EXPIRED'
-      ? (couponsPage?.content ?? []).filter((coupon) => coupon.status === 'USED' || coupon.status === 'EXPIRED')
+      ? (couponsPage?.content ?? []).filter((coupon) => coupon.couponStatus === 'USED' || coupon.couponStatus === 'EXPIRED')
       : (couponsPage?.content ?? []);
     return [...items].sort((first, second) => {
       if (couponSort === 'EXPIRING_SOON') {
-        return getDateValue(getCouponValidUntil(first)) - getDateValue(getCouponValidUntil(second));
+        return getDateValue(first.expiresAt) - getDateValue(second.expiresAt);
       }
 
-      return getDateValue(getCouponIssuedDate(second)) - getDateValue(getCouponIssuedDate(first));
+      return getDateValue(second.issuedAt) - getDateValue(first.issuedAt);
     });
   }, [couponSort, couponStatus, couponsPage]);
-  const availableCouponCount = getAvailableCouponCount(couponsPage, profile);
+  const availableCouponCount = getAvailableCouponCount(couponsPage, profile?.couponCount);
   const expiringThisMonthCount = getExpiringThisMonthCount(couponsPage);
 
   return (
@@ -365,13 +311,13 @@ export function PointsCouponsPage() {
                       <td colSpan={5}>포인트 내역을 불러오는 중입니다.</td>
                     </tr>
                   ) : pointItems.length > 0 ? (
-                    pointItems.map((item, index) => (
-                      <tr key={getPointRowKey(item, index)}>
-                        <td>{getPointDetail(item)}</td>
-                        <td>{formatDate(getPointDate(item))}</td>
+                    pointItems.map((item) => (
+                      <tr key={item.pointHistoryId}>
+                        <td>{item.description}</td>
+                        <td>{formatDate(item.createdAt)}</td>
                         <td>{getPointTypeLabel(item.pointType)}</td>
                         <td>{getUsageTypeLabel(item)}</td>
-                        <td>{formatPoint(getPointAmount(item))}</td>
+                        <td>{formatPoint(item.pointAmount)}</td>
                       </tr>
                     ))
                   ) : (
@@ -438,18 +384,18 @@ export function PointsCouponsPage() {
                       <td colSpan={5}>쿠폰 내역을 불러오는 중입니다.</td>
                     </tr>
                   ) : couponItems.length > 0 ? (
-                    couponItems.map((item, index) => (
-                      <tr key={getCouponRowKey(item, index)}>
-                        <td>{getCouponName(item)}</td>
-                        <td>{formatDate(getCouponIssuedDate(item))}</td>
-                        <td>{formatDate(getCouponValidUntil(item))}</td>
-                        <td>{getCouponStatusLabel(item.status)}</td>
+                    couponItems.map((item: CouponHistoryItem) => (
+                      <tr key={item.memberCouponId}>
+                        <td>{item.couponName}</td>
+                        <td>{formatDate(item.issuedAt)}</td>
+                        <td>{formatDate(item.expiresAt)}</td>
+                        <td>{getCouponStatusLabel(item.couponStatus)}</td>
                         <td>
                           <Button
                             className="points-coupons-action"
                             type="button"
                             variant="secondary"
-                            disabled={!isCouponUsable(item.status)}
+                            disabled={!isCouponUsable(item.couponStatus)}
                           >
                             사용 가능한 도서 보기
                           </Button>

@@ -3,12 +3,12 @@ import type {
   ApiResponse,
   CouponHistoryPage,
   CouponHistoryQuery,
-  PointHistoryPage,
   PointHistoryQuery,
+  PointSummary,
 } from '../types/api';
 
 export async function getMyPoints(params: PointHistoryQuery = {}) {
-  const response = await apiClient.get<ApiResponse<PointHistoryPage>>('/me/points', {
+  const response = await apiClient.get<ApiResponse<PointSummary>>('/me/points', {
     params,
   });
 
