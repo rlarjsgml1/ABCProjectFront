@@ -279,7 +279,7 @@ export function RentPaymentPage() {
   }
 
   return (
-    <section className={`page-section ${styles.page}`}>
+    <section className="page-section">
       <div className={styles.header}>
         <div>
           <h1>대여/결제 확인</h1>

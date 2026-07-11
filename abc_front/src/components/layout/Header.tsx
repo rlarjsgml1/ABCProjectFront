@@ -135,7 +135,6 @@ export function Header() {
                 <div className="abc-actions">
                     {isLoggedIn ? (
                         <>
-                            <Link className="abc-attendance-link" to="/me/attendance">출석체크</Link>
                             <button className="abc-dark-button" type="button" onClick={handleLogout}>로그아웃</button>
                         </>
                     ) : (

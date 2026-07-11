@@ -42,7 +42,7 @@ export function PaymentCompletePage() {
 
   if (!state) {
     return (
-      <section className={`page-section ${styles.page}`}>
+      <section className="page-section">
         <div className={styles.emptyState}>
           <h1>결제 완료 정보를 확인할 수 없습니다.</h1>
           <p>결제 완료된 도서만 이 화면에서 확인할 수 있습니다.</p>
