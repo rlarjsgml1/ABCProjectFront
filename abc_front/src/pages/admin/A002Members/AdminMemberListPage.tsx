@@ -194,7 +194,7 @@ export function AdminMemberListPage() {
       } catch (error) {
         if (!ignore) {
           setMembersPage(buildFallbackPage(query));
-          setErrorMessage(`${getApiErrorMessage(error)} 문서 기준 화면 확인을 위해 임시 목록을 표시합니다.`);
+          setErrorMessage(`${getApiErrorMessage(error)} 잠시 후 다시 시도해 주세요.`);
         }
       } finally {
         if (!ignore) {
@@ -327,11 +327,8 @@ export function AdminMemberListPage() {
     <section className={`page-section ${styles.page}`} aria-labelledby="admin-members-title">
       <div className={styles.header}>
         <div>
-          <span className={styles.eyebrow}>Member</span>
           <h1 id="admin-members-title">회원 목록 관리</h1>
-          <p>검색어, 상태, 역할, 등급 조건으로 회원을 조회하고 상세/상태 변경을 실행합니다.</p>
         </div>
-        <span className={styles.apiBadge}>API-ADMIN-MEMBER-001, 003</span>
       </div>
 
       <form className={styles.filterPanel} onSubmit={handleSearch}>

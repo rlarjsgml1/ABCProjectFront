@@ -1,15 +1,11 @@
 .page {
   display: grid;
-  gap: var(--space-7);
+  gap: var(--space-8);
   border: 0;
   box-shadow: none;
 }
 
 .header {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-5);
-  align-items: flex-start;
   border-bottom: 1px solid var(--color-border);
   padding-bottom: var(--space-6);
 }
@@ -24,7 +20,6 @@
 }
 
 .header h1 {
-  margin-top: var(--space-2);
   color: var(--color-text);
   font-size: 2rem;
   line-height: 1.2;
@@ -36,29 +31,15 @@
   font-weight: 700;
 }
 
-.eyebrow {
-  color: #2563eb;
-  font-weight: 900;
-}
-
-.apiBadge {
-  border-radius: 999px;
-  padding: var(--space-2) var(--space-4);
-  color: #1d4ed8;
-  background: #eff6ff;
-  font-size: 0.8rem;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
 .filterPanel {
   display: grid;
   grid-template-columns: 1.2fr repeat(3, minmax(150px, 0.8fr)) auto;
-  gap: var(--space-4);
+  column-gap: var(--space-4);
+  row-gap: var(--space-5);
   align-items: end;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: var(--space-5);
+  padding: var(--space-6);
   background: var(--color-surface);
   box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1);
 }
@@ -66,9 +47,10 @@
 .filterPanel label,
 .modal label {
   display: grid;
-  gap: var(--space-2);
+  gap: 10px;
   color: var(--color-text);
   font-weight: 800;
+  line-height: 1.2;
 }
 
 .filterPanel input,
@@ -98,6 +80,7 @@
 .filterActions {
   display: flex;
   gap: var(--space-3);
+  align-items: end;
 }
 
 .filterActions :global(.button) {
@@ -171,6 +154,7 @@
   padding: var(--space-3) var(--space-4);
   text-align: left;
   vertical-align: middle;
+  white-space: nowrap;
 }
 
 .table th {
@@ -184,6 +168,36 @@
   color: var(--color-text);
   font-size: 0.9rem;
   font-weight: 700;
+}
+
+.table th:nth-child(1),
+.table td:nth-child(1) {
+  min-width: 92px;
+}
+
+.table th:nth-child(2),
+.table td:nth-child(2) {
+  min-width: 132px;
+}
+
+.table th:nth-child(3),
+.table td:nth-child(3) {
+  min-width: 220px;
+}
+
+.table th:nth-child(4),
+.table td:nth-child(4) {
+  min-width: 118px;
+}
+
+.table th:nth-child(7),
+.table td:nth-child(7) {
+  min-width: 220px;
+}
+
+.table th:nth-child(8),
+.table td:nth-child(8) {
+  min-width: 132px;
 }
 
 .table tbody tr:hover {
@@ -204,6 +218,7 @@
   display: grid;
   gap: 2px;
   color: var(--color-text);
+  white-space: nowrap;
 }
 
 .memberLink:hover strong {
@@ -217,10 +232,13 @@
 
 .statusBadge {
   display: inline-flex;
+  justify-content: center;
   border-radius: 999px;
+  min-width: 46px;
   padding: 5px 10px;
   font-size: 0.78rem;
   font-weight: 900;
+  white-space: nowrap;
 }
 
 .statusJOINED {
@@ -269,7 +287,7 @@
 
 .pagination {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   gap: var(--space-3);
   align-items: center;
   color: var(--color-muted);
@@ -350,6 +368,17 @@
 }
 
 @media (max-width: 1180px) {
+  .filterPanel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filterActions {
+    grid-column: span 2;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 1440px) {
   .filterPanel {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
