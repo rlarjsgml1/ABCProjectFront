@@ -212,8 +212,8 @@ export function ChallengesPage() {
         <div className={styles.layout}>
           <aside className={styles.aside}>
             <h2 id="challenges-title">나의 챌린지 현황</h2>
-            <Link className="button button-secondary" to="/me/points-coupons">
-              수령한 포인트/쿠폰 확인하러 가기
+            <Link className={`button ${styles.rewardLink}`} to="/me/points-coupons">
+              내 포인트/쿠폰 확인
             </Link>
           </aside>
 

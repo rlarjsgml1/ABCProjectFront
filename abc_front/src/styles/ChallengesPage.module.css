@@ -27,6 +27,19 @@
   text-align: center;
 }
 
+.rewardLink {
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  background: #dbeafe;
+  box-shadow: none;
+}
+
+.rewardLink:hover {
+  border-color: #93c5fd;
+  color: #1e40af;
+  background: #bfdbfe;
+}
+
 .content {
   display: grid;
   gap: var(--space-6);
