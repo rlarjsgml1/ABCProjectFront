@@ -192,23 +192,9 @@ export function HomePage() {
     [bestBooks, memberName, newBooks, recommendedBooks],
   );
 
-  const moveBanner = (direction: 'prev' | 'next') => {
-    setActiveBannerIndex((currentIndex) => {
-      if (direction === 'prev') {
-        return currentIndex === 0 ? bannerItems.length - 1 : currentIndex - 1;
-      }
-
-      return (currentIndex + 1) % bannerItems.length;
-    });
-  };
-
   return (
     <div className="home-page">
       <section className="home-hero" aria-label="광고 이벤트 배너">
-        <button className="home-round-button home-hero-prev" type="button" onClick={() => moveBanner('prev')} aria-label="이전 배너">
-          ‹
-        </button>
-
         <div className="home-hero-track" style={{ transform: `translateX(-${activeBannerIndex * 100}%)` }}>
           {bannerItems.map((banner) => (
             <article className="home-hero-slide" key={banner.title}>
@@ -227,9 +213,19 @@ export function HomePage() {
           ))}
         </div>
 
-        <button className="home-round-button home-hero-next" type="button" onClick={() => moveBanner('next')} aria-label="다음 배너">
-          ›
-        </button>
+        <div className="home-hero-dots" role="tablist" aria-label="배너 슬라이드 이동">
+          {bannerItems.map((banner, index) => (
+            <button
+              key={banner.title}
+              type="button"
+              role="tab"
+              className={`home-hero-dot ${index === activeBannerIndex ? 'is-active' : ''}`}
+              aria-label={`${index + 1}번째 배너로 이동`}
+              aria-selected={index === activeBannerIndex}
+              onClick={() => setActiveBannerIndex(index)}
+            />
+          ))}
+        </div>
       </section>
 
       <div className="home-quick-menu" aria-label="빠른 메뉴">

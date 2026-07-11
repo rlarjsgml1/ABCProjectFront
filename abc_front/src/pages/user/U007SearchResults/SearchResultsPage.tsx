@@ -189,16 +189,9 @@ export function SearchResultsPage() {
     return offset;
   };
 
-  const moveFeatured = (direction: 'next' | 'prev') => {
+  const moveFeaturedNext = () => {
     if (featuredBooks.length <= 1) return;
-
-    setFeaturedIndex((currentIndex) => {
-      if (direction === 'prev') {
-        return currentIndex === 0 ? featuredBooks.length - 1 : currentIndex - 1;
-      }
-
-      return (currentIndex + 1) % featuredBooks.length;
-    });
+    setFeaturedIndex((currentIndex) => (currentIndex + 1) % featuredBooks.length);
   };
 
   useEffect(() => {
@@ -230,7 +223,7 @@ export function SearchResultsPage() {
 
   useEffect(() => {
     const timerId = window.setInterval(() => {
-      moveFeatured('next');
+      moveFeaturedNext();
     }, 5000);
 
     return () => window.clearInterval(timerId);
@@ -370,15 +363,6 @@ export function SearchResultsPage() {
         </div>
 
         <div className="books-recommend-carousel">
-          <button
-            className="books-round-button"
-            type="button"
-            onClick={() => moveFeatured('prev')}
-            aria-label="이전 입고 도서"
-          >
-            {'<'}
-          </button>
-
           <div className="books-recommend-viewport">
             <div className="books-recommend-track">
               {featuredBooks.map((book, index) => {
@@ -400,15 +384,20 @@ export function SearchResultsPage() {
               })}
             </div>
           </div>
+        </div>
 
-          <button
-            className="books-round-button"
-            type="button"
-            onClick={() => moveFeatured('next')}
-            aria-label="다음 입고 도서"
-          >
-            {'>'}
-          </button>
+        <div className="books-recommend-dots" role="tablist" aria-label="입고 도서 슬라이드 이동">
+          {featuredBooks.map((book, index) => (
+            <button
+              key={book.bookId}
+              type="button"
+              role="tab"
+              className={`books-recommend-dot ${index === featuredIndex ? 'is-active' : ''}`}
+              aria-label={`${index + 1}번째 도서로 이동`}
+              aria-selected={index === featuredIndex}
+              onClick={() => setFeaturedIndex(index)}
+            />
+          ))}
         </div>
       </section>
 
