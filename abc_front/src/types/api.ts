@@ -110,6 +110,90 @@ export type AdminMemberStatusChangeResponse = {
   currentSanction?: AdminMemberSanctionSummary | null;
 };
 
+export type AdminMemberUsageSummary = {
+  rentalCount: number;
+  paymentAmount: number;
+  reportCount: number;
+  reviewCount: number;
+  completedBookCount: number;
+  readingBookCount: number;
+};
+
+export type AdminMemberRentalHistory = {
+  rentalId: number;
+  bookTitle: string;
+  status: string;
+  progressRate?: number;
+  rentedAt: string;
+};
+
+export type AdminMemberPaymentHistory = {
+  paymentId: number;
+  bookTitle: string;
+  originalAmount: number;
+  discountAmount: number;
+  paidAmount: number;
+  status: string;
+  paidAt: string;
+};
+
+export type AdminMemberReviewHistory = {
+  reviewId: number;
+  bookTitle: string;
+  rating: number;
+  status: string;
+  createdAt: string;
+  updatedAt?: string;
+};
+
+export type AdminMemberReportHistory = {
+  reportId: number;
+  targetType: string;
+  reason: string;
+  status: string;
+  createdAt: string;
+};
+
+export type AdminMemberPointHistory = {
+  pointHistoryId: number;
+  pointType: string;
+  pointAmount: number;
+  description: string;
+  createdAt: string;
+};
+
+export type AdminMemberSanctionHistory = AdminMemberSanctionSummary & {
+  sanctionHistoryId: number;
+  status?: string;
+};
+
+export type AdminMemberDetail = AdminMemberSummary & {
+  phone?: string;
+  birthDate?: string;
+  gender?: string;
+  createdAt?: string;
+  usageSummary: AdminMemberUsageSummary;
+  rentalHistories: AdminMemberRentalHistory[];
+  paymentHistories: AdminMemberPaymentHistory[];
+  reviewHistories: AdminMemberReviewHistory[];
+  reportHistories: AdminMemberReportHistory[];
+  pointHistories: AdminMemberPointHistory[];
+  sanctionHistories: AdminMemberSanctionHistory[];
+};
+
+export type AdminMemberPointAdjustRequest = {
+  pointAmount: number;
+  description: string;
+};
+
+export type AdminMemberPointAdjustResponse = {
+  pointHistoryId: number;
+  pointAmount: number;
+  pointType: string;
+  pointBalance: number;
+  createdAt: string;
+};
+
 
 export type PointHistoryQuery = {
   pointType?: string;
