@@ -541,6 +541,68 @@ export type ReportHistoryItem = {
 
 export type ReportHistoryPage = PageResponse<ReportHistoryItem>;
 
+export type AdminReportTargetInfo = {
+  targetId: number;
+  title?: string;
+  authorName?: string;
+  reviewContent?: string;
+  reviewStatus?: string;
+  bookTitle?: string;
+};
+
+export type AdminReportReporter = {
+  memberId: number;
+  loginId: string;
+  name: string;
+};
+
+export type AdminReportItem = {
+  reportId: number;
+  targetType: ReportTargetType;
+  reporter: AdminReportReporter;
+  targetInfo: AdminReportTargetInfo;
+  reportType: string;
+  content: string;
+  status: ReportStatus;
+  managerName?: string;
+  createdAt: string;
+  processedAt?: string;
+  processResult?: string;
+};
+
+export type AdminReportListQuery = {
+  targetType?: ReportTargetType;
+  status?: ReportStatus;
+  q?: string;
+  page?: number;
+  size?: number;
+};
+
+export type AdminReportSanctionRequest = {
+  sanctionType: AdminSanctionType;
+  startedAt: string;
+  endedAt?: string;
+  reason: string;
+};
+
+export type AdminReportStatusUpdateRequest = {
+  status: ReportStatus;
+  processResult?: string;
+  hideReviewYn?: boolean;
+  sanction?: AdminReportSanctionRequest;
+};
+
+export type AdminReportStatusUpdateResponse = {
+  reportId: number;
+  targetType: ReportTargetType;
+  status: ReportStatus;
+  processResult?: string;
+  hideReviewYn?: boolean;
+  processedAt?: string;
+};
+
+export type AdminReportPage = PageResponse<AdminReportItem>;
+
 // API-REQUEST-001 (U-022 희망도서 신청)
 export type BookRequestCreateRequest = {
   title: string;
