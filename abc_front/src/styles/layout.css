@@ -1738,49 +1738,6 @@ a.count-card:focus-visible {
   font-size: 0.85rem;
 }
 
-.points-coupons-table-wrap {
-  overflow-x: auto;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-sm);
-}
-
-.points-coupons-table {
-  width: 100%;
-  min-width: calc(var(--space-10) * 18);
-  border-collapse: collapse;
-}
-
-.points-coupons-table th,
-.points-coupons-table td {
-  border-bottom: 1px solid var(--color-border);
-  padding: var(--space-4);
-  text-align: left;
-  vertical-align: middle;
-}
-
-.points-coupons-table th {
-  color: var(--color-muted);
-  background: var(--color-surface-muted);
-  font-size: 0.9rem;
-  font-weight: 800;
-}
-
-.points-coupons-table td {
-  font-weight: 700;
-}
-
-.points-coupons-table tr:last-child td {
-  border-bottom: 0;
-}
-
-.points-coupons-table td[colspan] {
-  padding: var(--space-8);
-  color: var(--color-muted);
-  text-align: center;
-}
-
 .points-coupons-action {
   white-space: nowrap;
 }

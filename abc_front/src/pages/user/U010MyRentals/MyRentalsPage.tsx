@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { getMyRentals } from '../../../api/myRentalsApi';
 import { getBookDetail } from '../../../api/bookApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
+import { Table } from '../../../components/common/Table';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
 import type { MyRentalItem, RentalStatus } from '../../../types/api';
 
@@ -191,40 +192,19 @@ export function MyRentalsPage() {
 
         <h3 className="my-rentals-section-title">대여 내역</h3>
 
-        <div className="points-coupons-table-wrap">
-          <table className="points-coupons-table">
-            <thead>
-              <tr>
-                <th scope="col">책 제목</th>
-                <th scope="col">저자</th>
-                <th scope="col">반납 예정일</th>
-                <th scope="col">상태</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={4}>대여 내역을 불러오는 중입니다.</td>
-                </tr>
-              ) : rentals.length > 0 ? (
-                rentals.map((item) => (
-                  <tr key={item.rentalId}>
-                    <td>
-                      <Link to={`/books/${item.bookId}`}>{item.title}</Link>
-                    </td>
-                    <td>{item.author ?? '-'}</td>
-                    <td>{formatDate(item.rentalEndAt)}</td>
-                    <td>{rentalStatusLabels[item.rentalStatus]}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={4}>대여 내역이 없습니다.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <Table<RentalCardData>
+          columns={[
+            { key: 'title', header: '책 제목', render: (item) => <Link to={`/books/${item.bookId}`}>{item.title}</Link> },
+            { key: 'author', header: '저자', render: (item) => item.author ?? '-' },
+            { key: 'rentalEndAt', header: '반납 예정일', render: (item) => formatDate(item.rentalEndAt) },
+            { key: 'rentalStatus', header: '상태', render: (item) => rentalStatusLabels[item.rentalStatus] },
+          ]}
+          rows={rentals}
+          rowKey={(item) => item.rentalId}
+          isLoading={isLoading}
+          loadingMessage="대여 내역을 불러오는 중입니다."
+          emptyMessage="대여 내역이 없습니다."
+        />
       </section>
     </MyPageLayout>
   );

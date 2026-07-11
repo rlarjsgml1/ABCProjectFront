@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { getMyCoupons, getMyPoints } from '../../../api/pointsCouponsApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
+import { Table } from '../../../components/common/Table';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
 import { useMyProfile } from '../../../context/MyProfileContext';
 import type { CouponHistoryItem, CouponHistoryPage, CouponStatus, PointHistoryItem, PointSummary } from '../../../types/api';
@@ -294,40 +295,20 @@ export function PointsCouponsPage() {
 
             {pointsError ? <div className="status-banner status-banner-error">{pointsError}</div> : null}
 
-            <div className="points-coupons-table-wrap">
-              <table className="points-coupons-table">
-                <thead>
-                  <tr>
-                    <th scope="col">상세내용</th>
-                    <th scope="col">적립일</th>
-                    <th scope="col">포인트 유형</th>
-                    <th scope="col">사용 구분</th>
-                    <th scope="col">적립 금액</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {isPointsLoading ? (
-                    <tr>
-                      <td colSpan={5}>포인트 내역을 불러오는 중입니다.</td>
-                    </tr>
-                  ) : pointItems.length > 0 ? (
-                    pointItems.map((item) => (
-                      <tr key={item.pointHistoryId}>
-                        <td>{item.description}</td>
-                        <td>{formatDate(item.createdAt)}</td>
-                        <td>{getPointTypeLabel(item.pointType)}</td>
-                        <td>{getUsageTypeLabel(item)}</td>
-                        <td>{formatPoint(item.pointAmount)}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5}>해당기간에 내역이 없습니다.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <Table<PointHistoryItem>
+              columns={[
+                { key: 'description', header: '상세내용' },
+                { key: 'createdAt', header: '적립일', render: (item) => formatDate(item.createdAt) },
+                { key: 'pointType', header: '포인트 유형', render: (item) => getPointTypeLabel(item.pointType) },
+                { key: 'usage', header: '사용 구분', render: (item) => getUsageTypeLabel(item) },
+                { key: 'pointAmount', header: '적립 금액', render: (item) => formatPoint(item.pointAmount) },
+              ]}
+              rows={pointItems}
+              rowKey={(item) => item.pointHistoryId}
+              isLoading={isPointsLoading}
+              loadingMessage="포인트 내역을 불러오는 중입니다."
+              emptyMessage="해당기간에 내역이 없습니다."
+            />
           </section>
         ) : (
           <section className="points-coupons-tab-panel" id="coupons-panel" role="tabpanel" aria-label="쿠폰 내역">
@@ -367,49 +348,33 @@ export function PointsCouponsPage() {
 
             {couponsError ? <div className="status-banner status-banner-error">{couponsError}</div> : null}
 
-            <div className="points-coupons-table-wrap">
-              <table className="points-coupons-table">
-                <thead>
-                  <tr>
-                    <th scope="col">상세내용</th>
-                    <th scope="col">발행일</th>
-                    <th scope="col">유효기간</th>
-                    <th scope="col">상태</th>
-                    <th scope="col">사용</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {isCouponsLoading ? (
-                    <tr>
-                      <td colSpan={5}>쿠폰 내역을 불러오는 중입니다.</td>
-                    </tr>
-                  ) : couponItems.length > 0 ? (
-                    couponItems.map((item: CouponHistoryItem) => (
-                      <tr key={item.memberCouponId}>
-                        <td>{item.couponName}</td>
-                        <td>{formatDate(item.issuedAt)}</td>
-                        <td>{formatDate(item.expiresAt)}</td>
-                        <td>{getCouponStatusLabel(item.couponStatus)}</td>
-                        <td>
-                          <Button
-                            className="points-coupons-action"
-                            type="button"
-                            variant="secondary"
-                            disabled={!isCouponUsable(item.couponStatus)}
-                          >
-                            사용 가능한 도서 보기
-                          </Button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5}>조회된 쿠폰이 없습니다.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <Table<CouponHistoryItem>
+              columns={[
+                { key: 'couponName', header: '상세내용' },
+                { key: 'issuedAt', header: '발행일', render: (item) => formatDate(item.issuedAt) },
+                { key: 'expiresAt', header: '유효기간', render: (item) => formatDate(item.expiresAt) },
+                { key: 'couponStatus', header: '상태', render: (item) => getCouponStatusLabel(item.couponStatus) },
+                {
+                  key: 'action',
+                  header: '사용',
+                  render: (item) => (
+                    <Button
+                      className="points-coupons-action"
+                      type="button"
+                      variant="secondary"
+                      disabled={!isCouponUsable(item.couponStatus)}
+                    >
+                      사용 가능한 도서 보기
+                    </Button>
+                  ),
+                },
+              ]}
+              rows={couponItems}
+              rowKey={(item) => item.memberCouponId}
+              isLoading={isCouponsLoading}
+              loadingMessage="쿠폰 내역을 불러오는 중입니다."
+              emptyMessage="조회된 쿠폰이 없습니다."
+            />
           </section>
         )}
       </section>

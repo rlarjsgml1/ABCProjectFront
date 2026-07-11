@@ -1,29 +1,13 @@
 import { useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getBookDetail } from '../../../api/bookApi';
 import { createMyFavorite, deleteMyFavorite } from '../../../api/favoritesApi';
+import { Modal } from '../../../components/common/Modal';
 import type { BookDetail } from '../../../types/book';
 import styles from '../../../styles/BookDetailPage.module.css';
 
 type DetailTab = 'description' | 'recommendations' | 'reviews';
 type ModalType = 'login' | 'bookReport' | 'reviewReport' | null;
-
-function ModalShell({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
-  return (
-    <div className={styles.modalBackdrop}>
-      <div className={styles.modal}>
-        <div className={styles.modalHeader}>
-          <h2>{title}</h2>
-          <button type="button" onClick={onClose} aria-label="닫기">
-            x
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
 
 function StarPicker({ value, onChange }: { value: number; onChange: (rating: number) => void }) {
   return (
@@ -361,11 +345,11 @@ export function BookDetailPage() {
         </div>
       </section>
 
-      {isReviewModalOpen && (
-        <ModalShell title="나의 리뷰 작성" onClose={() => setIsReviewModalOpen(false)}>
-          <p className={styles.modalMessage}>이 책은 어떠셨나요?</p>
-          <StarPicker value={reviewRating} onChange={setReviewRating} />
+      <Modal isOpen={isReviewModalOpen} onClose={() => setIsReviewModalOpen(false)} title="나의 리뷰 작성">
+        <p className={styles.modalMessage}>이 책은 어떠셨나요?</p>
+        <StarPicker value={reviewRating} onChange={setReviewRating} />
 
+        <div className={styles.formFields}>
           <label>
             리뷰 내용
             <textarea
@@ -374,32 +358,30 @@ export function BookDetailPage() {
               placeholder="이 책에 대한 감상을 남겨주세요. 다른 독자들에게 큰 도움이 됩니다."
             />
           </label>
-          {reviewNotice && <p className={styles.modalMessage}>{reviewNotice}</p>}
+        </div>
+        {reviewNotice && <p className={styles.modalMessage}>{reviewNotice}</p>}
 
-          <div className={styles.modalActions}>
-            <button className="button button-primary" type="button" onClick={handleSubmitReview}>
-              리뷰 등록
-            </button>
-          </div>
-        </ModalShell>
-      )}
+        <div className={styles.modalActions}>
+          <button className="button button-primary" type="button" onClick={handleSubmitReview}>
+            리뷰 등록
+          </button>
+        </div>
+      </Modal>
 
-      {activeModal === 'login' && (
-        <ModalShell title="회원 전용 기능입니다" onClose={() => setActiveModal(null)}>
-          <p className={styles.modalMessage}>로그인/회원가입 후 이용할 수 있습니다.</p>
-          <div className={styles.modalActions}>
-            <Link className="button button-primary" to="/login">
-              예
-            </Link>
-            <button className="button button-secondary" type="button" onClick={() => setActiveModal(null)}>
-              아니오
-            </button>
-          </div>
-        </ModalShell>
-      )}
+      <Modal isOpen={activeModal === 'login'} onClose={() => setActiveModal(null)} title="회원 전용 기능입니다">
+        <p className={styles.modalMessage}>로그인/회원가입 후 이용할 수 있습니다.</p>
+        <div className={styles.modalActions}>
+          <Link className="button button-primary" to="/login">
+            예
+          </Link>
+          <button className="button button-secondary" type="button" onClick={() => setActiveModal(null)}>
+            아니오
+          </button>
+        </div>
+      </Modal>
 
-      {activeModal === 'bookReport' && (
-        <ModalShell title="책 신고하기" onClose={closeReportModal}>
+      <Modal isOpen={activeModal === 'bookReport'} onClose={closeReportModal} title="책 신고하기">
+        <div className={styles.formFields}>
           <label>
             신고 사유
             <select value={reportReason} onChange={(event) => setReportReason(event.target.value)}>
@@ -414,24 +396,24 @@ export function BookDetailPage() {
             신고 내용
             <textarea value={reportContent} onChange={(event) => setReportContent(event.target.value)} placeholder="신고 내용을 입력해 주세요." />
           </label>
-          {reportNotice && <p className={styles.modalMessage}>{reportNotice}</p>}
+        </div>
+        {reportNotice && <p className={styles.modalMessage}>{reportNotice}</p>}
 
-          <div className={styles.modalActions}>
-            {reportNotice ? (
-              <button className="button button-secondary" type="button" onClick={closeReportModal}>
-                닫기
-              </button>
-            ) : (
-              <button className="button button-primary" type="button" onClick={handleSubmitReport}>
-                신고 등록
-              </button>
-            )}
-          </div>
-        </ModalShell>
-      )}
+        <div className={styles.modalActions}>
+          {reportNotice ? (
+            <button className="button button-secondary" type="button" onClick={closeReportModal}>
+              닫기
+            </button>
+          ) : (
+            <button className="button button-primary" type="button" onClick={handleSubmitReport}>
+              신고 등록
+            </button>
+          )}
+        </div>
+      </Modal>
 
-      {activeModal === 'reviewReport' && (
-        <ModalShell title="리뷰 신고하기" onClose={closeReportModal}>
+      <Modal isOpen={activeModal === 'reviewReport'} onClose={closeReportModal} title="리뷰 신고하기">
+        <div className={styles.formFields}>
           <label>
             신고 사유
             <select value={reportReason} onChange={(event) => setReportReason(event.target.value)}>
@@ -446,21 +428,21 @@ export function BookDetailPage() {
             신고 내용
             <textarea value={reportContent} onChange={(event) => setReportContent(event.target.value)} placeholder="신고 내용을 입력해 주세요." />
           </label>
-          {reportNotice && <p className={styles.modalMessage}>{reportNotice}</p>}
+        </div>
+        {reportNotice && <p className={styles.modalMessage}>{reportNotice}</p>}
 
-          <div className={styles.modalActions}>
-            {reportNotice ? (
-              <button className="button button-secondary" type="button" onClick={closeReportModal}>
-                닫기
-              </button>
-            ) : (
-              <button className="button button-primary" type="button" onClick={handleSubmitReport}>
-                신고 등록
-              </button>
-            )}
-          </div>
-        </ModalShell>
-      )}
+        <div className={styles.modalActions}>
+          {reportNotice ? (
+            <button className="button button-secondary" type="button" onClick={closeReportModal}>
+              닫기
+            </button>
+          ) : (
+            <button className="button button-primary" type="button" onClick={handleSubmitReport}>
+              신고 등록
+            </button>
+          )}
+        </div>
+      </Modal>
     </section>
   );
 }

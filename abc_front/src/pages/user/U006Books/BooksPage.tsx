@@ -2,6 +2,7 @@
 import { Link, useSearchParams } from 'react-router-dom';
 import { getBooks, getCategories, getRecommendedBooks, type BookListQuery } from '../../../api/bookApi';
 import { EmptyState } from '../../../components/common/EmptyState';
+import { Pagination } from '../../../components/common/Pagination';
 import type { BookCard, Category, PageResponse } from '../../../types/api';
 import '../../../styles/books.css';
 
@@ -356,7 +357,6 @@ export function BooksPage() {
   }, [currentPage, isLoggedIn, query, sectionConfig, sectionKey]);
 
   const totalPages = Math.max(1, bookPage.totalPages);
-  const pageNumbers = Array.from({ length: Math.min(totalPages, 5) }, (_, index) => index);
 
   const updateFilter = (updates: Record<string, string | undefined>) => {
     const next = new URLSearchParams(searchParams);
@@ -374,9 +374,8 @@ export function BooksPage() {
   };
 
   const movePage = (page: number) => {
-    const nextPage = Math.min(Math.max(page, 0), totalPages - 1);
     const next = new URLSearchParams(searchParams);
-    next.set('page', String(nextPage));
+    next.set('page', String(page));
     setSearchParams(next);
   };
 
@@ -413,19 +412,7 @@ export function BooksPage() {
             ))}
           </div>
 
-          <div className="books-pagination" aria-label="페이지 이동">
-            <button type="button" onClick={() => movePage(currentPage - 1)} disabled={currentPage <= 0}>
-              {'<'}
-            </button>
-            {pageNumbers.map((page) => (
-              <button className={currentPage === page ? 'is-active' : ''} type="button" onClick={() => movePage(page)} key={page}>
-                {page + 1}
-              </button>
-            ))}
-            <button type="button" onClick={() => movePage(currentPage + 1)} disabled={currentPage >= totalPages - 1}>
-              {'>'}
-            </button>
-          </div>
+          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={movePage} />
         </section>
       </div>
     );
@@ -562,19 +549,7 @@ export function BooksPage() {
             ))}
           </div>
 
-          <div className="books-pagination" aria-label="페이지 이동">
-            <button type="button" onClick={() => movePage(currentPage - 1)} disabled={currentPage <= 0}>
-              {'<'}
-            </button>
-            {pageNumbers.map((page) => (
-              <button className={currentPage === page ? 'is-active' : ''} type="button" onClick={() => movePage(page)} key={page}>
-                {page + 1}
-              </button>
-            ))}
-            <button type="button" onClick={() => movePage(currentPage + 1)} disabled={currentPage >= totalPages - 1}>
-              {'>'}
-            </button>
-          </div>
+          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={movePage} />
         </div>
       </section>
     </div>

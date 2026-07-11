@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { getMyReports } from '../../../api/reportsApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
+import { Modal } from '../../../components/common/Modal';
+import { Table } from '../../../components/common/Table';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
 import type { ReportHistoryItem, ReportHistoryPage, ReportStatus, ReportTargetType } from '../../../types/api';
 
@@ -125,83 +127,53 @@ export function ReportsPage() {
 
         {errorMessage ? <div className="status-banner status-banner-error">{errorMessage}</div> : null}
 
-        <div className="points-coupons-table-wrap">
-          <table className="points-coupons-table">
-            <thead>
-              <tr>
-                <th scope="col">신고번호</th>
-                <th scope="col">대상</th>
-                <th scope="col">신고유형</th>
-                <th scope="col">상태</th>
-                <th scope="col">접수일</th>
-                <th scope="col">처리일</th>
-                <th scope="col">상세</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={7}>신고 내역을 불러오는 중입니다.</td>
-                </tr>
-              ) : reports.length > 0 ? (
-                reports.map((report) => (
-                  <tr key={report.reportId}>
-                    <td>{report.reportId}</td>
-                    <td>{getTargetTypeLabel(report.targetType)}{report.targetTitle ? ` · ${report.targetTitle}` : ''}</td>
-                    <td>{report.reportType}</td>
-                    <td>{getStatusLabel(report.status)}</td>
-                    <td>{formatDate(report.createdAt)}</td>
-                    <td>{formatDate(report.processedAt)}</td>
-                    <td>
-                      <button type="button" className="button button-secondary" onClick={() => setSelectedReport(report)}>
-                        상세보기
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={7}>신고 내역이 없습니다.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <Table<ReportHistoryItem>
+          columns={[
+            { key: 'reportId', header: '신고번호' },
+            {
+              key: 'target',
+              header: '대상',
+              render: (report) => `${getTargetTypeLabel(report.targetType)}${report.targetTitle ? ` · ${report.targetTitle}` : ''}`,
+            },
+            { key: 'reportType', header: '신고유형' },
+            { key: 'status', header: '상태', render: (report) => getStatusLabel(report.status) },
+            { key: 'createdAt', header: '접수일', render: (report) => formatDate(report.createdAt) },
+            { key: 'processedAt', header: '처리일', render: (report) => formatDate(report.processedAt) },
+            {
+              key: 'detail',
+              header: '상세',
+              render: (report) => (
+                <button type="button" className="button button-secondary" onClick={() => setSelectedReport(report)}>
+                  상세보기
+                </button>
+              ),
+            },
+          ]}
+          rows={reports}
+          rowKey={(report) => report.reportId}
+          isLoading={isLoading}
+          loadingMessage="신고 내역을 불러오는 중입니다."
+          emptyMessage="신고 내역이 없습니다."
+        />
       </section>
 
-      {selectedReport ? (
-        <div className="membership-modal-backdrop" onClick={() => setSelectedReport(null)}>
-          <section
-            className="membership-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="report-detail-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="membership-modal-header">
-              <div>
-                <p className="eyebrow">REPORT DETAIL</p>
-                <h2 id="report-detail-title">신고 상세</h2>
-              </div>
-              <button
-                className="membership-modal-close"
-                type="button"
-                aria-label="신고 상세 닫기"
-                onClick={() => setSelectedReport(null)}
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="membership-modal-body">
-              <p>신고번호 {selectedReport.reportId}</p>
-              <p>대상 {getTargetTypeLabel(selectedReport.targetType)}</p>
-              <p>신고 내용 {selectedReport.content ?? '-'}</p>
-              <p>처리 결과 {selectedReport.resultMessage ?? '처리 중입니다.'}</p>
-            </div>
-          </section>
-        </div>
-      ) : null}
+      <Modal
+        isOpen={Boolean(selectedReport)}
+        onClose={() => setSelectedReport(null)}
+        eyebrow="REPORT DETAIL"
+        title="신고 상세"
+        titleId="report-detail-title"
+        closeLabel="신고 상세 닫기"
+      >
+        {selectedReport ? (
+          <>
+            <p>신고번호 {selectedReport.reportId}</p>
+            <p>대상 {getTargetTypeLabel(selectedReport.targetType)}</p>
+            <p>신고 내용 {selectedReport.content ?? '-'}</p>
+            <p>처리 결과 {selectedReport.resultMessage ?? '처리 중입니다.'}</p>
+          </>
+        ) : null}
+      </Modal>
     </MyPageLayout>
   );
 }

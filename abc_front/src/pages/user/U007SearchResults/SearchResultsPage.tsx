@@ -4,6 +4,7 @@ import { getBooks, getCategories, searchBooks, type BookSearchQuery } from '../.
 import { createBookRequest } from '../../../api/bookRequestsApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { EmptyState } from '../../../components/common/EmptyState';
+import { Pagination } from '../../../components/common/Pagination';
 import type { BookCard, Category, PageResponse } from '../../../types/api';
 import '../../../styles/books.css';
 import '../../../styles/search.css';
@@ -293,7 +294,6 @@ export function SearchResultsPage() {
   }, [currentPage, keyword, query]);
 
   const totalPages = Math.max(1, bookPage.totalPages);
-  const pageNumbers = Array.from({ length: Math.min(totalPages, 5) }, (_, index) => index);
   const showRequestPanel = Boolean(keyword && (requestMode || (!isLoading && bookPage.totalElements === 0)));
   const updateFilter = (updates: Record<string, string | undefined>) => {
     const next = new URLSearchParams(searchParams);
@@ -311,9 +311,8 @@ export function SearchResultsPage() {
   };
 
   const movePage = (page: number) => {
-    const nextPage = Math.min(Math.max(page, 0), totalPages - 1);
     const next = new URLSearchParams(searchParams);
-    next.set('page', String(nextPage));
+    next.set('page', String(page));
     setSearchParams(next);
   };
 
@@ -490,19 +489,7 @@ export function SearchResultsPage() {
                 ))}
               </div>
 
-              <div className="books-pagination" aria-label="페이지 이동">
-                <button type="button" onClick={() => movePage(currentPage - 1)} disabled={currentPage <= 0}>
-                  {'<'}
-                </button>
-                {pageNumbers.map((page) => (
-                  <button className={currentPage === page ? 'is-active' : ''} type="button" onClick={() => movePage(page)} key={page}>
-                    {page + 1}
-                  </button>
-                ))}
-                <button type="button" onClick={() => movePage(currentPage + 1)} disabled={currentPage >= totalPages - 1}>
-                  {'>'}
-                </button>
-              </div>
+              <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={movePage} />
             </>
           ) : null}
         </div>
