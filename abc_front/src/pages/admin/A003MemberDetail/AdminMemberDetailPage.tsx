@@ -46,88 +46,6 @@ const tabs: Array<{ value: HistoryTab; label: string }> = [
   { value: 'sanctions', label: '제재 이력' },
 ];
 
-const fallbackMember: AdminMemberDetail = {
-  memberId: 1024,
-  loginId: 'park_reader',
-  name: '박서연',
-  email: 'seoyeon.park@example.com',
-  phone: '010-1234-5678',
-  birthDate: '1994-03-12',
-  gender: '여성',
-  role: 'USER',
-  gradeId: 3,
-  gradeName: '골드',
-  pointBalance: 18500,
-  status: 'JOINED',
-  currentSanction: null,
-  usageSummary: {
-    rentalCount: 32,
-    paymentAmount: 86000,
-    reportCount: 1,
-    reviewCount: 8,
-    completedBookCount: 18,
-    readingBookCount: 3,
-  },
-  rentalHistories: [
-    {
-      rentalId: 3001,
-      bookTitle: '데이터베이스 입문',
-      status: 'READING',
-      progressRate: 68,
-      rentedAt: '2026-06-08T10:20:00',
-    },
-  ],
-  paymentHistories: [
-    {
-      paymentId: 801,
-      bookTitle: '데이터베이스 입문',
-      originalAmount: 26500,
-      discountAmount: 3000,
-      paidAmount: 23500,
-      status: 'PAID',
-      paidAt: '2026-06-08T10:21:00',
-    },
-  ],
-  reviewHistories: [
-    {
-      reviewId: 501,
-      bookTitle: '데이터베이스 입문',
-      rating: 4,
-      status: '노출',
-      createdAt: '2026-06-12T18:30:00',
-      updatedAt: '2026-06-13T09:10:00',
-    },
-  ],
-  reportHistories: [
-    {
-      reportId: 41,
-      targetType: 'REVIEW',
-      reason: '부적절한 표현',
-      status: '처리 완료',
-      createdAt: '2026-06-15T14:05:00',
-    },
-  ],
-  pointHistories: [
-    {
-      pointHistoryId: 71,
-      pointType: 'ADMIN_ADJUST',
-      pointAmount: 1000,
-      description: '이벤트 보상 지급',
-      createdAt: '2026-06-20T09:00:00',
-    },
-  ],
-  sanctionHistories: [
-    {
-      sanctionHistoryId: 11,
-      sanctionType: 'WARNING',
-      startedAt: '2026-05-01',
-      endedAt: '2026-05-01',
-      reason: '리뷰 신고 누적 안내',
-      status: '완료',
-    },
-  ],
-};
-
 function getOptionLabel<T extends string>(options: Array<{ value: T; label: string }>, value: T | string | undefined) {
   return options.find((option) => option.value === value)?.label ?? value ?? '-';
 }
@@ -173,19 +91,6 @@ function getSanctionText(member: AdminMemberDetail) {
   return [type, endedAt].filter(Boolean).join(' · ');
 }
 
-function getEmptyPage(memberId: number): AdminMemberDetail {
-  return {
-    ...fallbackMember,
-    memberId,
-    rentalHistories: [],
-    paymentHistories: [],
-    reviewHistories: [],
-    reportHistories: [],
-    pointHistories: [],
-    sanctionHistories: [],
-  };
-}
-
 export function AdminMemberDetailPage() {
   const { memberId } = useParams();
   const navigate = useNavigate();
@@ -223,8 +128,8 @@ export function AdminMemberDetailPage() {
       const data = await getAdminMember(numericMemberId);
       setMember(data);
     } catch (error) {
-      setMember(getEmptyPage(numericMemberId));
-      setErrorMessage(`${getApiErrorMessage(error)} 화면 확인을 위해 임시 상세 정보를 표시합니다.`);
+      setMember(null);
+      setErrorMessage(`${getApiErrorMessage(error)} 잠시 후 다시 시도해 주세요.`);
     } finally {
       setIsLoading(false);
     }
