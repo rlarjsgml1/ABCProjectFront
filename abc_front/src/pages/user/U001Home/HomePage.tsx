@@ -110,7 +110,7 @@ function toHomeCategories(categories: Category[]) {
 
 function getCategoryLink(category: HomeCategory) {
   if (category.id) {
-    return `/books?categoryId=${category.id}`;
+    return `/books?parentCategoryId=${category.id}`;
   }
 
   return `/books?category=${encodeURIComponent(category.name)}`;
