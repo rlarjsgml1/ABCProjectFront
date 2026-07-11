@@ -186,6 +186,12 @@
   color: var(--color-muted);
 }
 
+.field-error {
+  font-weight: 700;
+  font-size: 0.8125rem;
+  color: var(--color-danger);
+}
+
 .form-checkbox-row {
   display: grid;
   gap: var(--space-2);

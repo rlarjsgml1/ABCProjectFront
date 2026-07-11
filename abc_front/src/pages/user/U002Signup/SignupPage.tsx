@@ -32,17 +32,24 @@ function getTodayDateString() {
 export function SignupPage() {
   const navigate = useNavigate();
   const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [passwordMismatchMessage, setPasswordMismatchMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPasswordMismatchOpen, setIsPasswordMismatchOpen] = useState(false);
+
+  const checkPasswordMatch = (nextPassword: string, nextPasswordConfirm: string) => {
+    setPasswordMismatchMessage(
+      nextPasswordConfirm && nextPassword !== nextPasswordConfirm ? '비밀번호가 다릅니다.' : '',
+    );
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrorMessage('');
 
     const formData = new FormData(event.currentTarget);
-    const password = String(formData.get('password') ?? '');
-    const passwordConfirm = String(formData.get('passwordConfirm') ?? '');
 
     if (password !== passwordConfirm) {
       setIsPasswordMismatchOpen(true);
@@ -92,7 +99,17 @@ export function SignupPage() {
 
         <label>
           <span>비밀번호<span className="required-mark">*</span></span>
-          <input name="password" type="password" placeholder="비밀번호를 입력하세요" required />
+          <input
+            name="password"
+            type="password"
+            placeholder="비밀번호를 입력하세요"
+            value={password}
+            onChange={(event) => {
+              setPassword(event.target.value);
+              checkPasswordMatch(event.target.value, passwordConfirm);
+            }}
+            required
+          />
           <small className="field-hint">{PASSWORD_RULE_MESSAGE}</small>
         </label>
 
@@ -102,9 +119,16 @@ export function SignupPage() {
             name="passwordConfirm"
             type="password"
             placeholder="비밀번호를 다시 입력하세요"
+            value={passwordConfirm}
+            onChange={(event) => setPasswordConfirm(event.target.value)}
+            onBlur={() => checkPasswordMatch(password, passwordConfirm)}
             required
           />
-          <small className="field-hint">위와 동일한 비밀번호를 입력해주세요.</small>
+          {passwordMismatchMessage ? (
+            <small className="field-error">{passwordMismatchMessage}</small>
+          ) : (
+            <small className="field-hint">위와 동일한 비밀번호를 입력해주세요.</small>
+          )}
         </label>
 
         <label>
