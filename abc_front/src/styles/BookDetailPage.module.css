@@ -423,65 +423,27 @@
   font-weight: 700;
 }
 
-.modalBackdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  background: transparent;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: var(--space-6);
-  padding-top: var(--space-8);
-}
-
-.modal {
-  width: min(520px, 100%);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  padding: var(--space-8);
-  display: grid;
-  gap: var(--space-4);
-}
-
-.modal h2 {
-  margin: 0;
-  color: var(--color-text);
-}
-
-.modalHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
-.modalHeader button {
-  border: 0;
-  background: transparent;
-  color: var(--color-text);
-  cursor: pointer;
-  font: inherit;
-  font-weight: 700;
-}
-
 .modalMessage {
   margin: 0;
   color: var(--color-text);
   text-align: center;
 }
 
-.modal label {
+.formFields {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.formFields label {
   display: grid;
   gap: var(--space-2);
   color: var(--color-text);
   font-weight: 700;
 }
 
-.modal input,
-.modal select,
-.modal textarea {
+.formFields input,
+.formFields select,
+.formFields textarea {
   width: 100%;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -489,7 +451,7 @@
   font: inherit;
 }
 
-.modal textarea {
+.formFields textarea {
   min-height: 140px;
   resize: vertical;
 }
