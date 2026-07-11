@@ -331,6 +331,7 @@ export function AdminReportListPage() {
   const reports = reportsPage?.content ?? [];
   const shownPage = toUiPage(reportsPage?.page);
   const totalPages = reportsPage?.totalPages ?? 1;
+  const selectedTargetType = searchParams.get('targetType') ?? '';
 
   return (
     <section className={`page-section ${styles.page}`} aria-labelledby="admin-reports-title">
@@ -342,17 +343,17 @@ export function AdminReportListPage() {
       </div>
 
       <form className={styles.filterPanel} onSubmit={handleSearch}>
-        <label>
-          대상
-          <select name="targetType" defaultValue={searchParams.get('targetType') ?? ''}>
-            <option value="">전체</option>
-            {targetTypeOptions.map((option) => (
-              <option value={option.value} key={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className={styles.targetTabs} aria-label="신고 대상 필터">
+          <button type="button" className={!selectedTargetType ? styles.activeTargetTab : ''} onClick={() => updateQuery({ targetType: '', page: '1' })}>
+            전체
+          </button>
+          {targetTypeOptions.map((option) => (
+            <button type="button" className={selectedTargetType === option.value ? styles.activeTargetTab : ''} key={option.value} onClick={() => updateQuery({ targetType: option.value, page: '1' })}>
+              {option.label}
+            </button>
+          ))}
+        </div>
+        <input type="hidden" name="targetType" value={selectedTargetType} />
         <label>
           처리 상태
           <select name="status" defaultValue={searchParams.get('status') ?? ''}>

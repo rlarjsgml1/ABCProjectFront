@@ -33,7 +33,7 @@
 
 .filterPanel {
   display: grid;
-  grid-template-columns: minmax(160px, 0.7fr) minmax(180px, 0.8fr) minmax(240px, 1.2fr) auto;
+  grid-template-columns: minmax(180px, 0.8fr) minmax(260px, 1.2fr) auto;
   gap: var(--space-4);
   align-items: end;
   border: 1px solid var(--color-border);
@@ -41,6 +41,33 @@
   padding: var(--space-6);
   background: var(--color-surface);
   box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1);
+}
+
+.targetTabs {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  align-items: center;
+  max-width: 620px;
+}
+
+.targetTabs button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 18px;
+  color: var(--color-text);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+}
+
+.targetTabs button:hover,
+.targetTabs .activeTargetTab {
+  color: var(--color-text);
+  background: #e5e7eb;
 }
 
 .filterPanel label,
@@ -209,12 +236,12 @@
 
 .table th:nth-child(4),
 .table td:nth-child(4) {
-  width: 15%;
+  width: 14%;
 }
 
 .table th:nth-child(5),
 .table td:nth-child(5) {
-  width: 13%;
+  width: 12%;
 }
 
 .table th:nth-child(6),
@@ -224,17 +251,21 @@
 
 .table th:nth-child(7),
 .table td:nth-child(7) {
-  width: 12%;
+  width: 11%;
 }
 
 .table th:nth-child(8),
 .table td:nth-child(8) {
-  width: 8%;
+  width: 9%;
+  white-space: nowrap;
+  overflow-wrap: normal;
 }
 
 .table th:nth-child(9),
 .table td:nth-child(9) {
-  width: 15%;
+  width: 18%;
+  white-space: nowrap;
+  overflow-wrap: normal;
 }
 
 .memberLink {
@@ -286,17 +317,18 @@
 .rowActions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: 6px;
+  align-items: center;
 }
 
 .rowActions button {
   border: 0;
   border-radius: 999px;
-  padding: 5px 8px;
+  padding: 5px 7px;
   color: #1d4ed8;
   background: #eff6ff;
   cursor: pointer;
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   font-weight: 900;
   white-space: nowrap;
 }
@@ -506,6 +538,11 @@
   .filterPanel,
   .sanctionFields {
     grid-template-columns: 1fr;
+  }
+
+  .targetTabs {
+    grid-template-columns: 1fr;
+    max-width: none;
   }
 
   .filterActions,
