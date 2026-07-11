@@ -128,6 +128,10 @@ function getFallbackPage(query: BookListQuery, page: number): PageResponse<BookC
     content = content.filter((book) => getBookCategoryId(book) === query.categoryId);
   }
 
+  if (query.parentCategoryId) {
+    content = content.filter((book) => getBookCategoryId(book) === query.parentCategoryId);
+  }
+
   if (query.category) {
     content = content.filter((book) => getBookCategoryName(book) === query.category);
   }
@@ -220,6 +224,7 @@ export function BooksPage() {
   const sectionConfig = sectionKey ? sectionConfigs[sectionKey] : null;
   const sort = searchParams.get('sort') ?? (searchParams.get('section') === 'best' ? 'popular' : 'popular');
   const categoryId = searchParams.get('categoryId') ? Number(searchParams.get('categoryId')) : undefined;
+  const parentCategoryId = searchParams.get('parentCategoryId') ? Number(searchParams.get('parentCategoryId')) : undefined;
   const categoryName = searchParams.get('category') ?? undefined;
   const rentalType = searchParams.get('rentalType') ?? undefined;
   const availableOnly = searchParams.get('status') === 'AVAILABLE';
@@ -227,14 +232,24 @@ export function BooksPage() {
   const query = useMemo<BookListQuery>(
     () => ({
       sort,
-      categoryId,
+      categoryId: parentCategoryId ? undefined : categoryId,
+      parentCategoryId: parentCategoryId ?? categoryId,
       category: categoryName,
       rentalType,
       status: availableOnly ? 'AVAILABLE' : undefined,
       section: searchParams.get('section') ?? undefined,
     }),
-    [availableOnly, categoryId, categoryName, rentalType, searchParams, sort],
+    [availableOnly, categoryId, categoryName, parentCategoryId, rentalType, searchParams, sort],
   );
+
+  useEffect(() => {
+    if (!categoryId || parentCategoryId) return;
+
+    const next = new URLSearchParams(searchParams);
+    next.set('parentCategoryId', String(categoryId));
+    next.delete('categoryId');
+    setSearchParams(next, { replace: true });
+  }, [categoryId, parentCategoryId, searchParams, setSearchParams]);
 
   const getFeaturedOffset = (index: number) => {
     const length = featuredBooks.length;
@@ -499,14 +514,18 @@ export function BooksPage() {
 
           <div className="books-filter-group">
             <h2>카테고리</h2>
-            <button className={!categoryId && !categoryName ? 'is-active' : ''} type="button" onClick={() => updateFilter({ categoryId: undefined, category: undefined })}>
+            <button
+              className={!categoryId && !parentCategoryId && !categoryName ? 'is-active' : ''}
+              type="button"
+              onClick={() => updateFilter({ categoryId: undefined, parentCategoryId: undefined, category: undefined })}
+            >
               전체
             </button>
             {categories.map((category) => (
               <button
-                className={categoryId === category.categoryId || categoryName === category.name ? 'is-active' : ''}
+                className={parentCategoryId === category.categoryId || categoryId === category.categoryId || categoryName === category.name ? 'is-active' : ''}
                 type="button"
-                onClick={() => updateFilter({ categoryId: String(category.categoryId), category: undefined })}
+                onClick={() => updateFilter({ parentCategoryId: String(category.categoryId), categoryId: undefined, category: undefined })}
                 key={category.categoryId}
               >
                 {category.name}

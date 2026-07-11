@@ -5,6 +5,7 @@ import type { BookDetail } from '../types/book';
 export type BookListQuery = {
   sort?: string;
   categoryId?: number;
+  parentCategoryId?: number;
   category?: string;
   rentalType?: string;
   status?: string;

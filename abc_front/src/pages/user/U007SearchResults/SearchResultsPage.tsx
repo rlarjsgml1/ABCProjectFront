@@ -424,7 +424,7 @@ export function SearchResultsPage() {
               전체
             </button>
             {categories.map((category) => (
-              <button type="button" onClick={() => navigate(`/books?categoryId=${category.categoryId}`)} key={category.categoryId}>
+              <button type="button" onClick={() => navigate(`/books?parentCategoryId=${category.categoryId}`)} key={category.categoryId}>
                 {category.name}
               </button>
             ))}
