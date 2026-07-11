@@ -41,47 +41,6 @@ const sanctionTypeOptions: Array<{ value: AdminSanctionType; label: string }> = 
   { value: 'WARNING', label: '경고' },
 ];
 
-const fallbackMembers: AdminMemberSummary[] = [
-  {
-    memberId: 1024,
-    loginId: 'park_reader',
-    name: '박서연',
-    email: 'seoyeon.park@example.com',
-    role: 'USER',
-    gradeId: 3,
-    gradeName: 'GOLD',
-    pointBalance: 12300,
-    status: 'JOINED',
-    currentSanction: null,
-  },
-  {
-    memberId: 991,
-    loginId: 'read_admin',
-    name: '김도윤',
-    email: 'admin@example.com',
-    role: 'ADMIN',
-    pointBalance: 0,
-    status: 'JOINED',
-    currentSanction: null,
-  },
-  {
-    memberId: 873,
-    loginId: 'review_stop',
-    name: '이민준',
-    email: 'minjun@example.com',
-    role: 'USER',
-    gradeId: 1,
-    gradeName: 'BASIC',
-    pointBalance: 1500,
-    status: 'SANCTIONED',
-    currentSanction: {
-      sanctionType: 'ACCOUNT_SUSPENSION',
-      endedAt: '2026-07-02T23:59:59',
-      reason: '리뷰 신고 누적',
-    },
-  },
-];
-
 function toApiPage(uiPage: number) {
   return Math.max(uiPage - 1, 0);
 }
@@ -120,34 +79,6 @@ function getSanctionText(member: AdminMemberSummary) {
   const endedAt = formatDateTime(sanction.endedAt);
 
   return endedAt ? `${type} · ${endedAt} 종료` : type;
-}
-
-function buildFallbackPage(query: AdminMemberListQuery): PageResponse<AdminMemberSummary> {
-  const keyword = query.q?.trim().toLowerCase();
-  const filtered = fallbackMembers.filter((member) => {
-    const keywordMatched = keyword
-      ? [member.loginId, member.name, member.email].some((value) => value.toLowerCase().includes(keyword))
-      : true;
-    const statusMatched = query.status ? member.status === query.status : true;
-    const roleMatched = query.role ? member.role === query.role : true;
-    const gradeMatched = query.gradeId ? member.gradeId === query.gradeId : true;
-
-    return keywordMatched && statusMatched && roleMatched && gradeMatched;
-  });
-
-  const page = query.page ?? 0;
-  const size = query.size ?? PAGE_SIZE;
-  const start = page * size;
-  const content = filtered.slice(start, start + size);
-
-  return {
-    content,
-    page,
-    size,
-    totalElements: filtered.length,
-    totalPages: Math.max(Math.ceil(filtered.length / size), 1),
-    last: start + size >= filtered.length,
-  };
 }
 
 export function AdminMemberListPage() {
@@ -193,7 +124,7 @@ export function AdminMemberListPage() {
         }
       } catch (error) {
         if (!ignore) {
-          setMembersPage(buildFallbackPage(query));
+          setMembersPage(null);
           setErrorMessage(`${getApiErrorMessage(error)} 잠시 후 다시 시도해 주세요.`);
         }
       } finally {
