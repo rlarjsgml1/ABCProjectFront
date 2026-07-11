@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { addBookmark, deleteBookmark, getBookmarks, getViewerPage, saveReadingProgress } from '../../../api/viewerApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
+import { Modal } from '../../../components/common/Modal';
 import type { BookmarkItem, ViewerPageData } from '../../../types/api';
 
 type ReadingMode = 'PAGE' | 'SCROLL';
@@ -315,151 +316,132 @@ export function ViewerPage() {
         »
       </button>
 
-      {isSettingsOpen ? (
-        <div className="membership-modal-backdrop" onClick={closeSettings}>
-          <section
-            className="membership-modal viewer-settings-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="viewer-settings-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            {settingsView === 'main' ? (
-              <>
-                <div className="membership-modal-header">
-                  <h2 id="viewer-settings-title">보기 설정</h2>
-                  <div className="viewer-settings-header-actions">
-                    <button
-                      type="button"
-                      className="viewer-icon-button"
-                      aria-label="지정 페이지 조회"
-                      onClick={() => setSettingsView('search')}
-                    >
-                      🔍
-                    </button>
-                    <button className="membership-modal-close" type="button" aria-label="설정 닫기" onClick={closeSettings}>
-                      ×
-                    </button>
-                  </div>
-                </div>
-
-                <div className="membership-modal-body viewer-settings-body">
-                  <div className="viewer-settings-group">
-                    <p className="viewer-settings-group-title">스타일 설정</p>
-                    <div className="viewer-settings-row">
-                      <span>글자 크기</span>
-                      <div className="viewer-stepper">
-                        <button
-                          type="button"
-                          disabled={fontSizePercent <= FONT_SIZE_MIN}
-                          onClick={() => setFontSizePercent((value) => Math.max(FONT_SIZE_MIN, value - FONT_SIZE_STEP))}
-                        >
-                          -
-                        </button>
-                        <span>{fontSizePercent}%</span>
-                        <button
-                          type="button"
-                          disabled={fontSizePercent >= FONT_SIZE_MAX}
-                          onClick={() => setFontSizePercent((value) => Math.min(FONT_SIZE_MAX, value + FONT_SIZE_STEP))}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="viewer-settings-group">
-                    <p className="viewer-settings-group-title">자동넘김 설정</p>
-                    <div className="viewer-settings-row">
-                      <span>자동 넘김 시간 (초)</span>
-                      <div className="viewer-stepper">
-                        <button
-                          type="button"
-                          disabled={autoAdvanceInterval <= AUTO_ADVANCE_MIN}
-                          onClick={() => setAutoAdvanceInterval((value) => Math.max(AUTO_ADVANCE_MIN, value - AUTO_ADVANCE_STEP))}
-                        >
-                          -
-                        </button>
-                        <span>{autoAdvanceInterval}초</span>
-                        <button
-                          type="button"
-                          disabled={autoAdvanceInterval >= AUTO_ADVANCE_MAX}
-                          onClick={() => setAutoAdvanceInterval((value) => Math.min(AUTO_ADVANCE_MAX, value + AUTO_ADVANCE_STEP))}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                    <div className="viewer-settings-row">
-                      <span>자동 넘김</span>
-                      <button
-                        type="button"
-                        className={`button ${isAutoAdvancing ? 'button-secondary' : 'button-primary'}`}
-                        onClick={() => setIsAutoAdvancing((current) => !current)}
-                      >
-                        {isAutoAdvancing ? '중지' : '시작'}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="viewer-settings-group">
-                    <p className="viewer-settings-group-title">읽기 설정</p>
-                    <div className="viewer-settings-row">
-                      <span>스크롤 모드</span>
-                      <button
-                        type="button"
-                        className="viewer-mode-toggle"
-                        onClick={() => setReadingMode((mode) => (mode === 'PAGE' ? 'SCROLL' : 'PAGE'))}
-                      >
-                        {readingMode === 'PAGE' ? '페이지 모드' : '스크롤 모드'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="membership-modal-header">
-                  <h2 id="viewer-settings-title">지정 페이지 조회 (검색)</h2>
-                  <button className="membership-modal-close" type="button" aria-label="닫기" onClick={closeSettings}>
-                    ×
+      <Modal
+        isOpen={isSettingsOpen}
+        onClose={closeSettings}
+        title={settingsView === 'main' ? '보기 설정' : '지정 페이지 조회 (검색)'}
+        titleId="viewer-settings-title"
+        className="viewer-settings-modal"
+        closeLabel={settingsView === 'main' ? '설정 닫기' : '닫기'}
+        headerExtra={
+          settingsView === 'main' ? (
+            <button
+              type="button"
+              className="viewer-icon-button"
+              aria-label="지정 페이지 조회"
+              onClick={() => setSettingsView('search')}
+            >
+              🔍
+            </button>
+          ) : null
+        }
+      >
+        {settingsView === 'main' ? (
+          <div className="viewer-settings-body">
+            <div className="viewer-settings-group">
+              <p className="viewer-settings-group-title">스타일 설정</p>
+              <div className="viewer-settings-row">
+                <span>글자 크기</span>
+                <div className="viewer-stepper">
+                  <button
+                    type="button"
+                    disabled={fontSizePercent <= FONT_SIZE_MIN}
+                    onClick={() => setFontSizePercent((value) => Math.max(FONT_SIZE_MIN, value - FONT_SIZE_STEP))}
+                  >
+                    -
+                  </button>
+                  <span>{fontSizePercent}%</span>
+                  <button
+                    type="button"
+                    disabled={fontSizePercent >= FONT_SIZE_MAX}
+                    onClick={() => setFontSizePercent((value) => Math.min(FONT_SIZE_MAX, value + FONT_SIZE_STEP))}
+                  >
+                    +
                   </button>
                 </div>
+              </div>
+            </div>
 
-                <div className="membership-modal-body">
-                  <div className="viewer-search-field">
-                    <span aria-hidden="true">🔍</span>
-                    <input
-                      type="number"
-                      min={1}
-                      max={totalPages || undefined}
-                      placeholder="이동할 페이지 번호"
-                      value={searchPageInput}
-                      onChange={(event) => setSearchPageInput(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter') {
-                          handleSearchPageSubmit();
-                        }
-                      }}
-                    />
-                    {searchPageInput ? (
-                      <button type="button" aria-label="입력 지우기" onClick={() => setSearchPageInput('')}>
-                        ×
-                      </button>
-                    ) : null}
-                  </div>
-
-                  <div className="form-action-row">
-                    <button type="button" className="button button-primary" onClick={handleSearchPageSubmit}>
-                      이동
-                    </button>
-                  </div>
+            <div className="viewer-settings-group">
+              <p className="viewer-settings-group-title">자동넘김 설정</p>
+              <div className="viewer-settings-row">
+                <span>자동 넘김 시간 (초)</span>
+                <div className="viewer-stepper">
+                  <button
+                    type="button"
+                    disabled={autoAdvanceInterval <= AUTO_ADVANCE_MIN}
+                    onClick={() => setAutoAdvanceInterval((value) => Math.max(AUTO_ADVANCE_MIN, value - AUTO_ADVANCE_STEP))}
+                  >
+                    -
+                  </button>
+                  <span>{autoAdvanceInterval}초</span>
+                  <button
+                    type="button"
+                    disabled={autoAdvanceInterval >= AUTO_ADVANCE_MAX}
+                    onClick={() => setAutoAdvanceInterval((value) => Math.min(AUTO_ADVANCE_MAX, value + AUTO_ADVANCE_STEP))}
+                  >
+                    +
+                  </button>
                 </div>
-              </>
-            )}
-          </section>
-        </div>
-      ) : null}
+              </div>
+              <div className="viewer-settings-row">
+                <span>자동 넘김</span>
+                <button
+                  type="button"
+                  className={`button ${isAutoAdvancing ? 'button-secondary' : 'button-primary'}`}
+                  onClick={() => setIsAutoAdvancing((current) => !current)}
+                >
+                  {isAutoAdvancing ? '중지' : '시작'}
+                </button>
+              </div>
+            </div>
+
+            <div className="viewer-settings-group">
+              <p className="viewer-settings-group-title">읽기 설정</p>
+              <div className="viewer-settings-row">
+                <span>스크롤 모드</span>
+                <button
+                  type="button"
+                  className="viewer-mode-toggle"
+                  onClick={() => setReadingMode((mode) => (mode === 'PAGE' ? 'SCROLL' : 'PAGE'))}
+                >
+                  {readingMode === 'PAGE' ? '페이지 모드' : '스크롤 모드'}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="viewer-search-field">
+              <span aria-hidden="true">🔍</span>
+              <input
+                type="number"
+                min={1}
+                max={totalPages || undefined}
+                placeholder="이동할 페이지 번호"
+                value={searchPageInput}
+                onChange={(event) => setSearchPageInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    handleSearchPageSubmit();
+                  }
+                }}
+              />
+              {searchPageInput ? (
+                <button type="button" aria-label="입력 지우기" onClick={() => setSearchPageInput('')}>
+                  ×
+                </button>
+              ) : null}
+            </div>
+
+            <div className="form-action-row">
+              <button type="button" className="button button-primary" onClick={handleSearchPageSubmit}>
+                이동
+              </button>
+            </div>
+          </>
+        )}
+      </Modal>
     </>
   );
 }

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { getMyPayments } from '../../../api/paymentsApi';
 import { getMyRentals } from '../../../api/myRentalsApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
+import { Modal } from '../../../components/common/Modal';
+import { Table } from '../../../components/common/Table';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
 import type { PaymentHistoryItem, PaymentHistoryPage } from '../../../types/api';
 
@@ -167,97 +169,62 @@ export function PaymentsPage() {
 
         {errorMessage ? <div className="status-banner status-banner-error">{errorMessage}</div> : null}
 
-        <div className="points-coupons-table-wrap">
-          <table className="points-coupons-table">
-            <thead>
-              <tr>
-                <th scope="col">결제번호</th>
-                <th scope="col">도서명</th>
-                <th scope="col">금액</th>
-                <th scope="col">결제 유형</th>
-                <th scope="col">결제일</th>
-                <th scope="col">상태</th>
-                <th scope="col">상세보기</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={7}>결제 내역을 불러오는 중입니다.</td>
-                </tr>
-              ) : payments.length > 0 ? (
-                payments.map((payment) => (
-                  <tr key={payment.paymentId}>
-                    <td>{payment.paymentId}</td>
-                    <td>
-                      {payment.bookId ? (
-                        <Link to={`/books/${payment.bookId}`}>{payment.title}</Link>
-                      ) : (
-                        payment.title
-                      )}
-                    </td>
-                    <td>{formatWon(payment.amount)}</td>
-                    <td>{getPaymentTypeLabel(payment.rentalId, ownedRentalIds)}</td>
-                    <td>{formatDate(payment.paidAt)}</td>
-                    <td>{getPaymentStatusLabel(payment.paymentStatus)}</td>
-                    <td>
-                      <button type="button" className="button button-secondary" onClick={() => setSelectedPayment(payment)}>
-                        상세보기
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={7}>결제 내역이 없습니다.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <Table<PaymentHistoryItem>
+          columns={[
+            { key: 'paymentId', header: '결제번호' },
+            {
+              key: 'title',
+              header: '도서명',
+              render: (payment) =>
+                payment.bookId ? <Link to={`/books/${payment.bookId}`}>{payment.title}</Link> : payment.title,
+            },
+            { key: 'amount', header: '금액', render: (payment) => formatWon(payment.amount) },
+            { key: 'type', header: '결제 유형', render: (payment) => getPaymentTypeLabel(payment.rentalId, ownedRentalIds) },
+            { key: 'paidAt', header: '결제일', render: (payment) => formatDate(payment.paidAt) },
+            { key: 'status', header: '상태', render: (payment) => getPaymentStatusLabel(payment.paymentStatus) },
+            {
+              key: 'detail',
+              header: '상세보기',
+              render: (payment) => (
+                <button type="button" className="button button-secondary" onClick={() => setSelectedPayment(payment)}>
+                  상세보기
+                </button>
+              ),
+            },
+          ]}
+          rows={payments}
+          rowKey={(payment) => payment.paymentId}
+          isLoading={isLoading}
+          loadingMessage="결제 내역을 불러오는 중입니다."
+          emptyMessage="결제 내역이 없습니다."
+        />
       </section>
 
-      {selectedPayment ? (
-        <div className="membership-modal-backdrop" onClick={() => setSelectedPayment(null)}>
-          <section
-            className="membership-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="payment-detail-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="membership-modal-header">
-              <div>
-                <p className="eyebrow">PAYMENT DETAIL</p>
-                <h2 id="payment-detail-title">결제 내역 상세보기</h2>
-              </div>
-              <button
-                className="membership-modal-close"
-                type="button"
-                aria-label="결제 상세 닫기"
-                onClick={() => setSelectedPayment(null)}
-              >
-                ×
-              </button>
-            </div>
+      <Modal
+        isOpen={Boolean(selectedPayment)}
+        onClose={() => setSelectedPayment(null)}
+        eyebrow="PAYMENT DETAIL"
+        title="결제 내역 상세보기"
+        titleId="payment-detail-title"
+        closeLabel="결제 상세 닫기"
+      >
+        {selectedPayment ? (
+          <>
+            <p>결제번호 {selectedPayment.paymentId}</p>
+            <p>결제일자 {formatDate(selectedPayment.paidAt)}</p>
+            <p>도서명 {selectedPayment.title}</p>
+            <p>결제 유형 {getPaymentTypeLabel(selectedPayment.rentalId, ownedRentalIds)}</p>
 
-            <div className="membership-modal-body">
-              <p>결제번호 {selectedPayment.paymentId}</p>
-              <p>결제일자 {formatDate(selectedPayment.paidAt)}</p>
-              <p>도서명 {selectedPayment.title}</p>
-              <p>결제 유형 {getPaymentTypeLabel(selectedPayment.rentalId, ownedRentalIds)}</p>
-
-              <div className="payment-detail-breakdown">
-                <p className="eyebrow">결제 내역</p>
-                <p>판매 금액 {formatWon(selectedPayment.originalAmount)}</p>
-                <p>사용 포인트 {formatWon(selectedPayment.pointUsedAmount)}</p>
-                <p>할인 금액 {formatWon(selectedPayment.couponDiscountAmount)}</p>
-                <p>결제 금액 {formatWon(selectedPayment.amount)}</p>
-              </div>
+            <div className="payment-detail-breakdown">
+              <p className="eyebrow">결제 내역</p>
+              <p>판매 금액 {formatWon(selectedPayment.originalAmount)}</p>
+              <p>사용 포인트 {formatWon(selectedPayment.pointUsedAmount)}</p>
+              <p>할인 금액 {formatWon(selectedPayment.couponDiscountAmount)}</p>
+              <p>결제 금액 {formatWon(selectedPayment.amount)}</p>
             </div>
-          </section>
-        </div>
-      ) : null}
+          </>
+        ) : null}
+      </Modal>
     </MyPageLayout>
   );
 }

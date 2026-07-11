@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { getFallbackNoticePage, getNotices } from '../../../api/noticeApi';
-import { EmptyState } from '../../../components/common/EmptyState';
-import type { NoticePage } from '../../../types/api';
+import { Pagination } from '../../../components/common/Pagination';
+import { Table } from '../../../components/common/Table';
+import type { NoticeItem, NoticePage } from '../../../types/api';
 import styles from '../../../styles/NoticeListPage.module.css';
 
 const PAGE_SIZE = 13;
@@ -58,12 +59,10 @@ export function NoticeListPage() {
   }, [currentPage]);
 
   const totalPages = Math.max(1, noticePage.totalPages);
-  const pageNumbers = Array.from({ length: Math.min(totalPages, 5) }, (_, index) => index);
 
   const movePage = (page: number) => {
-    const nextPage = Math.min(Math.max(page, 0), totalPages - 1);
     const next = new URLSearchParams(searchParams);
-    next.set('page', String(nextPage));
+    next.set('page', String(page));
     setSearchParams(next);
   };
 
@@ -76,51 +75,20 @@ export function NoticeListPage() {
       <div className={styles.divider} />
 
       {errorMessage ? <div className="status-banner">{errorMessage}</div> : null}
-      {isLoading ? <div className="status-banner">공지사항을 불러오는 중입니다.</div> : null}
 
-      {!isLoading && !noticePage.content.length ? (
-        <EmptyState title="등록된 공지사항이 없습니다." description="잠시 후 다시 확인해주세요." />
-      ) : (
-        <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th scope="col">제목</th>
-                <th scope="col">등록일</th>
-              </tr>
-            </thead>
-            <tbody>
-              {noticePage.content.map((notice) => (
-                <tr key={notice.noticeId}>
-                  <td>
-                    <Link to={`/notices/${notice.noticeId}`}>{notice.title}</Link>
-                  </td>
-                  <td className={styles.dateCell}>{formatDate(notice.createdAt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <Table<NoticeItem>
+        columns={[
+          { key: 'title', header: '제목', render: (notice) => <Link to={`/notices/${notice.noticeId}`}>{notice.title}</Link> },
+          { key: 'createdAt', header: '등록일', align: 'right', render: (notice) => formatDate(notice.createdAt) },
+        ]}
+        rows={noticePage.content}
+        rowKey={(notice) => notice.noticeId}
+        isLoading={isLoading}
+        loadingMessage="공지사항을 불러오는 중입니다."
+        emptyMessage="등록된 공지사항이 없습니다."
+      />
 
-      <div className={styles.pagination} aria-label="페이지 이동">
-        <button type="button" onClick={() => movePage(currentPage - 1)} disabled={currentPage <= 0}>
-          {'<'}
-        </button>
-        {pageNumbers.map((page) => (
-          <button
-            className={currentPage === page ? styles.pageActive : ''}
-            type="button"
-            onClick={() => movePage(page)}
-            key={page}
-          >
-            {page + 1}
-          </button>
-        ))}
-        <button type="button" onClick={() => movePage(currentPage + 1)} disabled={currentPage >= totalPages - 1}>
-          {'>'}
-        </button>
-      </div>
+      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={movePage} />
     </section>
   );
 }
