@@ -61,6 +61,55 @@ export type LoginResponse = {
   member: LoginMember;
 };
 
+export type AdminMemberStatus = 'JOINED' | 'SANCTIONED' | 'WITHDRAWN' | 'DEACTIVATED';
+
+export type AdminMemberRole = 'USER' | 'ADMIN';
+
+export type AdminSanctionType = 'ACCOUNT_SUSPENSION' | 'SERVICE_LIMIT' | 'WARNING';
+
+export type AdminMemberListQuery = {
+  q?: string;
+  status?: AdminMemberStatus;
+  role?: AdminMemberRole;
+  gradeId?: number;
+  page?: number;
+  size?: number;
+};
+
+export type AdminMemberSanctionSummary = {
+  sanctionType?: AdminSanctionType | string;
+  startedAt?: string;
+  endedAt?: string;
+  reason?: string;
+};
+
+export type AdminMemberSummary = {
+  memberId: number;
+  loginId: string;
+  name: string;
+  email: string;
+  role: AdminMemberRole;
+  gradeId?: number;
+  gradeName?: string;
+  pointBalance: number;
+  status: AdminMemberStatus;
+  currentSanction?: AdminMemberSanctionSummary | null;
+};
+
+export type AdminMemberStatusChangeRequest = {
+  status: AdminMemberStatus;
+  reason: string;
+  sanctionType?: AdminSanctionType;
+  startedAt?: string;
+  endedAt?: string;
+};
+
+export type AdminMemberStatusChangeResponse = {
+  memberId: number;
+  status: AdminMemberStatus;
+  currentSanction?: AdminMemberSanctionSummary | null;
+};
+
 
 export type PointHistoryQuery = {
   pointType?: string;
