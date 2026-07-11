@@ -9,7 +9,6 @@ import type {
   AdminReportPage,
   AdminReportStatusUpdateRequest,
   AdminSanctionType,
-  PageResponse,
   ReportStatus,
   ReportTargetType,
 } from '../../../types/api';
@@ -46,38 +45,6 @@ const sanctionTypeOptions: Array<{ value: AdminSanctionType; label: string }> = 
   { value: 'WARNING', label: '경고' },
 ];
 
-const fallbackReports: AdminReportItem[] = [
-  {
-    reportId: 4021,
-    targetType: 'BOOK',
-    reporter: { memberId: 1024, loginId: 'park_reader', name: '박서연' },
-    targetInfo: { targetId: 301, title: '기초 SQL 가이드', authorName: 'ABC 편집부' },
-    reportType: '부정확한 도서 정보',
-    content: '책 소개와 실제 목차가 달라 확인이 필요합니다.',
-    status: 'WAITING',
-    managerName: '-',
-    createdAt: '2026-06-12T11:20:00',
-  },
-  {
-    reportId: 4019,
-    targetType: 'REVIEW',
-    reporter: { memberId: 991, loginId: 'read_admin', name: '김도윤' },
-    targetInfo: {
-      targetId: 510,
-      title: '리뷰 #510',
-      bookTitle: '문장 수집가',
-      authorName: 'review_stop',
-      reviewContent: '다른 이용자를 불쾌하게 할 수 있는 표현이 포함된 리뷰입니다.',
-      reviewStatus: 'VISIBLE',
-    },
-    reportType: '불쾌한 표현',
-    content: '리뷰 내용에 공격적인 표현이 있습니다.',
-    status: 'PROCESSING',
-    managerName: '운영관리자',
-    createdAt: '2026-06-18T15:08:00',
-  },
-];
-
 function toApiPage(uiPage: number) {
   return Math.max(uiPage - 1, 0);
 }
@@ -108,32 +75,6 @@ function getTargetTitle(report: AdminReportItem) {
   }
 
   return report.targetInfo.title ?? `도서 ${report.targetInfo.targetId}`;
-}
-
-function buildFallbackPage(query: AdminReportListQuery): PageResponse<AdminReportItem> {
-  const keyword = query.q?.trim().toLowerCase();
-  const filtered = fallbackReports.filter((report) => {
-    const keywordMatched = keyword
-      ? [report.reportType, report.content, report.reporter.loginId, report.reporter.name, getTargetTitle(report)].some((value) => value.toLowerCase().includes(keyword))
-      : true;
-    const targetMatched = query.targetType ? report.targetType === query.targetType : true;
-    const statusMatched = query.status ? report.status === query.status : true;
-
-    return keywordMatched && targetMatched && statusMatched;
-  });
-
-  const page = query.page ?? 0;
-  const size = query.size ?? PAGE_SIZE;
-  const start = page * size;
-
-  return {
-    content: filtered.slice(start, start + size),
-    page,
-    size,
-    totalElements: filtered.length,
-    totalPages: Math.max(Math.ceil(filtered.length / size), 1),
-    last: start + size >= filtered.length,
-  };
 }
 
 export function AdminReportListPage() {
@@ -184,8 +125,8 @@ export function AdminReportListPage() {
         }
       } catch (error) {
         if (!ignore) {
-          setReportsPage(buildFallbackPage(query));
-          setErrorMessage(`${getApiErrorMessage(error)} 화면 확인을 위해 임시 신고 목록을 표시합니다.`);
+          setReportsPage(null);
+          setErrorMessage(`${getApiErrorMessage(error)} 잠시 후 다시 시도해 주세요.`);
         }
       } finally {
         if (!ignore) {
@@ -320,9 +261,7 @@ export function AdminReportListPage() {
       setStatusMessage('신고 처리가 저장되었습니다.');
       setProcessReport(null);
     } catch (error) {
-      updateLocalReport(processReport, payload);
-      setStatusMessage(`${getApiErrorMessage(error)} 임시 목록에 처리 상태를 반영했습니다.`);
-      setProcessReport(null);
+      setModalError(getApiErrorMessage(error));
     } finally {
       setIsSaving(false);
     }
