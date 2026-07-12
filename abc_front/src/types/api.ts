@@ -723,3 +723,42 @@ export type NoticeDetail = NoticeItem & {
   prevNotice: NoticeNeighbor | null;
   nextNotice: NoticeNeighbor | null;
 };
+
+// API-NOTI-001~002 (U-019 알림 내역). 알림 본문은 저장/반환하지 않고 제목, 유형, 연결 대상, 읽음 여부, 일시만 사용.
+export type NotificationType =
+  | 'RENTAL'
+  | 'PAYMENT'
+  | 'NOTICE'
+  | 'EVENT'
+  | 'REPORT'
+  | 'BOOK_REQUEST'
+  | 'COUPON'
+  | 'CHALLENGE';
+
+export type NotificationListQuery = {
+  readYn?: boolean;
+  notificationType?: NotificationType;
+  page?: number;
+  size?: number;
+};
+
+export type NotificationItem = {
+  notificationId: number;
+  notificationType: NotificationType;
+  title: string;
+  targetType?: string | null;
+  targetId?: number | null;
+  readYn: boolean;
+  createdAt: string;
+  readAt?: string | null;
+};
+
+export type NotificationPage = PageResponse<NotificationItem>;
+
+export type NotificationReadResult = {
+  notificationId: number;
+  readYn: boolean;
+  readAt: string;
+  targetType?: string | null;
+  targetId?: number | null;
+};
