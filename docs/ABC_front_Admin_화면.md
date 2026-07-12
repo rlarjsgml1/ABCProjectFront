@@ -1,5 +1,7 @@
 # ABC Admin Front 화면 설계서
 
+> 최종 대조일: 2026-07-12 (32~36번 Backend 실제 구현 대조를 Dashboard/Statistics/AuditLog controller 추가 확인 기준으로 갱신)
+
 ## 1. 문서 목적
 
 이 문서는 ABC 전자책 대여 서비스의 Admin Front 구현 기준을 정의한다. 대상은 `A-001`부터 `A-018`까지의 관리자 화면이며, 각 화면의 route, API mapping, validation, user flow, 권한/메뉴/레이아웃 구현 기준을 포함한다.
@@ -880,7 +882,7 @@
 
 ## 32. Backend 실제 구현 대조
 
-> 기준일: 2026-07-11  
+> 기준일: 2026-07-12 (최초 작성 2026-07-11 대비 재대조 — Dashboard/Statistic/AuditLog controller 추가 확인)  
 > 기준 폴더: `/mnt/c/AcornProject/src/main/java/com/acorn/abc`  
 > 목적: Front만 구현할 때 실제로 호출 가능한 Admin API와 아직 spec-only인 API를 구분한다.
 
@@ -890,8 +892,8 @@
 |---|---|
 | Admin 권한 처리 | 실제 구현 있음. `SecurityConfig`에서 `/api/v1/admin/**`는 `hasRole("ADMIN")` 적용 |
 | Admin API 전체 | `api-spec(final).md`에는 A-001~A-018 전체 API가 있으나 backend controller는 일부만 구현됨 |
-| 실제 구현된 Admin API | 포인트 조정, 쿠폰, 챌린지, 외부 도서 ISBN temp/lookup |
-| 아직 controller 없는 API | 대시보드, 회원 목록/상세/상태, 도서 일반 CRUD, 카테고리, 대여, 결제, 신고, 희망도서, 공지, 도서관, 컬렉션, 통계, 감사 로그 |
+| 실제 구현된 Admin API | 대시보드(1차), 통계(TOTAL만), 감사 로그, 포인트 조정, 쿠폰, 챌린지, 외부 도서 ISBN temp/lookup |
+| 아직 controller 없는 API | 회원 목록/상세/상태, 도서 일반 CRUD, 카테고리, 대여, 결제, 신고, 희망도서, 공지, 도서관, 컬렉션 |
 | Front 처리 기준 | 화면/route/API wrapper는 API 문서 기준으로 전부 만든다. controller 없는 API도 endpoint/params/body 타입을 먼저 적용하고, 실행 시에는 dev mock/fallback/error state로 처리한다 |
 
 ## 33. 실제 구현된 Admin API
@@ -900,6 +902,9 @@
 
 | 화면 | 기능 | Method | Endpoint | Request | Response data | Backend source | Front 처리 |
 |---|---|---|---|---|---|---|---|
+| A-001 | 관리자 대시보드 조회 | GET | `/api/v1/admin/dashboard` | 없음 | KPI 통계, 최근 결제 목록 | `AdminDashboardController` | 실제 연결 가능하나 1차 구현. 최근 신고·최근 희망도서 위젯은 review/request 도메인 Repository 추가 후 후속 작업 |
+| A-016 | 관리자 통계 조회 | GET | `/api/v1/admin/statistics` | query: `periodType`(필수, `WEEKLY\|MONTHLY\|YEARLY\|TOTAL`), `baseDate?`, `ageBand?` | KPI 통계 | `AdminStatisticController` | 현재 `periodType=TOTAL` + `ageBand=ALL`(또는 미지정) 조합만 지원. 그 외 조합은 404(`COMMON_NOT_FOUND`) 반환하므로 화면은 우선 TOTAL 탭만 활성화 |
+| A-017 | 감사 로그 목록 조회 | GET | `/api/v1/admin/audit-logs` | query: `actionType?`, `targetType?`, `targetId?`, `page=0`, `size=10` | `PageResponse<AdminAuditLogSummaryResponse>` | `AdminAuditLogController` | 실제 연결 가능. 조회 전용 |
 | A-003/A-013 | 회원 포인트 조정 | POST | `/api/v1/admin/members/{memberId}/points` | `pointAmount`, `description` | `pointHistoryId`, `pointAmount`, `pointType`, `pointBalance`, `createdAt` | `AdminMemberPointController` | 실제 연결 가능 |
 | A-013 | 쿠폰 목록 | GET | `/api/v1/admin/coupons` | query: `status?`, `couponType?`, `page=0`, `size=10` | `PageResponse<AdminCouponSummaryResponse>` | `AdminCouponController` | 실제 연결 가능 |
 | A-013 | 쿠폰 등록 | POST | `/api/v1/admin/coupons` | `couponName`, `couponType`, `benefitValue`, `benefitUnit`, `validDays`, `status` | `couponId` | `AdminCouponController` | 실제 연결 가능 |
@@ -917,7 +922,6 @@
 
 | 화면 | API ID | Method | Endpoint | Front 처리 |
 |---|---|---|---|---|
-| A-001 | `API-ADMIN-DASHBOARD-001` | GET | `/api/v1/admin/dashboard` | API 문서 기준 `getAdminDashboard()` wrapper 생성. backend 준비 전 dev mock/fallback 사용 |
 | A-002 | `API-ADMIN-MEMBER-001` | GET | `/api/v1/admin/members` | API 문서 기준 `getAdminMembers()` wrapper와 query 적용. backend 준비 전 dev mock/fallback 사용 |
 | A-002/A-003 | `API-ADMIN-MEMBER-003` | PATCH | `/api/v1/admin/members/{memberId}/status` | API 문서 기준 `changeMemberStatus()` wrapper와 body 적용. backend 준비 전 error/dev mock 처리 |
 | A-003 | `API-ADMIN-MEMBER-002` | GET | `/api/v1/admin/members/{memberId}` | API 문서 기준 `getAdminMember()` wrapper 적용. 포인트 조정 API는 실제 연결 가능 |
@@ -939,8 +943,6 @@
 | A-015 | `API-ADMIN-LIBRARY-001` | GET | `/api/v1/admin/libraries` | API 문서 기준 `getAdminLibraries()` wrapper/query 적용. public `/books/{bookId}/libraries`와 구분 |
 | A-015 | `API-ADMIN-LIBRARY-002` | PUT | `/api/v1/admin/libraries/{libraryId}` | API 문서 기준 기본정보 저장 wrapper/body 적용. backend 준비 전 error/dev mock 처리 |
 | A-015 | `API-ADMIN-LIBRARY-003` | PUT | `/api/v1/admin/libraries/{libraryId}/books` | API 문서 기준 보유 도서 저장 wrapper/body 적용. backend 준비 전 error/dev mock 처리 |
-| A-016 | `API-ADMIN-STAT-001` | GET | `/api/v1/admin/statistics` | API 문서 기준 `getAdminStatistics()` wrapper/query 적용. backend 준비 전 dev mock/fallback 사용 |
-| A-017 | `API-ADMIN-AUDIT-001` | GET | `/api/v1/admin/audit-logs` | API 문서 기준 `getAdminAuditLogs()` wrapper/query 적용. backend 준비 전 dev mock/fallback 사용 |
 | A-018 | `API-ADMIN-COLLECTION-001` | GET | `/api/v1/admin/collections` | API 문서 기준 `getAdminCollections()` wrapper/query 적용. public collection API와 구분 |
 | A-018 | `API-ADMIN-COLLECTION-002` | PUT | `/api/v1/admin/collections/{collectionId}` | API 문서 기준 등록/수정 wrapper/body 적용. backend 준비 전 error/dev mock 처리 |
 | A-018 | `API-ADMIN-COLLECTION-003` | PUT | `/api/v1/admin/collections/{collectionId}/books` | API 문서 기준 도서 추가/정렬 wrapper/body 적용. backend 준비 전 error/dev mock 처리 |
@@ -980,7 +982,7 @@ Front에서 API URL을 page component에 직접 쓰지 않는다. 아래 파일 
 
 | 파일 | 담당 화면 | Backend 상태 | 포함 함수 예시 |
 |---|---|---|---|
-| `src/api/adminDashboardApi.ts` | A-001 | 문서 기준 적용(controller 미확인) | `getAdminDashboard()` |
+| `src/api/adminDashboardApi.ts` | A-001 | 구현 있음(1차, 최근신고/희망도서 위젯 없음) | `getAdminDashboard()` |
 | `src/api/adminMemberApi.ts` | A-002, A-003, A-013 | 일부 구현 | `getAdminMembers()`, `getAdminMember()`, `changeMemberStatus()`, `adjustMemberPoint()` |
 | `src/api/adminBookApi.ts` | A-004, A-005, A-006 | 일부 보조 구현 | `getAdminBooks()`, `createAdminBook()`, `updateAdminBook()`, `changeBookStatus()`, `lookupExternalBook()`, `fetchBookIsbnTemp()`, `getBookIsbnTemps()`, `approveBookIsbnTemp()` |
 | `src/api/adminCategoryApi.ts` | A-007 | 문서 기준 적용(controller 미확인) | `getAdminCategories()`, `saveAdminCategory()` |
@@ -992,8 +994,8 @@ Front에서 API URL을 page component에 직접 쓰지 않는다. 아래 파일 
 | `src/api/adminCouponApi.ts` | A-013 | 구현 있음 | `getAdminCoupons()`, `createAdminCoupon()`, `issueAdminCoupon()` |
 | `src/api/adminChallengeApi.ts` | A-014 | 구현 있음 | `getAdminChallenges()`, `updateAdminChallenge()` |
 | `src/api/adminLibraryApi.ts` | A-015 | 문서 기준 적용(controller 미확인) | `getAdminLibraries()`, `saveAdminLibrary()`, `saveAdminLibraryBooks()` |
-| `src/api/adminStatisticApi.ts` | A-016 | 문서 기준 적용(controller 미확인) | `getAdminStatistics()` |
-| `src/api/adminAuditApi.ts` | A-017 | 문서 기준 적용(controller 미확인) | `getAdminAuditLogs()` |
+| `src/api/adminStatisticApi.ts` | A-016 | 구현 있음(`periodType=TOTAL`만 지원) | `getAdminStatistics()` |
+| `src/api/adminAuditApi.ts` | A-017 | 구현 있음 | `getAdminAuditLogs()` |
 | `src/api/adminCollectionApi.ts` | A-018 | 문서 기준 적용(controller 미확인) | `getAdminCollections()`, `saveAdminCollection()`, `saveAdminCollectionBooks()`, `patchAdminCollection()` |
 
 ## 37. Admin Route 파일 계획
