@@ -1,6 +1,7 @@
 ﻿import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { getBooks, getCategories, getRecommendedBooks, type BookListQuery } from '../../../api/bookApi';
+import { getApiErrorMessage } from '../../../api/profileApi';
 import { EmptyState } from '../../../components/common/EmptyState';
 import { Pagination } from '../../../components/common/Pagination';
 import type { BookCard, Category, PageResponse } from '../../../types/api';
@@ -29,27 +30,6 @@ const sortOptions = [
   { label: '평점순', value: 'rating' },
   { label: '리뷰순', value: 'reviews' },
 ];
-
-const fallbackBooks: BookCard[] = Array.from({ length: 70 }, (_, index) => {
-  const category = fallbackCategories[index % fallbackCategories.length];
-  const isFree = index % 3 !== 1;
-
-  return {
-    bookId: index + 1,
-    title: `책 제목${index + 1}`,
-    coverImageUrl: '',
-    authors: [`저자${index + 1}`],
-    publisherName: 'ABC 출판',
-    rentalType: isFree ? 'FREE' : 'PAID',
-    rentalPrice: isFree ? 0 : 3000,
-    averageRating: 3.5 + ((index % 15) / 10),
-    reviewCount: 70 - index,
-    favoriteYn: false,
-    categoryId: category.categoryId,
-    categoryName: category.name,
-    availableYn: index % 6 !== 0,
-  } as BookCard & { categoryId: number; categoryName: string; availableYn: boolean };
-});
 
 const weeklyArrivalBooks: BookCard[] = [
   '싯다르타',
@@ -105,74 +85,9 @@ const sectionConfigs: Record<SectionKey, SectionConfig> = {
   },
 };
 
-function getBookCategoryId(book: BookCard) {
-  return (book as BookCard & { categoryId?: number }).categoryId;
-}
-
-function getBookCategoryName(book: BookCard) {
-  return (book as BookCard & { categoryName?: string }).categoryName;
-}
-
-function isBookAvailable(book: BookCard) {
-  return (book as BookCard & { availableYn?: boolean }).availableYn !== false;
-}
-
 function formatRentalType(book: BookCard) {
   if (book.rentalType === 'FREE' || book.rentalPrice === 0) return '무료';
   return '유료';
-}
-
-function getFallbackPage(query: BookListQuery, page: number): PageResponse<BookCard> {
-  let content = [...fallbackBooks];
-
-  if (query.categoryId) {
-    content = content.filter((book) => getBookCategoryId(book) === query.categoryId);
-  }
-
-  if (query.parentCategoryId) {
-    content = content.filter((book) => getBookCategoryId(book) === query.parentCategoryId);
-  }
-
-  if (query.category) {
-    content = content.filter((book) => getBookCategoryName(book) === query.category);
-  }
-
-  if (query.rentalType) {
-    content = content.filter((book) => book.rentalType === query.rentalType);
-  }
-
-  if (query.status === 'AVAILABLE') {
-    content = content.filter(isBookAvailable);
-  }
-
-  if (query.sort === 'latest') {
-    content.sort((a, b) => b.bookId - a.bookId);
-  }
-
-  if (query.sort === 'title') {
-    content.sort((a, b) => a.title.localeCompare(b.title, 'ko-KR'));
-  }
-
-  if (query.sort === 'rating') {
-    content.sort((a, b) => b.averageRating - a.averageRating);
-  }
-
-  if (query.sort === 'reviews' || query.sort === 'popular') {
-    content.sort((a, b) => b.reviewCount - a.reviewCount);
-  }
-
-  const totalElements = content.length;
-  const totalPages = Math.max(1, Math.ceil(totalElements / PAGE_SIZE));
-  const start = page * PAGE_SIZE;
-
-  return {
-    content: content.slice(start, start + PAGE_SIZE),
-    page,
-    size: PAGE_SIZE,
-    totalElements,
-    totalPages,
-    last: page >= totalPages - 1,
-  };
 }
 
 function getSectionKey(section: string | null): SectionKey | null {
@@ -183,37 +98,23 @@ function getSectionKey(section: string | null): SectionKey | null {
   return null;
 }
 
-function getFallbackSectionPage(section: SectionKey, page: number): PageResponse<BookCard> {
-  const config = sectionConfigs[section];
-  const query = config.query;
-  const content = [...fallbackBooks].slice(0, config.count);
-
-  if (query.sort === 'latest') {
-    content.sort((a, b) => b.bookId - a.bookId);
-  }
-
-  if (query.sort === 'popular' || query.section === 'best') {
-    content.sort((a, b) => b.reviewCount - a.reviewCount);
-  }
-
-  const totalElements = content.length;
-  const totalPages = Math.max(1, Math.ceil(totalElements / SECTION_PAGE_SIZE));
-  const start = page * SECTION_PAGE_SIZE;
-
+// 도서 목록 API(API-BOOK-001)는 이미 구현되어 있으므로, 조회 실패는 가짜 도서로
+// 가리지 않고 빈 목록 + 에러 메시지로 정직하게 보여준다.
+function getEmptyBookPage(page: number, size: number): PageResponse<BookCard> {
   return {
-    content: content.slice(start, start + SECTION_PAGE_SIZE),
+    content: [],
     page,
-    size: SECTION_PAGE_SIZE,
-    totalElements,
-    totalPages,
-    last: page >= totalPages - 1,
+    size,
+    totalElements: 0,
+    totalPages: 1,
+    last: true,
   };
 }
 
 export function BooksPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
-  const [bookPage, setBookPage] = useState<PageResponse<BookCard>>(() => getFallbackPage({ sort: 'popular' }, 0));
+  const [bookPage, setBookPage] = useState<PageResponse<BookCard>>(() => getEmptyBookPage(0, PAGE_SIZE));
   const [featuredBooks, setFeaturedBooks] = useState<BookCard[]>(weeklyArrivalBooks);
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [categories, setCategories] = useState<Category[]>(fallbackCategories);
@@ -351,11 +252,10 @@ export function BooksPage() {
           setBookPage(data);
           setErrorMessage('');
         }
-      } catch {
+      } catch (error) {
         if (!ignore) {
-          const fallbackSectionKey = sectionKey === 'recommend' && !isLoggedIn ? 'best' : sectionKey;
-          setBookPage(fallbackSectionKey ? getFallbackSectionPage(fallbackSectionKey, currentPage) : getFallbackPage(query, currentPage));
-          setErrorMessage('서버 데이터 연결 전까지 임시 도서가 표시됩니다.');
+          setBookPage(getEmptyBookPage(currentPage, sectionKey ? SECTION_PAGE_SIZE : PAGE_SIZE));
+          setErrorMessage(getApiErrorMessage(error));
         }
       } finally {
         if (!ignore) {
