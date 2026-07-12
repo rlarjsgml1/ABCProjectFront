@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { getBooks, getCategories, getRecommendedBooks, type BookListQuery } from '../../../api/bookApi';
 import { EmptyState } from '../../../components/common/EmptyState';
@@ -186,7 +186,7 @@ function getSectionKey(section: string | null): SectionKey | null {
 function getFallbackSectionPage(section: SectionKey, page: number): PageResponse<BookCard> {
   const config = sectionConfigs[section];
   const query = config.query;
-  let content = [...fallbackBooks].slice(0, config.count);
+  const content = [...fallbackBooks].slice(0, config.count);
 
   if (query.sort === 'latest') {
     content.sort((a, b) => b.bookId - a.bookId);
@@ -262,10 +262,10 @@ export function BooksPage() {
     return offset;
   };
 
-  const moveFeaturedNext = () => {
+  const moveFeaturedNext = useCallback(() => {
     if (featuredBooks.length <= 1) return;
     setFeaturedIndex((currentIndex) => (currentIndex + 1) % featuredBooks.length);
-  };
+  }, [featuredBooks.length]);
 
   useEffect(() => {
     let ignore = false;
@@ -319,7 +319,7 @@ export function BooksPage() {
     }, 5000);
 
     return () => window.clearInterval(timerId);
-  }, [featuredBooks.length, featuredIndex]);
+  }, [moveFeaturedNext]);
 
   useEffect(() => {
     let ignore = false;
