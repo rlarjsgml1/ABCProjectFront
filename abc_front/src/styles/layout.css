@@ -2653,6 +2653,44 @@ a.count-card:focus-visible {
   height: 25px;
 }
 
+.abc-notification-button {
+  position: relative;
+  width: var(--abc-header-control);
+  height: var(--abc-header-control);
+  border-radius: 50%;
+  background: var(--abc-header-muted);
+  color: var(--abc-header-surface);
+  box-shadow: 3px 4px 9px rgba(0, 0, 0, 0.3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.abc-notification-button svg {
+  width: 22px;
+  height: 22px;
+}
+
+.abc-notification-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+  border: 2px solid var(--abc-header-surface);
+}
+
 .abc-nav {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
