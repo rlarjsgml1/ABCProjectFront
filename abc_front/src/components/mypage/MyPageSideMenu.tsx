@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom';
 
 const menuItems = [
   { label: '내 서재', to: '/me', enabled: true, end: true },
+  { label: '알림', to: '/me/notifications', enabled: true, end: true },
   { label: '대여 현황', to: '/me/rentals', enabled: true, end: true },
   { label: '챌린지', to: '/me/challenges', enabled: true, end: true },
   { label: '즐겨찾기', to: '/me/favorites', enabled: true, end: true },

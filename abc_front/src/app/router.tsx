@@ -46,6 +46,7 @@ import { PaymentCompletePage } from '../pages/user/U030PaymentComplete/PaymentCo
 import { ChallengesPage } from '../pages/user/U027Challenges/ChallengesPage';
 import { NoticeListPage } from '../pages/user/U029Notices/NoticeListPage';
 import { NoticeDetailPage } from '../pages/user/U029Notices/NoticeDetailPage';
+import { NotificationsPage } from '../pages/user/U019Notifications/NotificationsPage';
 
 
 
@@ -84,6 +85,7 @@ export const router = createBrowserRouter([
         element: <MyPageProfileLayout />,
         children: [
           { index: true, element: <MyPage /> },
+          { path: 'notifications', element: <NotificationsPage /> },
           { path: 'profile', element: <ProfileEditPage /> },
           { path: 'attendance', element: <AttendancePage /> },
           { path: 'challenges', element: <ChallengesPage /> },
