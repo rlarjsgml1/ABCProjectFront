@@ -754,7 +754,8 @@
 .payments-page,
 .reports-page,
 .book-request-history-page,
-.my-rentals-page {
+.my-rentals-page,
+.notifications-page {
   display: grid;
   gap: var(--space-6);
 }
@@ -1739,6 +1740,128 @@ a.count-card:focus-visible {
 }
 
 .points-coupons-action {
+  white-space: nowrap;
+}
+
+/* U-019 알림 내역 */
+.notifications-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-left: auto;
+}
+
+.ghost-note {
+  font-size: var(--font-size-xs);
+  color: var(--color-muted);
+}
+
+.notifications-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.notifications-filter-tabs {
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid var(--color-border);
+  border-radius: var(--space-10);
+  padding: var(--space-1);
+  background: var(--color-surface-muted);
+}
+
+.notifications-filter-tab {
+  border: 0;
+  border-radius: var(--space-10);
+  padding: var(--space-2) var(--space-4);
+  color: var(--color-muted);
+  background: transparent;
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+}
+
+.notifications-filter-tab:hover,
+.notifications-filter-tab:focus-visible {
+  color: var(--color-primary-dark);
+}
+
+.notifications-filter-tab.is-active {
+  color: var(--color-primary-dark);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.notifications-row-button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.notifications-icon {
+  flex-shrink: 0;
+  width: var(--space-8);
+  height: var(--space-8);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--color-surface-muted);
+  font-size: var(--font-size-md);
+}
+
+.notifications-icon-rental,
+.notifications-icon-book_request {
+  background: var(--color-primary-soft);
+}
+
+.notifications-icon-payment {
+  background: var(--color-success-soft);
+}
+
+.notifications-icon-coupon,
+.notifications-icon-challenge,
+.notifications-icon-event {
+  background: var(--color-warning-soft);
+}
+
+.notifications-icon-report {
+  background: var(--color-danger-soft);
+}
+
+.notifications-row-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.notifications-row-button.is-unread .notifications-row-title {
+  font-weight: var(--font-weight-bold);
+}
+
+.notifications-unread-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.notifications-type-tag {
+  font-size: var(--font-size-xs);
+  color: var(--color-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--space-10);
+  padding: var(--space-1) var(--space-3);
   white-space: nowrap;
 }
 
