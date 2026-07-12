@@ -2,7 +2,8 @@
 
 > 대상: ABC User Front 화면 구현  
 > 세팅 문서: `/mnt/c/Acorn폴더자료/화면설계/ABC_front_세팅.md`  
-> 목적: Front 구현자가 화면, route, API 연결, Validation, 보강 필요사항만 빠르게 확인하기 위한 문서
+> 목적: Front 구현자가 화면, route, API 연결, Validation, 보강 필요사항만 빠르게 확인하기 위한 문서  
+> 최종 대조일: 2026-07-12 (백엔드 실제 controller, router.tsx, 화면흐름도/api-spec 기준 재대조 — 6번 Route 표, 8번 API 연결표, 12번 보강 필요사항 갱신)
 
 ---
 
@@ -168,7 +169,7 @@ ErrorState
 | U-008 | 도서 상세 | `/books/:bookId` | 비회원/회원 | `BookDetailPage.tsx` |
 | U-009 | 대여/결제 확인 | `/books/:bookId/rent` | 회원 | `RentPaymentPage.tsx` |
 | U-010 | 내 대여 현황 | `/me/rentals` | 회원 | `MyRentalsPage.tsx` |
-| U-011 | 전자책 뷰어 | `/viewer/:rentalId` | 회원 | `EbookViewerPage.tsx` |
+| U-011 | 전자책 뷰어 | `/rentals/:rentalId/read` | 회원 | `ViewerPage.tsx` |
 | U-012 | 즐겨찾기 | `/me/favorites` | 회원 | `FavoritesPage.tsx` |
 | U-014 | 마이페이지 | `/me` | 회원 | `MyPage.tsx` |
 | U-015 | 회원정보 수정 | `/me/profile` | 회원 | `ProfileEditPage.tsx` |
@@ -177,13 +178,15 @@ ErrorState
 | U-018 | 결제 내역 | `/me/payments` | 회원 | `PaymentsPage.tsx` |
 | U-019 | 알림 내역 | `/me/notifications` | 회원 | `NotificationsPage.tsx` |
 | U-021 | 내 신고 내역 | `/me/reports` | 회원 | `ReportsPage.tsx` |
-| U-022 | 희망도서 신청 | `/me/book-requests/new` | 회원 | `BookRequestPage.tsx` |
-| U-023 | 희망도서 신청 내역 | `/me/book-requests` | 회원 | `BookRequestHistoryPage.tsx` |
-| U-024 | 책 보유 도서관 위치 | `/books/:bookId/libraries` | 비회원/회원 | `LibraryLocationPage.tsx` |
-| U-025 | 추천 도서 | `/books/:bookId/recommendations` | 비회원/회원 | `RecommendationsPage.tsx` |
+| U-022 | 희망도서 신청 | `/me/book-requests` | 회원 | `BookRequestPage.tsx` |
+| U-023 | 희망도서 신청 내역 | `/me/book-requests/history` | 회원 | `BookRequestHistoryPage.tsx` |
+| U-024 | 책 보유 도서관 위치 | `/books/:bookId/libraries` | 비회원/회원 | 미구현 (`BookDetailPage.tsx`에서 이미 링크 걸림 — 12.4 참고) |
+| U-025 | 추천 도서 | `/books/:bookId/recommendations` | 비회원/회원 | 미구현 (`BookDetailPage.tsx`에서 이미 링크 걸림 — 12.4 참고) |
 | U-026 | 독서 통계 | `/me/statistics` | 회원 | `ReadingStatsPage.tsx` |
 | U-027 | 챌린지 | `/me/challenges` | 회원 | `ChallengesPage.tsx` |
 | U-028 | 최근 읽은 책 | `/me/recent-books` | 회원 | `RecentBooksPage.tsx` |
+| U-029 | 공지사항 목록/상세 | `/notices`, `/notices/:noticeId` | 비회원/회원 | `NoticeListPage.tsx`, `NoticeDetailPage.tsx` (화면흐름도에 없는 ID, Front 자체 부여) |
+| U-030 | 결제 완료 | `/books/:bookId/rent/complete` | 회원 | `PaymentCompletePage.tsx` (화면흐름도에 없는 ID, Front 자체 부여) |
 | A-001 | 관리자 대시보드 | `/admin` | 관리자 | `pages/admin/AdminDashboardPage.tsx` |
 
 로그인 성공 분기:
@@ -239,10 +242,10 @@ U-014 마이페이지
 | U-002 | POST | `/api/v1/auth/signup` | 회원가입 |
 | U-003 | POST | `/api/v1/auth/login` | 로그인 |
 | U-004 | POST | `/api/v1/auth/find-id` | 아이디 찾기 |
-| U-014/U-015 | GET | `/api/v1/me` | 내 정보 조회 |
-| U-015 | PATCH | `/api/v1/me` | 회원정보 수정 |
-| U-015 | PATCH | `/api/v1/me/password` | 비밀번호 변경 |
-| U-015 | DELETE | `/api/v1/me` | 회원 탈퇴 |
+| U-014/U-015 | GET | `/api/v1/me` | 내 정보 조회 (백엔드 미구현, `MeController`엔 없음) |
+| U-015 | PATCH | `/api/v1/me` | 회원정보 수정 (백엔드 미구현) |
+| U-015 | PATCH | `/api/v1/me/password` | 비밀번호 변경 (구현됨) |
+| U-015 | DELETE | `/api/v1/me` | 회원 탈퇴 (백엔드 미구현) |
 | U-001/U-006 | GET | `/api/v1/books` | 도서 목록 |
 | U-007 | GET | `/api/v1/books/search` | 도서 검색 |
 | U-008 | GET | `/api/v1/books/{bookId}` | 도서 상세 |
@@ -268,21 +271,21 @@ U-014 마이페이지
 | U-001/U-006/U-008 | POST | `/api/v1/me/favorites` | 즐겨찾기 등록 |
 | U-001/U-006/U-008/U-012 | DELETE | `/api/v1/me/favorites/{bookId}` | 즐겨찾기 삭제 |
 | U-012/U-014 | GET | `/api/v1/me/favorites` | 즐겨찾기 목록 |
-| U-008 | POST | `/api/v1/reports/books` | 책 신고 |
-| U-008 | POST | `/api/v1/reports/reviews` | 리뷰 신고 |
-| U-021 | GET | `/api/v1/me/reports` | 내 신고 내역 |
+| U-008 | POST | `/api/v1/reports/books` | 책 신고 (백엔드 미구현, `ReportController` 없음) |
+| U-008 | POST | `/api/v1/reports/reviews` | 리뷰 신고 (백엔드 미구현) |
+| U-021 | GET | `/api/v1/me/reports` | 내 신고 내역 (백엔드 미구현) |
 | U-016 | POST | `/api/v1/me/attendance` | 출석 체크 |
 | U-016 | GET | `/api/v1/me/attendance` | 출석 현황 |
 | U-017 | GET | `/api/v1/me/points` | 포인트 이력 |
 | U-009/U-017 | GET | `/api/v1/me/coupons` | 쿠폰 목록 |
-| U-001/U-019 | GET | `/api/v1/notices` | 공지 목록 |
-| U-019 | GET | `/api/v1/me/notifications` | 알림 목록 |
-| U-019 | PATCH | `/api/v1/me/notifications/{notificationId}/read` | 알림 읽음 처리 |
+| U-001/U-019 | GET | `/api/v1/notices` | 공지 목록 (백엔드 미구현, `NoticeController` 없음) |
+| U-019 | GET | `/api/v1/me/notifications` | 알림 목록 (백엔드 미구현) |
+| U-019 | PATCH | `/api/v1/me/notifications/{notificationId}/read` | 알림 읽음 처리 (백엔드 미구현) |
 | U-026 | GET | `/api/v1/me/statistics` | 독서 통계 |
 | U-027 | GET | `/api/v1/challenges` | 챌린지 목록 |
 | U-027 | POST | `/api/v1/challenges/{challengeId}/reward` | 챌린지 보상 |
-| U-022 | POST | `/api/v1/book-requests` | 희망도서 신청 |
-| U-023 | GET | `/api/v1/me/book-requests` | 희망도서 내역 |
+| U-022 | POST | `/api/v1/book-requests` | 희망도서 신청 (백엔드 미구현, `BookRequestController` 없음) |
+| U-023 | GET | `/api/v1/me/book-requests` | 희망도서 내역 (백엔드 미구현) |
 
 ---
 
@@ -375,7 +378,12 @@ Front validation은 submit 전 기본 확인만 한다. API 오류가 오면 화
 
 | 항목 | 현재 상태 | Front 처리 |
 |---|---|---|
-| U-019 모두 읽기 | `API-NOTI-003` 없음 | 버튼 비활성 또는 제외 |
+| U-014/U-015 내 정보 조회/수정/탈퇴 | `API-ME-001`, `API-ME-002`, `API-ME-004` 전부 백엔드 미구현. `MeController`엔 `PATCH /me/password`만 있음 | 조회/수정/탈퇴 화면은 이미 구현했지만 호출 시 실패한다. 실패 시 빈 상태 + 에러 메시지로 처리(가짜 데이터로 가리지 않음). 탈퇴 버튼은 계속 비활성 유지 |
+| U-019 알림 전체 | `API-NOTI-001`(목록), `API-NOTI-002`(읽음 처리) 백엔드 미구현. `API-NOTI-003`(모두 읽기)은 API 명세에도 없음 | 목록/읽음처리 API 자체가 없으므로 화면 전체가 백엔드 대기 상태. 모두 읽기 버튼은 비활성 유지 |
+| U-021 내 신고 내역 | `API-REPORT-004`(`GET /me/reports`) 백엔드 미구현 | 실패 시 빈 상태 + 에러 메시지 |
+| U-022/U-023 희망도서 신청/내역 | `API-REQUEST-001`(신청), `API-REQUEST-002`(내역) 백엔드 미구현 | 실패 시 빈 상태 + 에러 메시지 |
+| U-008 신고 모달 | `API-REPORT-001`(책 신고), `API-REPORT-002`(리뷰 신고) 백엔드 미구현 | 신고 제출 버튼은 구현하되 실패 처리 필요 |
+| U-013 리뷰 (Front 미구현) | 백엔드 `ReviewController`는 리뷰 CRUD API를 이미 다 구현했으나, Front에 `reviewApi.ts` 자체가 없음 | 백엔드가 아니라 Front가 뒤처진 케이스. 리뷰 작성/수정/삭제 API 연동 작업 필요 |
 | U-014 내 리뷰 목록 | 전용 `내 리뷰 목록 조회` API 없음 | 임시 조합 구현 금지. API 보완 필요 |
 | U-014 리뷰 수 | `API-ME-001` 기준 불명확, `API-STAT-001`에는 있음 | 마이페이지에서 통계 API 조합 여부 결정 |
 | token 저장 방식 | Bearer token 기준이나 저장 위치 미정 | 빠른 구현은 localStorage, 최종 방식은 팀 결정 |
@@ -419,6 +427,15 @@ Front enum 문자열은 DB table column명이 아니라 API response/request DTO
 - API 누락은 `api-spec(final).md`의 User API 목록 기준으로 먼저 확인한다.
 - DB table 누락은 화면/API에서 직접 쓰는 것만 확인한다. `book_isbn_temp`, `admin_audit_log`처럼 User Front가 직접 쓰지 않는 table은 이 문서에 상세 반영하지 않는다.
 - enum은 DB DDL보다 backend API DTO와 실제 응답을 우선한다.
+
+### 12.4 알려진 코드 이슈 (기록용, 이번 문서 업데이트 범위 아님)
+
+문서 최신화 과정에서 실제 코드와 대조하다가 발견한 문제. 문서만 고치는 것으로는 해결되지 않고 코드 수정이 필요해서, 고치지 않고 이슈로만 남긴다.
+
+| 이슈 | 내용 | 근거 |
+|---|---|---|
+| U-005 범위 이탈 | `FindIdPage.tsx`가 "제외 기능"인 비밀번호 재설정 탭을 실제로 렌더링하고 있다. API 연결도 없이 UI만 떠 있는 상태 | 11번 "구현 제외 기능" 표의 `U-005` 행과 모순 |
+| U-024/U-025 깨진 링크 | `BookDetailPage.tsx`가 이미 `/books/:bookId/libraries`, `/books/:bookId/recommendations`로 링크를 걸어두었지만, 두 화면 모두 실제로 만들어진 적이 없어 클릭 시 404가 난다 | 6번 Route 기준 표의 U-024/U-025 행 참고 |
 
 ---
 
