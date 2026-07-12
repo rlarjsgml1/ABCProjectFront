@@ -56,26 +56,6 @@ const weeklyArrivalBooks: BookCard[] = [
   favoriteYn: false,
 })) as BookCard[];
 
-const fallbackBooks: BookCard[] = [
-  '바람의 문장',
-  '생활의 발견',
-  '코드 산책',
-  '새벽 독서',
-  '기억의 지도',
-  '책방의 계절',
-].map((title, index) => ({
-  bookId: index + 301,
-  title,
-  coverImageUrl: '',
-  authors: [index % 2 === 0 ? '김하늘' : '이서윤'],
-  publisherName: index % 2 === 0 ? 'ABC 출판' : '미래출판',
-  rentalType: index % 3 === 0 ? 'PAID' : 'FREE',
-  rentalPrice: index % 3 === 0 ? 3000 : 0,
-  averageRating: 4.6 - index * 0.2,
-  reviewCount: 30 - index,
-  favoriteYn: false,
-})) as BookCard[];
-
 function getEmptyPage(page = 0): PageResponse<BookCard> {
   return {
     content: [],
@@ -84,57 +64,6 @@ function getEmptyPage(page = 0): PageResponse<BookCard> {
     totalElements: 0,
     totalPages: 1,
     last: true,
-  };
-}
-
-function getFallbackSearchPage(keyword: string, query: BookSearchQuery, page: number): PageResponse<BookCard> {
-  const normalizedKeyword = keyword.trim().toLowerCase();
-  let content = fallbackBooks.filter((book) => {
-    const targets = {
-      TITLE: book.title,
-      AUTHOR: book.authors.join(' '),
-      PUBLISHER: book.publisherName,
-      ALL: [book.title, book.authors.join(' '), book.publisherName].join(' '),
-    };
-    const target = targets[query.searchType ?? 'ALL'].toLowerCase();
-    return target.includes(normalizedKeyword);
-  });
-
-  if (!normalizedKeyword) {
-    content = [];
-  }
-
-  if (query.rentalType) {
-    content = content.filter((book) => book.rentalType === query.rentalType);
-  }
-
-  if (query.sort === 'latest') {
-    content.sort((a, b) => b.bookId - a.bookId);
-  }
-
-  if (query.sort === 'title') {
-    content.sort((a, b) => a.title.localeCompare(b.title, 'ko-KR'));
-  }
-
-  if (query.sort === 'rating') {
-    content.sort((a, b) => b.averageRating - a.averageRating);
-  }
-
-  if (query.sort === 'reviews' || query.sort === 'popular') {
-    content.sort((a, b) => b.reviewCount - a.reviewCount);
-  }
-
-  const totalElements = content.length;
-  const totalPages = Math.max(1, Math.ceil(totalElements / PAGE_SIZE));
-  const start = page * PAGE_SIZE;
-
-  return {
-    content: content.slice(start, start + PAGE_SIZE),
-    page,
-    size: PAGE_SIZE,
-    totalElements,
-    totalPages,
-    last: page >= totalPages - 1,
   };
 }
 
@@ -274,10 +203,10 @@ export function SearchResultsPage() {
           setBookPage(data);
           setErrorMessage('');
         }
-      } catch {
+      } catch (error) {
         if (!ignore) {
-          setBookPage(getFallbackSearchPage(keyword, query, currentPage));
-          setErrorMessage('');
+          setBookPage(getEmptyPage(currentPage));
+          setErrorMessage(getApiErrorMessage(error));
         }
       } finally {
         if (!ignore) {
