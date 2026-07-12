@@ -1,6 +1,7 @@
 import { FormEvent, MouseEvent, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AUTH_CHANGED_EVENT } from '../../api/authApi';
+import { NOTIFICATIONS_UPDATED_EVENT, getMyNotifications } from '../../api/notificationsApi';
 import abcLogo from '../../assets/abc-logo.png';
 
 const authStorageKeys = ['accessToken', 'memberRole', 'memberId', 'loginId', 'memberName'];
@@ -31,10 +32,39 @@ export function Header() {
     const [keyword, setKeyword] = useState('');
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [isSearchFocused, setIsSearchFocused] = useState(false);
+    const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
     useEffect(() => {
         setIsLoggedIn(hasLoginSession());
     }, [location.pathname, location.search]);
+
+    useEffect(() => {
+        if (!isLoggedIn) {
+            setUnreadNotificationCount(0);
+            return;
+        }
+
+        let ignore = false;
+
+        const loadUnreadCount = async () => {
+            try {
+                const data = await getMyNotifications({ readYn: false, page: 0, size: 1 });
+                if (!ignore) {
+                    setUnreadNotificationCount(data.totalElements);
+                }
+            } catch {
+                // API-NOTI-001이 아직 없는 동안에는 배지를 표시하지 않는다.
+            }
+        };
+
+        void loadUnreadCount();
+        window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, loadUnreadCount);
+
+        return () => {
+            ignore = true;
+            window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, loadUnreadCount);
+        };
+    }, [isLoggedIn]);
 
     useEffect(() => {
         const syncAuthState = () => {
@@ -147,6 +177,18 @@ export function Header() {
                             </Link>
                         </>
                     )}
+
+                    {isLoggedIn ? (
+                        <Link className="abc-notification-button" to="/me/notifications" aria-label={unreadNotificationCount > 0 ? `알림 (안읽음 ${unreadNotificationCount}건)` : '알림'}>
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M6 16v-5a6 6 0 1 1 12 0v5l1.6 2.2H4.4L6 16Z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                                <path d="M10 20a2 2 0 0 0 4 0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                            </svg>
+                            {unreadNotificationCount > 0 ? (
+                                <span className="abc-notification-badge">{unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}</span>
+                            ) : null}
+                        </Link>
+                    ) : null}
 
                     <Link className="abc-profile-button" to={isLoggedIn ? '/me' : '/login'} aria-label="마이페이지">
                         <svg viewBox="0 0 24 24" aria-hidden="true">
