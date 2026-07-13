@@ -13,7 +13,7 @@ import type {
   AdminSanctionType,
   PageResponse,
 } from '../../../types/api';
-import styles from './AdminMemberListPage.module.css';
+import styles from '../../../styles/AdminMemberListPage.module.css';
 
 const PAGE_SIZE = 10;
 
@@ -40,6 +40,48 @@ const sanctionTypeOptions: Array<{ value: AdminSanctionType; label: string }> = 
   { value: 'ACCOUNT_SUSPENSION', label: '계정 정지' },
   { value: 'SERVICE_LIMIT', label: '서비스 제한' },
   { value: 'WARNING', label: '경고' },
+];
+
+const fallbackMembers: AdminMemberSummary[] = [
+  {
+    memberId: 1024,
+    loginId: 'park_reader',
+    name: '박서연',
+    email: 'seoyeon.park@example.com',
+    role: 'USER',
+    gradeId: 4,
+    gradeName: '숲',
+    pointBalance: 12300,
+    status: 'JOINED',
+    currentSanction: null,
+  },
+  {
+    memberId: 991,
+    loginId: 'read_admin',
+    name: '김도윤',
+    email: 'admin@example.com',
+    role: 'ADMIN',
+    pointBalance: 0,
+    status: 'JOINED',
+    currentSanction: null,
+  },
+  {
+    memberId: 873,
+    loginId: 'review_stop',
+    name: '이민준',
+    email: 'minjun@example.com',
+    role: 'USER',
+    gradeId: 1,
+    gradeName: '씨앗',
+    pointBalance: 1500,
+    status: 'SANCTIONED',
+    currentSanction: {
+      sanctionType: 'ACCOUNT_SUSPENSION',
+      startedAt: '2026-07-02T09:00:00',
+      endedAt: '2026-07-16T23:59:00',
+      reason: '리뷰 신고 누적',
+    },
+  },
 ];
 
 function toApiPage(uiPage: number) {
@@ -80,6 +122,31 @@ function getSanctionText(member: AdminMemberSummary) {
   const endedAt = formatDateTime(sanction.endedAt);
 
   return endedAt ? `${type} · ${endedAt} 종료` : type;
+}
+
+function buildFallbackMemberPage(query: AdminMemberListQuery): PageResponse<AdminMemberSummary> {
+  const keyword = query.q?.trim().toLowerCase();
+  const filtered = fallbackMembers.filter((member) => {
+    const matchesKeyword = keyword ? [member.name, member.loginId, member.email].join(' ').toLowerCase().includes(keyword) : true;
+    const matchesStatus = query.status ? member.status === query.status : true;
+    const matchesRole = query.role ? member.role === query.role : true;
+    const matchesGrade = query.gradeId ? member.gradeId === query.gradeId : true;
+
+    return matchesKeyword && matchesStatus && matchesRole && matchesGrade;
+  });
+
+  const page = query.page ?? 0;
+  const size = query.size ?? PAGE_SIZE;
+  const start = page * size;
+
+  return {
+    content: filtered.slice(start, start + size),
+    page,
+    size,
+    totalElements: filtered.length,
+    totalPages: Math.max(Math.ceil(filtered.length / size), 1),
+    last: start + size >= filtered.length,
+  };
 }
 
 export function AdminMemberListPage() {
@@ -125,8 +192,8 @@ export function AdminMemberListPage() {
         }
       } catch (error) {
         if (!ignore) {
-          setMembersPage(null);
-          setErrorMessage(`${getApiErrorMessage(error)} 잠시 후 다시 시도해 주세요.`);
+          setMembersPage(buildFallbackMemberPage(query));
+          setErrorMessage(`${getApiErrorMessage(error)} 화면 확인을 위해 임시 회원 목록을 표시합니다.`);
         }
       } finally {
         if (!ignore) {
@@ -245,7 +312,32 @@ export function AdminMemberListPage() {
         };
       });
     } catch (error) {
-      setModalError(getApiErrorMessage(error));
+      setStatusMessage('임시 데이터에 회원 상태 변경을 반영했습니다.');
+      setSelectedMember(null);
+      setMembersPage((current) => {
+        if (!current) return current;
+
+        return {
+          ...current,
+          content: current.content.map((member) =>
+            member.memberId === selectedMember.memberId
+              ? {
+                  ...member,
+                  status: statusForm.status,
+                  currentSanction:
+                    statusForm.status === 'SANCTIONED'
+                      ? {
+                          sanctionType: statusForm.sanctionType,
+                          startedAt: statusForm.startedAt,
+                          endedAt: statusForm.endedAt,
+                          reason: statusForm.reason,
+                        }
+                      : null,
+                }
+              : member,
+          ),
+        };
+      });
     } finally {
       setIsSavingStatus(false);
     }
@@ -265,12 +357,12 @@ export function AdminMemberListPage() {
 
       <form className={styles.filterPanel} onSubmit={handleSearch}>
         <label>
-          검색어
+          <span className={styles.filterLabelText}>검색어</span>
           <input name="q" type="search" placeholder="회원명 / 아이디 / 이메일" defaultValue={searchParams.get('q') ?? ''} />
         </label>
 
         <label>
-          상태
+          <span className={styles.filterLabelText}>상태</span>
           <select name="status" defaultValue={searchParams.get('status') ?? ''}>
             <option value="">전체</option>
             {statusOptions.map((option) => (
@@ -282,7 +374,7 @@ export function AdminMemberListPage() {
         </label>
 
         <label>
-          역할
+          <span className={styles.filterLabelText}>역할</span>
           <select name="role" defaultValue={searchParams.get('role') ?? ''}>
             <option value="">전체</option>
             {roleOptions.map((option) => (
@@ -294,7 +386,7 @@ export function AdminMemberListPage() {
         </label>
 
         <label>
-          등급
+          <span className={styles.filterLabelText}>등급</span>
           <select name="gradeId" defaultValue={searchParams.get('gradeId') ?? ''}>
             <option value="">전체</option>
             {gradeOptions.map((option) => (

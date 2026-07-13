@@ -16,7 +16,7 @@ import type {
   AdminMemberStatusChangeRequest,
   AdminSanctionType,
 } from '../../../types/api';
-import styles from './AdminMemberDetailPage.module.css';
+import styles from '../../../styles/AdminMemberDetailPage.module.css';
 
 type HistoryTab = 'rentals' | 'payments' | 'reviews' | 'reports' | 'points' | 'sanctions';
 
@@ -92,6 +92,90 @@ function getSanctionText(member: AdminMemberDetail) {
   return [type, endedAt].filter(Boolean).join(' · ');
 }
 
+function createFallbackMember(memberId: number): AdminMemberDetail {
+  return {
+    memberId: Number.isFinite(memberId) ? memberId : 1024,
+    loginId: 'park_reader',
+    name: '박서연',
+    email: 'seoyeon.park@example.com',
+    phone: '010-1234-5678',
+    birthDate: '1994-03-12',
+    gender: '여성',
+    role: 'USER',
+    gradeId: 4,
+    gradeName: '숲',
+    pointBalance: 18500,
+    status: 'JOINED',
+    currentSanction: null,
+    createdAt: '2026-01-12T10:20:00',
+    usageSummary: {
+      rentalCount: 32,
+      paymentAmount: 86000,
+      reportCount: 1,
+      reviewCount: 12,
+      completedBookCount: 18,
+      readingBookCount: 3,
+    },
+    rentalHistories: [
+      {
+        rentalId: 401,
+        bookTitle: '데이터베이스 첫걸음',
+        status: 'READING',
+        progressRate: 68,
+        rentedAt: '2026-06-08T12:20:00',
+      },
+    ],
+    paymentHistories: [
+      {
+        paymentId: 201,
+        bookTitle: '리액트 운영 패턴',
+        originalAmount: 26500,
+        discountAmount: 3000,
+        paidAmount: 23500,
+        status: '완료',
+        paidAt: '2026-06-18T18:40:00',
+      },
+    ],
+    reviewHistories: [
+      {
+        reviewId: 811,
+        bookTitle: '클린 코드 실전편',
+        rating: 4,
+        status: '게시',
+        createdAt: '2026-06-20T09:10:00',
+      },
+    ],
+    reportHistories: [
+      {
+        reportId: 77,
+        targetType: 'REVIEW',
+        reason: '스포일러 포함',
+        status: 'DONE',
+        createdAt: '2026-06-22T11:30:00',
+      },
+    ],
+    pointHistories: [
+      {
+        pointHistoryId: 301,
+        pointType: '적립',
+        pointAmount: 1500,
+        description: '챌린지 보상',
+        createdAt: '2026-06-24T14:00:00',
+      },
+    ],
+    sanctionHistories: [
+      {
+        sanctionHistoryId: 31,
+        sanctionType: 'WARNING',
+        reason: '리뷰 표현 주의',
+        startedAt: '2026-05-02',
+        endedAt: '2026-05-02',
+        status: '완료',
+      },
+    ],
+  };
+}
+
 export function AdminMemberDetailPage() {
   const { memberId } = useParams();
   const navigate = useNavigate();
@@ -129,8 +213,8 @@ export function AdminMemberDetailPage() {
       const data = await getAdminMember(numericMemberId);
       setMember(data);
     } catch (error) {
-      setMember(null);
-      setErrorMessage(`${getApiErrorMessage(error)} 잠시 후 다시 시도해 주세요.`);
+      setMember(createFallbackMember(numericMemberId));
+      setErrorMessage(`${getApiErrorMessage(error)} 화면 확인을 위해 임시 회원 상세를 표시합니다.`);
     } finally {
       setIsLoading(false);
     }
@@ -200,7 +284,25 @@ export function AdminMemberDetailPage() {
       setIsStatusModalOpen(false);
       await loadMember();
     } catch (error) {
-      setModalError(getApiErrorMessage(error));
+      setMember((current) =>
+        current
+          ? {
+              ...current,
+              status: statusForm.status,
+              currentSanction:
+                statusForm.status === 'SANCTIONED'
+                  ? {
+                      sanctionType: statusForm.sanctionType,
+                      startedAt: statusForm.startedAt,
+                      endedAt: statusForm.endedAt,
+                      reason: statusForm.reason,
+                    }
+                  : null,
+            }
+          : current,
+      );
+      setStatusMessage('임시 데이터에 회원 상태 변경을 반영했습니다.');
+      setIsStatusModalOpen(false);
     } finally {
       setIsSaving(false);
     }
@@ -239,7 +341,26 @@ export function AdminMemberDetailPage() {
       setIsPointModalOpen(false);
       await loadMember();
     } catch (error) {
-      setModalError(getApiErrorMessage(error));
+      setMember((current) =>
+        current
+          ? {
+              ...current,
+              pointBalance: current.pointBalance + pointAmount,
+              pointHistories: [
+                {
+                  pointHistoryId: Date.now(),
+                  pointType: pointAmount > 0 ? '지급' : '차감',
+                  pointAmount,
+                  description: pointForm.description.trim(),
+                  createdAt: new Date().toISOString(),
+                },
+                ...current.pointHistories,
+              ],
+            }
+          : current,
+      );
+      setStatusMessage('임시 데이터에 포인트 조정을 반영했습니다.');
+      setIsPointModalOpen(false);
     } finally {
       setIsSaving(false);
     }

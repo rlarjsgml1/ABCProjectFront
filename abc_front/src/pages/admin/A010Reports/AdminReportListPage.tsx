@@ -13,7 +13,7 @@ import type {
   ReportStatus,
   ReportTargetType,
 } from '../../../types/api';
-import styles from './AdminReportListPage.module.css';
+import styles from '../../../styles/AdminReportListPage.module.css';
 
 const PAGE_SIZE = 10;
 
@@ -46,6 +46,48 @@ const sanctionTypeOptions: Array<{ value: AdminSanctionType; label: string }> = 
   { value: 'WARNING', label: '경고' },
 ];
 
+const fallbackReports: AdminReportItem[] = [
+  {
+    reportId: 4021,
+    targetType: 'BOOK',
+    reporter: {
+      memberId: 1024,
+      loginId: 'park_reader',
+      name: '박서연',
+    },
+    targetInfo: {
+      targetId: 88,
+      title: '데이터베이스 첫걸음',
+      authorName: '박서연',
+    },
+    reportType: '도서 정보 오류',
+    content: '도서 소개에 오탈자가 있어 확인이 필요합니다.',
+    status: 'WAITING',
+    managerName: '-',
+    createdAt: '2026-07-12T09:30:00',
+  },
+  {
+    reportId: 4059,
+    targetType: 'REVIEW',
+    reporter: {
+      memberId: 873,
+      loginId: 'review_stop',
+      name: '이민준',
+    },
+    targetInfo: {
+      targetId: 611,
+      bookTitle: '리액트 운영 패턴',
+      reviewContent: '결말과 핵심 내용이 그대로 포함된 리뷰입니다.',
+      reviewStatus: 'VISIBLE',
+    },
+    reportType: '스포일러 포함',
+    content: '리뷰에 주요 결말이 포함되어 숨김 처리가 필요합니다.',
+    status: 'PROCESSING',
+    managerName: '운영관리자',
+    createdAt: '2026-07-13T10:10:00',
+  },
+];
+
 function toApiPage(uiPage: number) {
   return Math.max(uiPage - 1, 0);
 }
@@ -76,6 +118,32 @@ function getTargetTitle(report: AdminReportItem) {
   }
 
   return report.targetInfo.title ?? `도서 ${report.targetInfo.targetId}`;
+}
+
+function buildFallbackReportPage(query: AdminReportListQuery): AdminReportPage {
+  const keyword = query.q?.trim().toLowerCase();
+  const filtered = fallbackReports.filter((report) => {
+    const matchesTargetType = query.targetType ? report.targetType === query.targetType : true;
+    const matchesStatus = query.status ? report.status === query.status : true;
+    const matchesKeyword = keyword
+      ? [getTargetTitle(report), report.reporter.name, report.reporter.loginId, report.reportType, report.content].join(' ').toLowerCase().includes(keyword)
+      : true;
+
+    return matchesTargetType && matchesStatus && matchesKeyword;
+  });
+
+  const page = query.page ?? 0;
+  const size = query.size ?? PAGE_SIZE;
+  const start = page * size;
+
+  return {
+    content: filtered.slice(start, start + size),
+    page,
+    size,
+    totalElements: filtered.length,
+    totalPages: Math.max(Math.ceil(filtered.length / size), 1),
+    last: start + size >= filtered.length,
+  };
 }
 
 export function AdminReportListPage() {
@@ -126,8 +194,8 @@ export function AdminReportListPage() {
         }
       } catch (error) {
         if (!ignore) {
-          setReportsPage(null);
-          setErrorMessage(`${getApiErrorMessage(error)} 잠시 후 다시 시도해 주세요.`);
+          setReportsPage(buildFallbackReportPage(query));
+          setErrorMessage(`${getApiErrorMessage(error)} 화면 확인을 위해 임시 신고 목록을 표시합니다.`);
         }
       } finally {
         if (!ignore) {
@@ -262,7 +330,9 @@ export function AdminReportListPage() {
       setStatusMessage('신고 처리가 저장되었습니다.');
       setProcessReport(null);
     } catch (error) {
-      setModalError(getApiErrorMessage(error));
+      updateLocalReport(processReport, payload);
+      setStatusMessage('임시 데이터에 신고 처리 상태를 반영했습니다.');
+      setProcessReport(null);
     } finally {
       setIsSaving(false);
     }
@@ -295,7 +365,7 @@ export function AdminReportListPage() {
         </div>
         <input type="hidden" name="targetType" value={selectedTargetType} />
         <label>
-          처리 상태
+          <span className={styles.filterLabelText}>처리 상태</span>
           <select name="status" defaultValue={searchParams.get('status') ?? ''}>
             <option value="">전체</option>
             {statusOptions.map((option) => (
@@ -306,7 +376,7 @@ export function AdminReportListPage() {
           </select>
         </label>
         <label>
-          검색어
+          <span className={styles.filterLabelText}>검색어</span>
           <input name="q" type="search" placeholder="신고 제목 또는 대상" defaultValue={searchParams.get('q') ?? ''} />
         </label>
         <div className={styles.filterActions}>

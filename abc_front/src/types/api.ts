@@ -643,6 +643,51 @@ export type BookRequestHistoryItem = {
 
 export type BookRequestHistoryPage = PageResponse<BookRequestHistoryItem>;
 
+export type AdminBookRequestCandidateQuery = {
+  status?: BookRequestStatus;
+  q?: string;
+  page?: number;
+  size?: number;
+};
+
+export type AdminBookRequestApplicantSummary = {
+  memberId: number;
+  loginId: string;
+  name: string;
+  reason?: string;
+  requestedAt: string;
+};
+
+export type AdminBookRequestCandidate = {
+  candidateId: number;
+  title: string;
+  author: string;
+  publisher: string;
+  status: BookRequestStatus;
+  requestCount: number;
+  firstRequestedAt: string;
+  latestRequestedAt?: string;
+  applicants: AdminBookRequestApplicantSummary[];
+  rejectReason?: string;
+  approvedBookId?: number;
+};
+
+export type AdminBookRequestCandidatePage = PageResponse<AdminBookRequestCandidate>;
+
+export type AdminBookRequestStatusUpdateRequest = {
+  status: BookRequestStatus;
+  approvedBookId?: number;
+  rejectReason?: string;
+};
+
+export type AdminBookRequestStatusUpdateResponse = {
+  candidateId: number;
+  status: BookRequestStatus;
+  affectedRequestCount: number;
+  approvedBookId?: number;
+  rejectReason?: string;
+};
+
 // API-RENTAL-003 (U-010 내 대여 현황). 필드명은 MyRentalSummaryResponse.java 기준.
 export type RentalStatus = 'READY' | 'READING' | 'OWNED';
 
