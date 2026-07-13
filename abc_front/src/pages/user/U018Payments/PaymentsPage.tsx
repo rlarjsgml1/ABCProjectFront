@@ -1,3 +1,4 @@
+// 결제 내역(U018) 화면 — 결제 내역을 기간·유형별로 조회하고 결제 상세 내역을 모달로 보여준다
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getMyPayments } from '../../../api/paymentsApi';

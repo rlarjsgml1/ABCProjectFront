@@ -1,3 +1,4 @@
+// 마이페이지 사이드 메뉴 — 내 서재/대여/즐겨찾기 등 하위 메뉴 내비게이션 목록
 import { NavLink } from 'react-router-dom';
 
 const menuItems = [

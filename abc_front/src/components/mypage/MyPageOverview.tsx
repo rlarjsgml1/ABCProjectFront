@@ -1,3 +1,4 @@
+// 마이페이지 상단 요약 대시보드 — 프로필, 회원등급, 독서통계, 출석/챌린지 현황을 표시
 import { useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import type { UserProfile } from '../../types/api';

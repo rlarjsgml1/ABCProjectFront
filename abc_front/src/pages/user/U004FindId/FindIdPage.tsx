@@ -1,3 +1,4 @@
+// 아이디 찾기 화면(U004) — 이름/생년월일/이메일로 아이디를 찾는 입력 폼과 탭 UI를 제공한다.
 import { Button } from '../../../components/common/Button';
 
 export function FindIdPage() {

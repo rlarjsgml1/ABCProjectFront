@@ -1,3 +1,4 @@
+// 회원 관리(A002) 화면 — 회원 목록 조회/검색/필터링과 회원 상태(가입·제재·탈퇴 등) 변경을 담당한다
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { changeAdminMemberStatus, getAdminMembers } from '../../../api/adminMemberApi';

@@ -1,3 +1,4 @@
+// 챌린지(U027) 화면 — 일일/전체 챌린지 진행 현황을 보여주고 완료된 챌린지의 보상 수령을 처리한다
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { claimChallengeReward, getMyChallenges } from '../../../api/challengesApi';

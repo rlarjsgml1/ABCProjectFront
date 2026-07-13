@@ -1,3 +1,4 @@
+// 전자책 뷰어 화면(U011) — 페이지 열람, 북마크, 읽기 진행률 저장, 글자크기/자동넘김 등 보기 설정을 담당한다.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { addBookmark, deleteBookmark, getBookmarks, getViewerPage, saveReadingProgress } from '../../../api/viewerApi';

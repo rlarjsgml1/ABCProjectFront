@@ -1,3 +1,4 @@
+// 회원가입 화면(U002) — 아이디/비밀번호/개인정보를 입력받아 회원가입을 처리한다.
 import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { signup } from '../../../api/authApi';

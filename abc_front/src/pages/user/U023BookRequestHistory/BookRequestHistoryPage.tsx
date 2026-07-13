@@ -1,3 +1,4 @@
+// 희망도서 신청 내역(U023) 화면 — 내가 신청한 희망도서 목록을 상태별로 조회하고 상세 내용을 확인한다
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getMyBookRequests } from '../../../api/bookRequestsApi';

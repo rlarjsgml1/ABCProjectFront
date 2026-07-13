@@ -1,3 +1,4 @@
+// 희망도서 신청 등록 및 내 희망도서 신청 내역 조회 API 클라이언트
 import { apiClient } from './apiClient';
 import type {
   ApiResponse,

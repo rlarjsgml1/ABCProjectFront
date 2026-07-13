@@ -1,3 +1,4 @@
+// 내 독서 통계 조회 API와 백엔드 미구현 기간 대비 fallback 통계 데이터 생성 로직
 import { apiClient } from './apiClient';
 import type { ApiResponse, ReadingStatisticsData, ReadingStatisticsPeriodType, ReadingStatisticsQuery, ReadingTrendPoint } from '../types/api';
 

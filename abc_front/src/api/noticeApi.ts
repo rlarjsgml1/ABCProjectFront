@@ -1,3 +1,4 @@
+// 공지사항 목록/상세 조회 API와 백엔드 미구현 구간을 대비한 fallback 목데이터
 import { apiClient } from './apiClient';
 import type { ApiResponse, NoticeDetail, NoticeItem, NoticeListQuery, NoticePage } from '../types/api';
 

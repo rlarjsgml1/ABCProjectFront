@@ -1,3 +1,4 @@
+// 독서 통계(U026) 화면 — 기간별 독서량 추이 차트와 탄소·나무 절약 등 환경 기여 지표를 보여준다
 import { useEffect, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { TooltipContentProps } from 'recharts';

@@ -1,3 +1,4 @@
+// 데이터가 없을 때 제목/설명을 보여주는 공통 빈 상태(empty state) 컴포넌트
 type EmptyStateProps = {
   title: string;
   description?: string;

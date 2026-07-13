@@ -1,3 +1,4 @@
+// 프로필 수정 화면(U015) — 회원 기본 정보 수정과 비밀번호 변경을 담당한다.
 import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { changeMyPassword, getApiErrorMessage, updateMyProfile } from '../../../api/profileApi';

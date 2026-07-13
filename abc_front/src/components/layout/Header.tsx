@@ -1,3 +1,4 @@
+// 사이트 공통 헤더 — 로고, 도서 검색, 주요 내비게이션, 로그인/알림 상태를 표시
 import { FormEvent, MouseEvent, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AUTH_CHANGED_EVENT } from '../../api/authApi';

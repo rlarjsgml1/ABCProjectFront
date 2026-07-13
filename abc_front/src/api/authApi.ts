@@ -1,3 +1,4 @@
+// 회원가입/로그인 API 클라이언트와 인증 상태 변경 이벤트 이름 상수
 import { apiClient } from './apiClient';
 import type { ApiResponse, LoginRequest, LoginResponse, SignupRequest, SignupResponse } from '../types/api';
 

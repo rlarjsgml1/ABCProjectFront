@@ -1,3 +1,4 @@
+// 홈 화면(U001) — 배너 슬라이드, 카테고리, 추천/신간/베스트 도서 섹션을 보여준다.
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getBestBooks, getCategories, getLatestBooks, getRecommendedBooks } from '../../../api/bookApi';

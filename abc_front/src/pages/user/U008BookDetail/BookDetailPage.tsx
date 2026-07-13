@@ -1,3 +1,4 @@
+// 도서 상세 화면(U008) — 도서 정보 조회, 찜하기, 리뷰 작성/수정/삭제, 신고 모달을 담당한다.
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getBookDetail } from '../../../api/bookApi';

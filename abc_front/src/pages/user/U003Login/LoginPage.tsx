@@ -1,3 +1,4 @@
+// 로그인 화면(U003) — 아이디/비밀번호로 로그인하고 인증 정보를 저장한다.
 import { FormEvent, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AUTH_CHANGED_EVENT, login } from '../../../api/authApi';

@@ -1,3 +1,4 @@
+// 내 관심도서 목록 조회 및 관심도서 등록/삭제 API 클라이언트
 import { apiClient } from './apiClient';
 import type { ApiResponse, FavoriteBooksPage, FavoriteBooksQuery } from '../types/api';
 

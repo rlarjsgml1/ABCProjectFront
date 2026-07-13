@@ -1,3 +1,4 @@
+// 공지사항 목록(U029) 화면 — 공지사항을 페이지네이션으로 조회하고 상세 화면으로 이동시킨다
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { getFallbackNoticePage, getNotices } from '../../../api/noticeApi';

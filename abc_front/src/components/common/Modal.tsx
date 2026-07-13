@@ -1,3 +1,4 @@
+// 공통 모달 다이얼로그 — ESC/배경 클릭 닫기 등을 지원하는 재사용 가능한 모달 컴포넌트
 import { useEffect, type ReactNode } from 'react';
 import styles from './Modal.module.css';
 
