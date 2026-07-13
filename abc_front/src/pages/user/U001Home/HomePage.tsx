@@ -233,7 +233,7 @@ export function HomePage() {
 
       <div className="home-quick-menu" aria-label="빠른 메뉴">
         <Link to="/me/attendance">출석체크</Link>
-        <Link to="/notices">이벤트</Link>
+        <Link to="/events">이벤트</Link>
         <Link to="/me/challenges">챌린지</Link>
       </div>
 

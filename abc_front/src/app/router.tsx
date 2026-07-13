@@ -49,6 +49,7 @@ import { ChallengesPage } from '../pages/user/U027Challenges/ChallengesPage';
 import { NoticeListPage } from '../pages/user/U029Notices/NoticeListPage';
 import { NoticeDetailPage } from '../pages/user/U029Notices/NoticeDetailPage';
 import { NotificationsPage } from '../pages/user/U019Notifications/NotificationsPage';
+import { EventPage } from '../pages/user/U020Event/EventPage';
 
 
 
@@ -57,6 +58,7 @@ export const router = createBrowserRouter([
     element: <UserLayout />,
     children: [
       { path: '/', element: <HomePage /> },
+      { path: '/events', element: <EventPage /> },
       { path: '/books', element: <BooksPage /> },
       { path: '/search', element: <SearchResultsPage /> },
       { path: '/notices', element: <NoticeListPage /> },
