@@ -20,6 +20,7 @@ import { AdminLibraryPage } from '../pages/admin/A015Libraries/AdminLibraryPage'
 import { AdminStatisticsPage } from '../pages/admin/A016Statistics/AdminStatisticsPage';
 import { AdminAuditLogPage } from '../pages/admin/A017AuditLogs/AdminAuditLogPage';
 import { AdminCollectionPage } from '../pages/admin/A018Collections/AdminCollectionPage';
+import { AdminSettingsPage } from '../pages/admin/AdminSettings/AdminSettingsPage';
 import { BookDetailPage } from '../pages/user/U008BookDetail/BookDetailPage';
 import { BooksPage } from '../pages/user/U006Books/BooksPage';
 import { HomePage } from '../pages/user/U001Home/HomePage';
@@ -136,6 +137,7 @@ export const router = createBrowserRouter([
       { path: 'statistics', element: <AdminStatisticsPage /> },
       { path: 'audit-logs', element: <AdminAuditLogPage /> },
       { path: 'collections', element: <AdminCollectionPage /> },
+      { path: 'settings', element: <AdminSettingsPage /> },
     ],
   },
 ]);
