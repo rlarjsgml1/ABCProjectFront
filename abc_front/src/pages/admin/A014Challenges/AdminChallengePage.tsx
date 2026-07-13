@@ -206,7 +206,12 @@ export function AdminChallengePage() {
       try {
         const data = await getAdminChallenges(query);
         if (!ignore) {
-          setChallengesPage(data);
+          if (data.content.length > 0) {
+            setChallengesPage(data);
+          } else {
+            setChallengesPage(buildFallbackChallengePage(query));
+            setErrorMessage('등록된 챌린지가 없어 화면 확인을 위해 임시 챌린지 목록을 표시합니다.');
+          }
         }
       } catch (error) {
         if (!ignore) {
@@ -234,7 +239,7 @@ export function AdminChallengePage() {
       try {
         const data = await getAdminCoupons({ status: 'ACTIVE', page: 0, size: 50 });
         if (!ignore) {
-          setCoupons(data.content);
+          setCoupons(data.content.length > 0 ? data.content : fallbackCoupons);
         }
       } catch {
         if (!ignore) {
