@@ -31,33 +31,11 @@
   font-weight: 700;
 }
 
-.kpiGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-4);
-}
-
-.kpiCard {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  background: var(--color-surface);
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
-  cursor: pointer;
-}
-
-.kpiLabel {
-  color: var(--color-muted);
-  font-size: 0.82rem;
-  font-weight: 800;
-}
-
-.kpiValue {
-  margin-top: 6px;
+.sectionTitle {
+  margin: var(--space-2) 0 0;
   color: var(--color-text);
-  font-size: 1.6rem;
-  font-weight: 900;
-  font-variant-numeric: tabular-nums;
+  font-size: 1.05rem;
+  font-weight: 800;
 }
 
 .ecoRow {
@@ -67,22 +45,20 @@
 }
 
 .ecoCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  background: var(--color-success-soft);
+  padding: var(--space-6);
+  background: var(--color-surface);
 }
 
 .ecoValue {
   color: var(--color-success);
-  font-size: 1.3rem;
-  font-weight: 900;
-}
-
-.ecoLabel {
-  margin-top: 4px;
-  color: var(--color-muted);
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: 1.6rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .chartGrid {
@@ -96,7 +72,6 @@
   border-radius: var(--radius-lg);
   padding: var(--space-5);
   background: var(--color-surface);
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
 }
 
 .chartCard h3 {
@@ -105,18 +80,42 @@
   font-size: 0.95rem;
 }
 
-@media (max-width: 1180px) {
-  .kpiGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.chartArea {
+  width: 100%;
+  height: 200px;
+}
 
+.chartTooltip {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
+.chartTooltipLabel {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.chartTooltipValue {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+@media (max-width: 1180px) {
   .chartGrid {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 760px) {
-  .kpiGrid,
   .ecoRow {
     grid-template-columns: 1fr;
   }

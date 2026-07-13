@@ -106,7 +106,7 @@ export function AdminRentalListPage() {
   const [rentalsPage, setRentalsPage] = useState<AdminRentalPage | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-  const [selectedRental, setSelectedRental] = useState<AdminRentalItem | null>(null);
+  const [detailRental, setDetailRental] = useState<AdminRentalItem | null>(null);
 
   const currentPage = Number(searchParams.get('page') ?? '1') || 1;
 
@@ -214,126 +214,129 @@ export function AdminRentalListPage() {
 
       {errorMessage ? <p className={styles.notice}>{errorMessage}</p> : null}
 
-      <div className={`${styles.contentGrid} ${styles.withDetail}`}>
-        <section className={styles.tablePanel} aria-label="대여 목록">
-          <div className={styles.tableHeader}>
-            <div>
-              <h2>대여 목록</h2>
-              <p>총 {(rentalsPage?.totalElements ?? 0).toLocaleString('ko-KR')}건</p>
-            </div>
-            <span>
-              {shownPage} / {totalPages}
-            </span>
+      <section className={styles.tablePanel} aria-label="대여 목록">
+        <div className={styles.tableHeader}>
+          <div>
+            <h2>대여 목록</h2>
+            <p>총 {(rentalsPage?.totalElements ?? 0).toLocaleString('ko-KR')}건</p>
           </div>
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
+          <span>
+            {shownPage} / {totalPages}
+          </span>
+        </div>
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>대여번호</th>
+                <th>회원</th>
+                <th>도서</th>
+                <th>상태</th>
+                <th>생성일/첫 읽기/종료일</th>
+                <th>진행률</th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
                 <tr>
-                  <th>대여번호</th>
-                  <th>회원</th>
-                  <th>도서</th>
-                  <th>상태</th>
-                  <th>생성일</th>
-                  <th>진행률</th>
-                  <th>관리</th>
+                  <td colSpan={7}>대여 목록을 불러오는 중입니다.</td>
                 </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={7}>대여 목록을 불러오는 중입니다.</td>
+              ) : rentals.length > 0 ? (
+                rentals.map((rental) => (
+                  <tr key={rental.rentalId}>
+                    <td>R-{rental.rentalId}</td>
+                    <td>
+                      <Link className={styles.cellLink} to={`/admin/members/${rental.memberId}`}>
+                        {rental.memberName}
+                      </Link>
+                    </td>
+                    <td>
+                      <Link className={styles.cellLink} to={`/admin/books/${rental.bookId}/edit`}>
+                        {rental.bookTitle}
+                      </Link>
+                    </td>
+                    <td>
+                      <span className={`${styles.pill} ${statusPillClass[rental.status]}`}>{getLabel(statusOptions, rental.status)}</span>
+                    </td>
+                    <td>
+                      {formatDate(rental.createdAt)}
+                      <span className={styles.cellSub}>
+                        첫 읽기 {formatDate(rental.firstReadAt)} · 종료 {formatDate(rental.endedAt)}
+                      </span>
+                    </td>
+                    <td>{rental.progressPercent}%</td>
+                    <td>
+                      <div className={styles.rowActions}>
+                        <button type="button" onClick={() => setDetailRental(rental)}>
+                          상세보기
+                        </button>
+                      </div>
+                    </td>
                   </tr>
-                ) : rentals.length > 0 ? (
-                  rentals.map((rental) => (
-                    <tr key={rental.rentalId} className={`${styles.clickableRow} ${selectedRental?.rentalId === rental.rentalId ? styles.selectedRow : ''}`} onClick={() => setSelectedRental(rental)}>
-                      <td>R-{rental.rentalId}</td>
-                      <td>{rental.memberName}</td>
-                      <td>{rental.bookTitle}</td>
-                      <td>
-                        <span className={`${styles.pill} ${statusPillClass[rental.status]}`}>{getLabel(statusOptions, rental.status)}</span>
-                      </td>
-                      <td>{formatDate(rental.createdAt)}</td>
-                      <td>{rental.progressPercent}%</td>
-                      <td>
-                        <div className={styles.rowActions}>
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              setSelectedRental(rental);
-                            }}
-                          >
-                            상세보기
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={7}>대여 내역이 없습니다.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          <div className={styles.pagination}>
-            <Button type="button" variant="secondary" disabled={shownPage <= 1} onClick={() => updateQuery({ page: String(shownPage - 1) })}>
-              이전
-            </Button>
-            <span>{shownPage} 페이지</span>
-            <Button type="button" variant="secondary" disabled={shownPage >= totalPages} onClick={() => updateQuery({ page: String(shownPage + 1) })}>
-              다음
-            </Button>
-          </div>
-        </section>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={7}>대여 내역이 없습니다.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className={styles.pagination}>
+          <Button type="button" variant="secondary" disabled={shownPage <= 1} onClick={() => updateQuery({ page: String(shownPage - 1) })}>
+            이전
+          </Button>
+          <span>{shownPage} 페이지</span>
+          <Button type="button" variant="secondary" disabled={shownPage >= totalPages} onClick={() => updateQuery({ page: String(shownPage + 1) })}>
+            다음
+          </Button>
+        </div>
+      </section>
 
-        <aside className={styles.detailPanel} aria-label="대여 상세">
-          {selectedRental ? (
-            <>
-              <div className={styles.detailHeader}>
-                <div>
-                  <strong>R-{selectedRental.rentalId}</strong>
-                  <h2>{selectedRental.bookTitle}</h2>
-                </div>
-                <span className={`${styles.pill} ${statusPillClass[selectedRental.status]}`}>{getLabel(statusOptions, selectedRental.status)}</span>
+      {detailRental ? (
+        <div className={styles.modalBackdrop} role="presentation" onMouseDown={() => setDetailRental(null)}>
+          <div className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="rental-detail-title" onMouseDown={(event) => event.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <div>
+                <h2 id="rental-detail-title">대여 상세</h2>
+                <p>R-{detailRental.rentalId}</p>
               </div>
-              <dl className={styles.detailList}>
-                <div>
-                  <dt>회원</dt>
-                  <dd>
-                    {selectedRental.memberName}
-                    <Link to={`/admin/members/${selectedRental.memberId}`}>회원 상세로</Link>
-                  </dd>
-                </div>
-                <div>
-                  <dt>도서</dt>
-                  <dd>
-                    {selectedRental.bookTitle}
-                    <Link to={`/admin/books/${selectedRental.bookId}/edit`}>도서 수정으로</Link>
-                  </dd>
-                </div>
-                <div>
-                  <dt>기간</dt>
-                  <dd>
-                    {formatDate(selectedRental.createdAt)} 시작 · 첫 읽기 {formatDate(selectedRental.firstReadAt)} · 종료 {formatDate(selectedRental.endedAt)}
-                  </dd>
-                </div>
-                <div>
-                  <dt>결제 연결</dt>
-                  <dd>{selectedRental.paymentSummary ?? '-'} (읽기 전용)</dd>
-                </div>
-              </dl>
-            </>
-          ) : (
-            <p className={styles.emptyHint}>
-              목록에서 <strong>상세보기</strong>를 클릭하면
-              <br />
-              대여 상세 정보가 여기에 표시됩니다.
-            </p>
-          )}
-        </aside>
-      </div>
+              <button type="button" aria-label="닫기" onClick={() => setDetailRental(null)}>
+                ×
+              </button>
+            </div>
+            <dl className={styles.detailList}>
+              <div>
+                <dt>회원</dt>
+                <dd>
+                  <Link className={styles.cellLink} to={`/admin/members/${detailRental.memberId}`}>
+                    {detailRental.memberName}
+                  </Link>
+                </dd>
+              </div>
+              <div>
+                <dt>도서</dt>
+                <dd>
+                  <Link className={styles.cellLink} to={`/admin/books/${detailRental.bookId}/edit`}>
+                    {detailRental.bookTitle}
+                  </Link>
+                </dd>
+              </div>
+              <div>
+                <dt>기간</dt>
+                <dd>
+                  {formatDate(detailRental.createdAt)} 시작 · 첫 읽기 {formatDate(detailRental.firstReadAt)} · 종료 {formatDate(detailRental.endedAt)}
+                </dd>
+              </div>
+              <div>
+                <dt>결제 연결</dt>
+                <dd>{detailRental.paymentSummary ?? '-'} (읽기 전용)</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

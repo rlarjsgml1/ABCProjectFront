@@ -209,7 +209,7 @@ export function AdminPaymentListPage() {
                 <th>결제번호</th>
                 <th>회원 / 도서</th>
                 <th>대여번호</th>
-                <th>수단</th>
+                <th>유형/수단</th>
                 <th>금액</th>
                 <th>상태</th>
                 <th>결제일</th>
@@ -230,7 +230,7 @@ export function AdminPaymentListPage() {
                       <span className={styles.cellSub}>{payment.bookTitle}</span>
                     </td>
                     <td>R-{payment.rentalId}</td>
-                    <td>{payment.paymentMethod}</td>
+                    <td>대여 · {payment.paymentMethod}</td>
                     <td>{formatAmount(payment.amount)}</td>
                     <td>
                       <span className={`${styles.pill} ${styles.pillSuccess}`}>결제 완료</span>
