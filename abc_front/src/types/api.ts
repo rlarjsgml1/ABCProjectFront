@@ -762,3 +762,50 @@ export type NotificationReadResult = {
   targetType?: string | null;
   targetId?: number | null;
 };
+
+// API-REVIEW-001~004 (U-013 리뷰/별점, U-008 안의 패널/모달로 구현)
+export type ReviewStatus = 'ACTIVE' | 'DELETED';
+
+export type ReviewItem = {
+  reviewId: number;
+  ratingId: number | null;
+  bookId: number;
+  memberId: number;
+  memberName: string;
+  ratingScore: number;
+  content: string;
+  status: ReviewStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ReviewSummary = {
+  averageRating: number;
+  reviewCount: number;
+};
+
+export type ReviewListQuery = {
+  page?: number;
+  size?: number;
+  sort?: string;
+};
+
+export type ReviewListResponse = {
+  summary: ReviewSummary;
+  reviews: PageResponse<ReviewItem>;
+};
+
+export type ReviewCreateRequest = {
+  bookId: number;
+  ratingScore: number;
+  content: string;
+};
+
+export type ReviewUpdateRequest = {
+  content: string;
+};
+
+export type ReviewDeleteResult = {
+  reviewId: number;
+  status: ReviewStatus;
+};
