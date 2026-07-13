@@ -907,3 +907,123 @@ export type AdminDashboardResponse = {
   recentReports: AdminRecentReport[];
   recentBookRequests: AdminRecentBookRequest[];
 };
+
+// API-ADMIN-RENTAL-001 (A-008 대여 현황 관리). controller 미구현 — mock/fallback 사용. 조회 전용.
+export type AdminRentalStatus = 'READY' | 'READING' | 'OWNED';
+
+export type AdminRentalListQuery = {
+  q?: string;
+  memberId?: number;
+  status?: AdminRentalStatus;
+  page?: number;
+  size?: number;
+};
+
+export type AdminRentalItem = {
+  rentalId: number;
+  memberId: number;
+  memberName: string;
+  bookId: number;
+  bookTitle: string;
+  status: AdminRentalStatus;
+  createdAt: string;
+  firstReadAt?: string;
+  endedAt?: string;
+  progressPercent: number;
+  paymentSummary?: string;
+};
+
+export type AdminRentalPage = PageResponse<AdminRentalItem>;
+
+// API-ADMIN-PAYMENT-001 (A-009 결제 관리). controller 미구현 — mock/fallback 사용. 조회 전용.
+export type AdminPaymentListQuery = {
+  q?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  size?: number;
+};
+
+export type AdminPaymentItem = {
+  paymentId: number;
+  memberName: string;
+  bookTitle: string;
+  rentalId: number;
+  paymentMethod: string;
+  grossAmount: number;
+  couponDiscount: number;
+  couponName?: string;
+  pointDiscount: number;
+  amount: number;
+  paymentStatus: 'PAID';
+  paidAt: string;
+};
+
+export type AdminPaymentPage = PageResponse<AdminPaymentItem>;
+
+// API-ADMIN-NOTICE-001~003 (A-012 공지 관리). controller 미구현 — mock/fallback 사용.
+export type AdminNoticeStatus = 'ACTIVE' | 'HIDDEN';
+
+export type AdminNoticeListQuery = {
+  status?: AdminNoticeStatus;
+  page?: number;
+  size?: number;
+};
+
+export type AdminNoticeItem = {
+  noticeId: number;
+  title: string;
+  content: string;
+  status: AdminNoticeStatus;
+  createdAt: string;
+  updatedAt?: string;
+};
+
+export type AdminNoticePage = PageResponse<AdminNoticeItem>;
+
+export type AdminNoticeSaveRequest = {
+  title: string;
+  content: string;
+  status: AdminNoticeStatus;
+  notifyYn: boolean;
+};
+
+// API-ADMIN-STAT-001 (A-016 통계 관리). 실제 backend 연동됨(AdminStatisticController). 현재 periodType=TOTAL(+ageBand 미지정/ALL)만 지원, 그 외 조합은 404.
+export type AdminStatisticsAgeBand = 'ALL' | '10S' | '20S' | '30S' | '40S' | '50_PLUS';
+
+export type AdminStatisticsQuery = {
+  periodType: ReadingStatisticsPeriodType;
+  baseDate?: string;
+  ageBand?: AdminStatisticsAgeBand;
+};
+
+export type AdminStatisticsData = {
+  periodType: ReadingStatisticsPeriodType;
+  ageBand?: AdminStatisticsAgeBand;
+  statistics: AdminDashboardStatistics;
+  trendPoints: ReadingTrendPoint[];
+};
+
+// API-ADMIN-AUDIT-001 (A-017 관리자 감사 로그). 실제 backend 연동됨(AdminAuditLogController). 조회 전용.
+export type AdminAuditLogQuery = {
+  actionType?: string;
+  targetType?: string;
+  targetId?: number;
+  page?: number;
+  size?: number;
+};
+
+export type AdminAuditLogItem = {
+  auditLogId: number;
+  adminName: string;
+  actionType: string;
+  targetType: string;
+  targetId: number;
+  targetLabel?: string;
+  beforeValue?: string;
+  afterValue?: string;
+  reason?: string;
+  createdAt: string;
+};
+
+export type AdminAuditLogPage = PageResponse<AdminAuditLogItem>;
