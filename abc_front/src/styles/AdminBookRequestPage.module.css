@@ -33,7 +33,7 @@
 
 .filterPanel {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(180px, 0.85fr) minmax(320px, 1.4fr) auto;
   gap: var(--space-4);
   align-items: end;
   border: 1px solid var(--color-border);
@@ -46,11 +46,25 @@
 .filterPanel label,
 .modal label {
   display: grid;
-  gap: 10px;
   min-width: 0;
   color: var(--color-text);
   font-weight: 800;
   line-height: 1.2;
+}
+
+.filterPanel label {
+  grid-template-rows: 20px 42px;
+  gap: 8px;
+}
+
+.modal label {
+  gap: 10px;
+}
+
+.filterLabelText {
+  display: flex;
+  align-items: center;
+  min-height: 20px;
 }
 
 .filterPanel input,
@@ -58,15 +72,31 @@
 .modal input,
 .modal select,
 .modal textarea {
+  box-sizing: border-box;
   width: 100%;
-  min-height: 42px;
+  height: 42px;
   border: 1px solid var(--color-border);
   border-radius: 6px;
-  padding: 11px 12px;
+  padding: 0 12px;
   color: var(--color-text);
   background: var(--color-surface);
   font: inherit;
   font-weight: 700;
+  line-height: 40px;
+}
+
+.filterPanel input,
+.filterPanel select {
+  height: 42px;
+  padding: 0 12px;
+  line-height: 40px;
+}
+
+.modal textarea {
+  height: auto;
+  min-height: 120px;
+  padding: 12px;
+  line-height: 1.5;
 }
 
 .filterPanel input:focus,

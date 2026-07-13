@@ -306,7 +306,7 @@ export function AdminBookRequestPage() {
 
       <form className={styles.filterPanel} onSubmit={handleSearch}>
         <label>
-          신청 상태
+          <span className={styles.filterLabelText}>신청 상태</span>
           <select name="status" defaultValue={searchParams.get('status') ?? ''}>
             <option value="">전체</option>
             {statusOptions.map((option) => (
@@ -317,7 +317,7 @@ export function AdminBookRequestPage() {
           </select>
         </label>
         <label>
-          도서명/신청자
+          <span className={styles.filterLabelText}>도서명/신청자</span>
           <input name="q" type="search" placeholder="도서명, 신청자, 아이디" defaultValue={searchParams.get('q') ?? ''} />
         </label>
         <div className={styles.filterActions}>
