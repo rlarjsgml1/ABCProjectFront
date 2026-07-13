@@ -1,3 +1,4 @@
+// 알림 내역(U019) 화면 — 알림 목록을 필터링·페이징하여 조회하고 클릭 시 읽음 처리 및 관련 화면으로 이동시킨다
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -228,11 +229,9 @@ export function NotificationsPage() {
                   <span className={`notifications-icon notifications-icon-${notification.notificationType.toLowerCase()}`} aria-hidden="true">
                     {typeIcons[notification.notificationType]}
                   </span>
-                  <span className="notifications-row-body">
-                    <span className="notifications-row-title">
-                      {!notification.readYn ? <span className="notifications-unread-dot" aria-hidden="true" /> : null}
-                      {notification.title}
-                    </span>
+                  <span className="notifications-row-title">
+                    {!notification.readYn ? <span className="notifications-unread-dot" aria-hidden="true" /> : null}
+                    {notification.title}
                   </span>
                 </button>
               ),
