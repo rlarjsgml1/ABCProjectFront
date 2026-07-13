@@ -10,7 +10,7 @@ import type {
   AdminBookRequestStatusUpdateRequest,
   BookRequestStatus,
 } from '../../../types/api';
-import styles from './AdminBookRequestPage.module.css';
+import styles from '../../../styles/AdminBookRequestPage.module.css';
 
 const PAGE_SIZE = 10;
 

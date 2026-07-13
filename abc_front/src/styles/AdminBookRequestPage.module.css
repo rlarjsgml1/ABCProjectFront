@@ -33,7 +33,7 @@
 
 .filterPanel {
   display: grid;
-  grid-template-columns: minmax(180px, 0.85fr) minmax(320px, 1.4fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
   gap: var(--space-4);
   align-items: end;
   border: 1px solid var(--color-border);
@@ -47,6 +47,7 @@
 .modal label {
   display: grid;
   gap: 10px;
+  min-width: 0;
   color: var(--color-text);
   font-weight: 800;
   line-height: 1.2;
@@ -58,6 +59,7 @@
 .modal select,
 .modal textarea {
   width: 100%;
+  min-height: 42px;
   border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 11px 12px;
@@ -80,10 +82,12 @@
   display: flex;
   gap: var(--space-3);
   align-items: end;
+  min-width: max-content;
 }
 
 .filterActions :global(.button) {
   min-width: 86px;
+  min-height: 42px;
   justify-content: center;
 }
 
