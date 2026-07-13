@@ -243,6 +243,56 @@ export type AdminCouponIssueResponse = {
   issuedCount: number;
 };
 
+export type AdminChallengeType = 'DAILY' | 'TOTAL';
+
+export type AdminChallengeStatus = 'ACTIVE' | 'INACTIVE';
+
+export type AdminChallengeRewardType = 'POINT' | 'coupon';
+
+export type AdminChallengeListQuery = {
+  challengeType?: AdminChallengeType;
+  status?: AdminChallengeStatus;
+  page?: number;
+  size?: number;
+};
+
+export type AdminChallengeRewardItem = {
+  rewardId?: number;
+  rewardType: AdminChallengeRewardType;
+  pointAmount?: number;
+  couponId?: number;
+  couponName?: string;
+  rewardQuantity: number;
+};
+
+export type AdminChallengeSummary = {
+  challengeId: number;
+  challengeName: string;
+  challengeType: AdminChallengeType;
+  targetAction: string;
+  targetCount: number;
+  status: AdminChallengeStatus;
+  participantCount: number;
+  completedCount: number;
+  rewardPoint?: number;
+  rewards: AdminChallengeRewardItem[];
+  startedAt?: string;
+  endedAt?: string;
+};
+
+export type AdminChallengeUpdateRequest = {
+  challengeName: string;
+  challengeType: AdminChallengeType;
+  targetAction: string;
+  targetCount: number;
+  status: AdminChallengeStatus;
+  rewards: AdminChallengeRewardItem[];
+};
+
+export type AdminChallengeUpdateResponse = {
+  challengeId: number;
+};
+
 
 export type PointHistoryQuery = {
   pointType?: string;
