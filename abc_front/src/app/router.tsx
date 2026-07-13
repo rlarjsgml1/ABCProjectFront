@@ -1,3 +1,4 @@
+// 유저/관리자 전체 페이지 라우팅 설정 — URL 경로와 페이지 컴포넌트를 매핑한다
 import { createBrowserRouter } from 'react-router-dom';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { ProtectedRoute } from '../components/layout/ProtectedRoute';

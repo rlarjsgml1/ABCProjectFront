@@ -1,3 +1,4 @@
+// 공통 페이지네이션 컴포넌트 — 페이지 번호 목록과 이전/다음 이동 버튼을 제공
 import styles from './Pagination.module.css';
 
 type PaginationProps = {

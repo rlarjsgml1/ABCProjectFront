@@ -123,7 +123,6 @@ function buildFallbackPage(query: AdminBookRequestCandidateQuery): AdminBookRequ
     last: start + size >= filtered.length,
   };
 }
-
 export function AdminBookRequestPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [candidatesPage, setCandidatesPage] = useState<AdminBookRequestCandidatePage | null>(null);

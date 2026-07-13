@@ -1,3 +1,4 @@
+// 결제 완료(U030) 화면 — 직전 결제 결과(금액·쿠폰·포인트 사용 내역)를 요약해서 보여주고 이후 이동 경로를 안내한다
 import { Link, useLocation, useParams } from 'react-router-dom';
 import styles from '../../../styles/PaymentCompletePage.module.css';
 

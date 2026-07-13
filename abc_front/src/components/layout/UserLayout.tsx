@@ -1,3 +1,4 @@
+// 일반 사용자 공통 레이아웃 — 헤더/푸터와 맨 위로 이동 버튼을 포함한 화면 뼈대
 import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Footer } from './Footer';

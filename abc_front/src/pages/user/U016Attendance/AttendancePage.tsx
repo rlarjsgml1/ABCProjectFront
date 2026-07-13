@@ -1,3 +1,4 @@
+// 출석 체크(U016) 화면 — 월간 출석 달력과 7일 챌린지 진행률을 보여주고 오늘 출석 체크 처리를 담당한다
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { checkInToday, getCurrentAttendanceQuery, getMonthlyAttendance } from '../../../api/attendanceApi';
 import { getApiErrorMessage } from '../../../api/profileApi';

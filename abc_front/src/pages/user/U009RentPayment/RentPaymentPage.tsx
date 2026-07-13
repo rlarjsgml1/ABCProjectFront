@@ -1,3 +1,4 @@
+// 대여/결제 화면(U009) — 도서 대여 정보 확인, 쿠폰/포인트 적용, 결제 확정을 담당한다.
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getBookDetail } from '../../../api/bookApi';

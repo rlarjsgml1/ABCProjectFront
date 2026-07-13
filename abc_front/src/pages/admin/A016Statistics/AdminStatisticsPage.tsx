@@ -1,3 +1,4 @@
+// 통계 관리(A016) 화면 — 향후 구현 예정인 서비스 통계 조회 placeholder이다
 export function AdminStatisticsPage() {
   return (
     <section className="page-section">

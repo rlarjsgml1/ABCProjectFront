@@ -1,3 +1,4 @@
+// 백엔드 API 요청/응답 관련 공통 타입 정의 모음 (회원, 도서, 대여, 결제, 알림 등)
 export type ApiResponse<T> = {
   success: boolean;
   code: string;
@@ -806,4 +807,103 @@ export type NotificationReadResult = {
   readAt: string;
   targetType?: string | null;
   targetId?: number | null;
+};
+
+// API-REVIEW-001~004 (U-013 리뷰/별점, U-008 안의 패널/모달로 구현)
+export type ReviewStatus = 'ACTIVE' | 'DELETED';
+
+export type ReviewItem = {
+  reviewId: number;
+  ratingId: number | null;
+  bookId: number;
+  memberId: number;
+  memberName: string;
+  ratingScore: number;
+  content: string;
+  status: ReviewStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ReviewSummary = {
+  averageRating: number;
+  reviewCount: number;
+};
+
+export type ReviewListQuery = {
+  page?: number;
+  size?: number;
+  sort?: string;
+};
+
+export type ReviewListResponse = {
+  summary: ReviewSummary;
+  reviews: PageResponse<ReviewItem>;
+};
+
+export type ReviewCreateRequest = {
+  bookId: number;
+  ratingScore: number;
+  content: string;
+};
+
+export type ReviewUpdateRequest = {
+  content: string;
+};
+
+export type ReviewDeleteResult = {
+  reviewId: number;
+  status: ReviewStatus;
+};
+
+// API-ADMIN-DASHBOARD-001 (A-001 관리자 대시보드). AdminDashboardResponse.java 기준.
+export type AdminDashboardStatistics = {
+  totalMemberCount: number;
+  sanctionedMemberCount: number;
+  activeBookCount: number;
+  totalRentalCount: number;
+  freeRentalCount: number;
+  paidRentalCount: number;
+  totalReadBookCount: number;
+  totalPaymentAmount: number;
+  reviewCount: number;
+  reportCount: number;
+  carbonSavedKg: number;
+  treeSavedCount: number;
+};
+
+export type AdminRecentPayment = {
+  paymentId: number;
+  memberName: string;
+  amount: number;
+  paymentStatus: string;
+  paidAt: string;
+};
+
+export type AdminRecentReport = {
+  reportId: number;
+  targetType: 'BOOK' | 'REVIEW';
+  targetId: number;
+  targetTitle: string;
+  reportType: string;
+  reportStatus: string;
+  reporterName: string;
+  createdAt: string;
+};
+
+export type AdminRecentBookRequest = {
+  candidateId: number;
+  title: string;
+  author: string;
+  publisher: string;
+  requestCount: number;
+  candidateStatus: string;
+  firstRequestedAt: string;
+};
+
+export type AdminDashboardResponse = {
+  statistics: AdminDashboardStatistics;
+  recentPayments: AdminRecentPayment[];
+  recentReports: AdminRecentReport[];
+  recentBookRequests: AdminRecentBookRequest[];
 };

@@ -1,3 +1,4 @@
+// 내 서재 화면(U014) — 대여/완독/리뷰 이용 현황을 보여주는 마이페이지 메인(현재는 자리표시 미리보기)이다.
 import { EmptyState } from '../../../components/common/EmptyState';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
 

@@ -1,3 +1,4 @@
+// 포인트/쿠폰(U017) 화면 — 보유 포인트·쿠폰 내역을 탭으로 나눠 필터링 및 정렬하여 조회한다
 import { useEffect, useMemo, useState } from 'react';
 import { getMyCoupons, getMyPoints } from '../../../api/pointsCouponsApi';
 import { getApiErrorMessage } from '../../../api/profileApi';

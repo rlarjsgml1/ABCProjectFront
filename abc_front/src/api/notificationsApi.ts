@@ -1,3 +1,4 @@
+// 알림 목록 조회/읽음 처리 API와 알림 유형별 라벨·이동 경로 매핑, fallback 목데이터
 import { apiClient } from './apiClient';
 import type {
   ApiResponse,

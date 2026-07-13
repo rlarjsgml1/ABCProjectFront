@@ -1,4 +1,5 @@
-﻿import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
+﻿// 도서 목록 화면(U006) — 목록 조회, 카테고리/정렬/유형 필터, 페이지네이션, 섹션별 더보기를 담당한다.
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { getBooks, getCategories, getRecommendedBooks, type BookListQuery } from '../../../api/bookApi';
 import { getApiErrorMessage } from '../../../api/profileApi';

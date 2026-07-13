@@ -1,3 +1,4 @@
+// 도서 목록 관리(A004) 화면 — 향후 구현 예정인 도서 목록 조회/관리 placeholder이다
 export function AdminBookListPage() {
   return (
     <section className="page-section">

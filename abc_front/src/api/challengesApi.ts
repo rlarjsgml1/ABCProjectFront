@@ -1,3 +1,4 @@
+// 내 챌린지 목록 조회 및 챌린지 보상 수령 API 클라이언트
 import { apiClient } from './apiClient';
 import type { ApiResponse, ChallengeListResponse, ChallengeRewardResult } from '../types/api';
 

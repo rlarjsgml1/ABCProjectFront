@@ -1,3 +1,4 @@
+// 내 도서 대여 내역 조회 API 클라이언트
 import { apiClient } from './apiClient';
 import type { ApiResponse, MyRentalsPage, MyRentalsQuery } from '../types/api';
 

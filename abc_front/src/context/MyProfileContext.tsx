@@ -1,3 +1,4 @@
+// 내 프로필 정보를 조회하고 하위 컴포넌트에 공유하는 Context/Provider
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { getApiErrorMessage, getMyProfile } from '../api/profileApi';
 import type { UserProfile } from '../types/api';

@@ -1,3 +1,4 @@
+// 내 대여 현황 화면(U010) — 대여 중/완료 목록 조회, 이어보기, 반납 예정일 표시를 담당한다.
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getMyRentals } from '../../../api/myRentalsApi';

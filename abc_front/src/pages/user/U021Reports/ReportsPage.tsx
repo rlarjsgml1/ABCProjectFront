@@ -1,3 +1,4 @@
+// 내 신고 내역(U021) 화면 — 내가 접수한 신고를 대상·처리 상태별로 조회하고 상세 내용을 확인한다
 import { useEffect, useState } from 'react';
 import { getMyReports } from '../../../api/reportsApi';
 import { getApiErrorMessage } from '../../../api/profileApi';

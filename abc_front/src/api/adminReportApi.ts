@@ -1,3 +1,4 @@
+// 관리자용 신고 목록 조회 및 신고 처리 상태 변경 API 클라이언트
 import { apiClient } from './apiClient';
 import type {
   AdminReportListQuery,

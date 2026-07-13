@@ -1,3 +1,4 @@
+// 도서 목록/추천/최신/베스트/카테고리/검색/상세 조회 API 클라이언트
 import { apiClient } from './apiClient';
 import type { ApiResponse, BookCard, Category, PageResponse } from '../types/api';
 import type { BookDetail } from '../types/book';
