@@ -84,6 +84,10 @@
   align-items: start;
 }
 
+.couponGrid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .panel,
 .sidePanel {
   display: grid;
@@ -253,6 +257,54 @@
   font-weight: 700;
 }
 
+.table th:nth-child(1),
+.table td:nth-child(1) {
+  width: 8%;
+}
+
+.table th:nth-child(2),
+.table td:nth-child(2) {
+  width: 24%;
+}
+
+.table th:nth-child(3),
+.table td:nth-child(3) {
+  width: 10%;
+}
+
+.table th:nth-child(4),
+.table td:nth-child(4),
+.table th:nth-child(5),
+.table td:nth-child(5),
+.table th:nth-child(6),
+.table td:nth-child(6) {
+  width: 8%;
+}
+
+.table th:nth-child(7),
+.table td:nth-child(7),
+.table th:nth-child(8),
+.table td:nth-child(8) {
+  width: 10%;
+}
+
+.table th:nth-child(9),
+.table td:nth-child(9) {
+  width: 14%;
+}
+
+.couponName {
+  display: -webkit-box;
+  overflow: hidden;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.dateCell {
+  white-space: nowrap;
+}
+
 .table tr:last-child td,
 .memberTable tr:last-child td {
   border-bottom: 0;
@@ -307,6 +359,7 @@
   cursor: pointer;
   font-size: 0.8rem;
   font-weight: 900;
+  white-space: nowrap;
 }
 
 .rowActions button:disabled {
@@ -332,6 +385,25 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-3);
+}
+
+.couponCreatePanel {
+  grid-template-columns: minmax(240px, 1.4fr) minmax(180px, 0.8fr) minmax(220px, 1fr) minmax(160px, 0.8fr) auto;
+  align-items: end;
+}
+
+.couponCreatePanel .tableHeader,
+.couponCreatePanel .modalError {
+  grid-column: 1 / -1;
+}
+
+.couponCreatePanel .formGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.couponCreatePanel :global(.button) {
+  min-width: 120px;
+  justify-content: center;
 }
 
 .modalError {
@@ -493,9 +565,20 @@
   }
 }
 
+@media (max-width: 1180px) {
+  .couponCreatePanel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .couponCreatePanel :global(.button) {
+    width: fit-content;
+  }
+}
+
 @media (max-width: 900px) {
   .filterPanel,
-  .memberFilterPanel {
+  .memberFilterPanel,
+  .couponCreatePanel {
     grid-template-columns: 1fr;
   }
 

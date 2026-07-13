@@ -172,6 +172,19 @@ function formatDate(value: string | undefined) {
   }).format(time);
 }
 
+function formatCompactDate(value: string | undefined) {
+  if (!value) return '-';
+
+  const time = new Date(value).getTime();
+  if (Number.isNaN(time)) return value;
+
+  return new Intl.DateTimeFormat('ko-KR', {
+    year: '2-digit',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(time);
+}
+
 function formatPoint(value: number) {
   return `${value.toLocaleString('ko-KR')}P`;
 }
@@ -623,7 +636,7 @@ export function AdminCouponsPointsPage() {
       {statusMessage ? <p className={styles.success}>{statusMessage}</p> : null}
 
       {activeTab === 'coupons' ? (
-        <div className={styles.contentGrid}>
+        <div className={`${styles.contentGrid} ${styles.couponGrid}`}>
           <section className={styles.panel} aria-label="쿠폰 조회 및 등록">
             <form className={styles.filterPanel} onSubmit={handleCouponSearch}>
               <label>
@@ -689,7 +702,11 @@ export function AdminCouponsPointsPage() {
                     coupons.map((coupon) => (
                       <tr key={coupon.couponId}>
                         <td>CP-{coupon.couponId}</td>
-                        <td>{coupon.couponName}</td>
+                        <td>
+                          <span className={styles.couponName} title={coupon.couponName}>
+                            {coupon.couponName}
+                          </span>
+                        </td>
                         <td>{getOptionLabel(couponTypeOptions, coupon.couponType)}</td>
                         <td>{formatBenefit(coupon)}</td>
                         <td>{coupon.validDays}일</td>
@@ -699,7 +716,7 @@ export function AdminCouponsPointsPage() {
                         <td>
                           {(coupon.issuedCount ?? 0).toLocaleString('ko-KR')} / {(coupon.usedCount ?? 0).toLocaleString('ko-KR')}
                         </td>
-                        <td>{formatDate(coupon.createdAt)}</td>
+                        <td className={styles.dateCell}>{formatCompactDate(coupon.createdAt)}</td>
                         <td>
                           <div className={styles.rowActions}>
                             <button type="button" onClick={() => openIssueModal(coupon)} disabled={coupon.status !== 'ACTIVE'}>
@@ -728,7 +745,7 @@ export function AdminCouponsPointsPage() {
             </div>
           </section>
 
-          <form className={styles.sidePanel} onSubmit={handleCouponCreate} aria-label="쿠폰 등록">
+          <form className={`${styles.sidePanel} ${styles.couponCreatePanel}`} onSubmit={handleCouponCreate} aria-label="쿠폰 등록">
             <div className={styles.tableHeader}>
               <div>
                 <h2>쿠폰 등록</h2>
