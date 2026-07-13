@@ -2,14 +2,34 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getBookDetail } from '../../../api/bookApi';
 import { createMyFavorite, deleteMyFavorite } from '../../../api/favoritesApi';
+import { getApiErrorMessage } from '../../../api/profileApi';
+import { createReview, deleteReview, getBookReviews, updateReview } from '../../../api/reviewApi';
 import { Modal } from '../../../components/common/Modal';
 import type { BookDetail } from '../../../types/book';
+import type { ReviewItem, ReviewSummary } from '../../../types/api';
 import styles from '../../../styles/BookDetailPage.module.css';
 
 type DetailTab = 'description' | 'recommendations' | 'reviews';
 type ModalType = 'login' | 'bookReport' | 'reviewReport' | null;
 
-function StarPicker({ value, onChange }: { value: number; onChange: (rating: number) => void }) {
+const REVIEW_PAGE_SIZE = 50;
+
+function formatReviewDate(value: string) {
+  const time = new Date(value).getTime();
+
+  if (Number.isNaN(time)) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).format(time);
+}
+
+function formatStars(score: number) {
+  const clamped = Math.min(5, Math.max(0, score));
+  return '★'.repeat(clamped) + '☆'.repeat(5 - clamped);
+}
+
+function StarPicker({ value, onChange, disabled = false }: { value: number; onChange: (rating: number) => void; disabled?: boolean }) {
   return (
     <div className={styles.starPicker} aria-label="별점 선택">
       {[1, 2, 3, 4, 5].map((rating) => (
@@ -17,6 +37,7 @@ function StarPicker({ value, onChange }: { value: number; onChange: (rating: num
           className={rating <= value ? styles.starActive : ''}
           type="button"
           key={rating}
+          disabled={disabled}
           onClick={() => onChange(rating)}
           aria-label={`${rating}점`}
         >
@@ -42,9 +63,32 @@ export function BookDetailPage() {
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewContent, setReviewContent] = useState('');
   const [reviewNotice, setReviewNotice] = useState('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [reportContent, setReportContent] = useState('');
   const [reportNotice, setReportNotice] = useState('');
+  const [reviewSummary, setReviewSummary] = useState<ReviewSummary | null>(null);
+  const [reviewItems, setReviewItems] = useState<ReviewItem[]>([]);
+  const [reviewListError, setReviewListError] = useState('');
+  const [openReviewMenuId, setOpenReviewMenuId] = useState<number | null>(null);
+
+  const currentMemberId = Number(localStorage.getItem('memberId')) || null;
+  const myReview = reviewItems.find((review) => review.memberId === currentMemberId) ?? null;
+
+  async function loadReviews() {
+    if (!bookId) return;
+
+    try {
+      // API-REVIEW-001에는 "내 리뷰만 조회"하는 별도 파라미터가 없어서, 목록에서 직접
+      // memberId로 내 리뷰를 찾는다. 리뷰가 매우 많은 도서는 내 리뷰가 이 페이지 밖에 있을 수 있다.
+      const data = await getBookReviews(Number(bookId), { page: 0, size: REVIEW_PAGE_SIZE, sort: 'latest' });
+      setReviewSummary(data.summary);
+      setReviewItems(data.reviews.content);
+      setReviewListError('');
+    } catch (error) {
+      setReviewListError(getApiErrorMessage(error));
+    }
+  }
 
   useEffect(() => {
     async function loadBookDetail() {
@@ -66,6 +110,11 @@ export function BookDetailPage() {
     }
 
     loadBookDetail();
+  }, [bookId]);
+
+  useEffect(() => {
+    void loadReviews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookId]);
 
   async function handleFavoriteClick() {
@@ -121,19 +170,51 @@ export function BookDetailPage() {
       return;
     }
 
-    setReviewRating(0);
-    setReviewContent('');
+    setOpenReviewMenuId(null);
+    setReviewRating(myReview?.ratingScore ?? 0);
+    setReviewContent(myReview?.content ?? '');
     setReviewNotice('');
     setIsReviewModalOpen(true);
   }
 
-  function handleSubmitReview() {
+  async function handleSubmitReview() {
     if (!reviewRating || !reviewContent.trim()) {
       setReviewNotice('별점과 리뷰 내용을 입력해 주세요.');
       return;
     }
 
-    setReviewNotice('리뷰 등록 API 연결 후 처리됩니다.');
+    if (!bookId) return;
+
+    setIsSubmittingReview(true);
+    setReviewNotice('');
+
+    try {
+      if (myReview) {
+        await updateReview(myReview.reviewId, { content: reviewContent.trim() });
+      } else {
+        await createReview({ bookId: Number(bookId), ratingScore: reviewRating, content: reviewContent.trim() });
+      }
+
+      setIsReviewModalOpen(false);
+      await loadReviews();
+    } catch (error) {
+      setReviewNotice(getApiErrorMessage(error));
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  }
+
+  async function handleDeleteReview() {
+    if (!myReview) return;
+
+    setOpenReviewMenuId(null);
+
+    try {
+      await deleteReview(myReview.reviewId);
+      await loadReviews();
+    } catch (error) {
+      setReviewListError(getApiErrorMessage(error));
+    }
   }
 
   function handleSubmitReport() {
@@ -331,23 +412,77 @@ export function BookDetailPage() {
         <div className={styles.reviewHeader}>
           <h2>리뷰</h2>
           <button className="button button-secondary" type="button" onClick={openReviewEditor}>
-            나의 리뷰 작성
+            {myReview ? '나의 리뷰 수정' : '나의 리뷰 작성'}
           </button>
         </div>
 
         <div className={styles.reviewSummary}>
-          <p className={styles.emptyState}>리뷰 목록 API 연결 후 평점 요약이 표시됩니다.</p>
+          {reviewSummary && reviewSummary.reviewCount > 0 ? (
+            <p>
+              <span className={styles.stars}>{formatStars(Math.round(reviewSummary.averageRating))}</span>{' '}
+              {reviewSummary.averageRating.toFixed(1)}점 · 리뷰 {reviewSummary.reviewCount}건
+            </p>
+          ) : (
+            <p className={styles.emptyState}>등록된 평점이 없습니다.</p>
+          )}
         </div>
 
         <div className={styles.reviewList}>
           <h3>이 책을 읽은 독자들의 한 줄 소감평</h3>
-          <p className={styles.emptyState}>등록된 리뷰가 없습니다.</p>
+          {reviewListError ? <p className={styles.emptyState}>{reviewListError}</p> : null}
+          {!reviewListError && reviewItems.length === 0 ? (
+            <p className={styles.emptyState}>등록된 리뷰가 없습니다.</p>
+          ) : null}
+          {reviewItems.length > 0 ? (
+            <div className={styles.reviewRows}>
+              {reviewItems.map((review) => (
+                <div className={styles.reviewRow} key={review.reviewId}>
+                  <div className={styles.reviewProfile} aria-hidden="true" />
+                  <div className={styles.reviewBody}>
+                    <strong>{review.memberName}</strong>
+                    <p>{review.content}</p>
+                  </div>
+                  <span className={styles.stars} aria-label={`별점 ${review.ratingScore}점`}>
+                    {formatStars(review.ratingScore)}
+                  </span>
+                  <span className={styles.reviewDate}>{formatReviewDate(review.createdAt)}</span>
+                  {review.memberId === currentMemberId ? (
+                    <div className={styles.reviewMenu}>
+                      <button
+                        type="button"
+                        aria-haspopup="menu"
+                        aria-expanded={openReviewMenuId === review.reviewId}
+                        onClick={() => setOpenReviewMenuId((current) => (current === review.reviewId ? null : review.reviewId))}
+                      >
+                        ⋯
+                      </button>
+                      {openReviewMenuId === review.reviewId ? (
+                        <div className={styles.reviewMenuPanel} role="menu">
+                          <button type="button" onClick={openReviewEditor}>
+                            수정
+                          </button>
+                          <button type="button" onClick={handleDeleteReview}>
+                            삭제
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : null}
         </div>
       </section>
 
-      <Modal isOpen={isReviewModalOpen} onClose={() => setIsReviewModalOpen(false)} title="나의 리뷰 작성">
+      <Modal
+        isOpen={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
+        title={myReview ? '나의 리뷰 수정' : '나의 리뷰 작성'}
+      >
         <p className={styles.modalMessage}>이 책은 어떠셨나요?</p>
-        <StarPicker value={reviewRating} onChange={setReviewRating} />
+        <StarPicker value={reviewRating} onChange={setReviewRating} disabled={Boolean(myReview)} />
+        {myReview ? <p className={styles.modalMessage}>별점은 최초 작성 이후 수정할 수 없습니다.</p> : null}
 
         <div className={styles.formFields}>
           <label>
@@ -362,8 +497,8 @@ export function BookDetailPage() {
         {reviewNotice && <p className={styles.modalMessage}>{reviewNotice}</p>}
 
         <div className={styles.modalActions}>
-          <button className="button button-primary" type="button" onClick={handleSubmitReview}>
-            리뷰 등록
+          <button className="button button-primary" type="button" onClick={handleSubmitReview} disabled={isSubmittingReview}>
+            {isSubmittingReview ? '처리 중...' : myReview ? '리뷰 수정' : '리뷰 등록'}
           </button>
         </div>
       </Modal>
