@@ -93,6 +93,7 @@
   --admin-sidebar-muted: #6b7094;
   --admin-sidebar-active-bg: #262c4d;
   --admin-sidebar-section-label: #565c82;
+  --admin-sidebar-danger: #f87171;
 }
 
 .admin-sidebar {
@@ -204,6 +205,10 @@
 
 .admin-sidebar-link.is-active .admin-sidebar-tag {
   color: var(--admin-sidebar-text);
+}
+
+.admin-sidebar-logout-label {
+  color: var(--admin-sidebar-danger);
 }
 
 .admin-main {

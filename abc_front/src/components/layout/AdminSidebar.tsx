@@ -101,7 +101,7 @@ export function AdminSidebar() {
 
         <div className="admin-sidebar-group">
           <button className="admin-sidebar-link admin-sidebar-logout" type="button" onClick={handleLogout}>
-            <span>로그아웃</span>
+            <span className="admin-sidebar-logout-label">로그아웃</span>
             <span className="admin-sidebar-tag">Exit</span>
           </button>
         </div>
