@@ -195,6 +195,54 @@ export type AdminMemberPointAdjustResponse = {
   createdAt: string;
 };
 
+export type AdminCouponType = 'PERCENT_DISCOUNT' | 'AMOUNT_DISCOUNT';
+
+export type AdminCouponBenefitUnit = 'PERCENT' | 'AMOUNT';
+
+export type AdminCouponStatus = 'ACTIVE' | 'INACTIVE';
+
+export type AdminCouponListQuery = {
+  status?: AdminCouponStatus;
+  couponType?: AdminCouponType;
+  page?: number;
+  size?: number;
+};
+
+export type AdminCouponSummary = {
+  couponId: number;
+  couponName: string;
+  couponType: AdminCouponType;
+  benefitValue: number;
+  benefitUnit: AdminCouponBenefitUnit;
+  validDays: number;
+  status: AdminCouponStatus;
+  issuedCount?: number;
+  usedCount?: number;
+  createdAt?: string;
+};
+
+export type AdminCouponCreateRequest = {
+  couponName: string;
+  couponType: AdminCouponType;
+  benefitValue: number;
+  benefitUnit: AdminCouponBenefitUnit;
+  validDays: number;
+  status: AdminCouponStatus;
+};
+
+export type AdminCouponCreateResponse = {
+  couponId: number;
+};
+
+export type AdminCouponIssueRequest = {
+  memberIds: number[];
+  quantity: number;
+};
+
+export type AdminCouponIssueResponse = {
+  issuedCount: number;
+};
+
 
 export type PointHistoryQuery = {
   pointType?: string;
