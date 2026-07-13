@@ -1,3 +1,4 @@
+// 검색 결과 화면(U007) — 키워드 검색 결과 조회, 필터/정렬, 결과 없을 때 희망 도서 신청을 담당한다.
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getBooks, getCategories, searchBooks, type BookSearchQuery } from '../../../api/bookApi';

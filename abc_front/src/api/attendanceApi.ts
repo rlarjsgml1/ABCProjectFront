@@ -1,3 +1,4 @@
+// 출석 체크인 및 월별 출석 현황 조회 API와 응답을 화면용 데이터로 가공하는 로직
 import { apiClient } from './apiClient';
 import type {
   ApiResponse,

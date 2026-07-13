@@ -1,3 +1,4 @@
+// 즐겨찾기 화면(U012) — 찜한 도서 목록 조회, 정렬, 즐겨찾기 해제를 담당한다.
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { deleteMyFavorite, getMyFavorites } from '../../../api/favoritesApi';

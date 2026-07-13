@@ -1,3 +1,4 @@
+// 관리자용 회원 목록/상세 조회, 회원 상태 변경, 포인트 조정 API 클라이언트
 import { apiClient } from './apiClient';
 import type {
   AdminMemberDetail,

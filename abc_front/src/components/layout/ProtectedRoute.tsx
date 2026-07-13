@@ -1,3 +1,4 @@
+// 로그인 및 관리자 권한 여부를 확인해 접근을 제어하는 라우트 가드
 import type { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 

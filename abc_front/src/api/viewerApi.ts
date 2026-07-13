@@ -1,3 +1,4 @@
+// 전자책 뷰어 페이지 조회, 독서 진행률 저장, 북마크 조회/추가/삭제 API 클라이언트
 import { apiClient } from './apiClient';
 import type {
   ApiResponse,

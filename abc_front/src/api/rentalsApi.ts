@@ -1,3 +1,4 @@
+// 무료/유료 도서 대여 생성 API 클라이언트
 import { apiClient } from './apiClient';
 import type { ApiResponse, RentalPaymentRequest, RentalPaymentResult } from '../types/api';
 

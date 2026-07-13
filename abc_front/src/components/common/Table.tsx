@@ -1,3 +1,4 @@
+// 제네릭 공통 테이블 컴포넌트 — 컬럼 정의 기반으로 렌더링하며 로딩/빈 상태를 처리
 import type { ReactNode } from 'react';
 import styles from './Table.module.css';
 

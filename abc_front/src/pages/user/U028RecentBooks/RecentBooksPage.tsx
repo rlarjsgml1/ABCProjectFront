@@ -1,3 +1,4 @@
+// 최근 읽은 책(U028) 화면 — 최근 읽은 도서 목록과 읽기 진행률을 보여주고 이어보기로 뷰어 진입을 돕는다
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getRecentBooks } from '../../../api/recentBooksApi';

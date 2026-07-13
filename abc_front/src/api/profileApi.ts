@@ -1,3 +1,4 @@
+// 내 프로필 조회/수정, 비밀번호 변경, 회원 탈퇴 API와 공통 에러 메시지 추출 유틸
 import { isAxiosError } from 'axios';
 import { apiClient } from './apiClient';
 import type {

@@ -1,3 +1,4 @@
+// 회원 상세(A003) 화면 — 회원 상세 정보와 이용 이력을 조회하고 상태 변경/포인트 지급·차감을 담당한다
 import { FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { adjustAdminMemberPoint, changeAdminMemberStatus, getAdminMember } from '../../../api/adminMemberApi';

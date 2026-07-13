@@ -1,3 +1,4 @@
+// 공통 버튼 컴포넌트 — variant(primary/secondary/danger)에 따라 스타일이 달라지는 버튼
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {

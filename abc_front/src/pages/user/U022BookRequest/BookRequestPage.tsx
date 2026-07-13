@@ -1,3 +1,4 @@
+// 희망도서 신청(U022) 화면 — 도서 정보와 신청 사유를 입력받아 희망도서 신청을 등록한다
 import { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createBookRequest } from '../../../api/bookRequestsApi';

@@ -1,3 +1,4 @@
+// 신고 관리(A010) 화면 — 도서/리뷰 신고 목록 조회와 처리 상태 변경(완료/반려/제재 등록)을 담당한다
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { getAdminReports, updateAdminReportStatus } from '../../../api/adminReportApi';

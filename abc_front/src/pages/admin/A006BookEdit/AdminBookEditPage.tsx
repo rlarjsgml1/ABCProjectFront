@@ -1,3 +1,4 @@
+// 도서 수정(A006) 화면 — 향후 구현 예정인 기존 도서 정보 수정 placeholder이다
 export function AdminBookEditPage() {
   return (
     <section className="page-section">

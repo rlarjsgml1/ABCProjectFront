@@ -1,3 +1,4 @@
+// 공지사항 상세(U029) 화면 — 선택한 공지사항의 본문과 이전/다음 글 이동을 제공한다
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getFallbackNoticeDetail, getNoticeDetail } from '../../../api/noticeApi';
