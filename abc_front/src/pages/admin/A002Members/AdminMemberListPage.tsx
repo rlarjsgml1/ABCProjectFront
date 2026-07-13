@@ -12,7 +12,7 @@ import type {
   AdminSanctionType,
   PageResponse,
 } from '../../../types/api';
-import styles from './AdminMemberListPage.module.css';
+import styles from '../../../styles/AdminMemberListPage.module.css';
 
 const PAGE_SIZE = 10;
 

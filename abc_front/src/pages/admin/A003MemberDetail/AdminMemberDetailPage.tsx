@@ -15,7 +15,7 @@ import type {
   AdminMemberStatusChangeRequest,
   AdminSanctionType,
 } from '../../../types/api';
-import styles from './AdminMemberDetailPage.module.css';
+import styles from '../../../styles/AdminMemberDetailPage.module.css';
 
 type HistoryTab = 'rentals' | 'payments' | 'reviews' | 'reports' | 'points' | 'sanctions';
 

@@ -12,7 +12,7 @@ import type {
   ReportStatus,
   ReportTargetType,
 } from '../../../types/api';
-import styles from './AdminReportListPage.module.css';
+import styles from '../../../styles/AdminReportListPage.module.css';
 
 const PAGE_SIZE = 10;
 
