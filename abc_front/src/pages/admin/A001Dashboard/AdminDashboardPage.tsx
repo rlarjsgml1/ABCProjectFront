@@ -113,7 +113,7 @@ function buildCombinedRecent(dashboard: AdminDashboardResponse): CombinedRecentI
     content: item.title,
     status: candidateStatusLabels[item.candidateStatus] ?? item.candidateStatus,
     sortAt: new Date(item.firstRequestedAt).getTime(),
-    linkLabel: 'A-011',
+    linkLabel: '보기',
     linkTo: '/admin/book-requests',
   }));
 
@@ -123,7 +123,7 @@ function buildCombinedRecent(dashboard: AdminDashboardResponse): CombinedRecentI
     content: `${item.memberName} · ${item.amount.toLocaleString('ko-KR')}원`,
     status: item.paymentStatus,
     sortAt: new Date(item.paidAt).getTime(),
-    linkLabel: 'A-009',
+    linkLabel: '보기',
     linkTo: '/admin/payments',
   }));
 
@@ -192,11 +192,11 @@ export function AdminDashboardPage() {
         <div className="admin-dashboard-header-top">
           <span className="admin-dashboard-eyebrow">Admin</span>
           <Link className="button button-primary" to="/admin/statistics">
-            전체 통계 → A-016
+            전체 통계
           </Link>
         </div>
         <h1>관리자 대시보드</h1>
-        <p>운영 KPI와 최근 처리 대상을 한 화면에서 확인합니다.</p>
+
         {errorMessage ? <div className="status-banner status-banner-error">{errorMessage}</div> : null}
       </section>
 
@@ -228,16 +228,16 @@ export function AdminDashboardPage() {
           <p className="admin-dashboard-panel-hint">도서 등록, 컬렉션 등록, 공지 등록, 쿠폰 발급</p>
           <div className="admin-dashboard-quick-actions">
             <Link className="button button-primary" to="/admin/books/new">
-              도서 등록 → A-005
+              도서 등록
             </Link>
             <Link className="button button-secondary" to="/admin/collections">
-              컬렉션 등록 → A-018
+              컬렉션 등록
             </Link>
             <Link className="button button-secondary" to="/admin/notices">
-              공지 등록 → A-012
+              공지 등록
             </Link>
             <Link className="button button-secondary" to="/admin/coupons-points">
-              쿠폰 발급 → A-013
+              쿠폰 발급
             </Link>
           </div>
         </section>
