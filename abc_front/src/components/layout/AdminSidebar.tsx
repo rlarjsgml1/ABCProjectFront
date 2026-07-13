@@ -1,3 +1,4 @@
+// 관리자 사이드바 — 메뉴 그룹별 내비게이션 링크와 로그아웃 기능을 제공
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { AUTH_CHANGED_EVENT } from '../../api/authApi';
 
@@ -100,7 +101,7 @@ export function AdminSidebar() {
         ))}
 
         <div className="admin-sidebar-group">
-          <button className="admin-sidebar-link admin-sidebar-logout" type="button" onClick={handleLogout}>
+          <button className="admin-sidebar-link" type="button" onClick={handleLogout}>
             <span className="admin-sidebar-logout-label">로그아웃</span>
             <span className="admin-sidebar-tag">Exit</span>
           </button>

@@ -1,3 +1,4 @@
+// 백엔드 API 요청/응답 관련 공통 타입 정의 모음 (회원, 도서, 대여, 결제, 알림 등)
 export type ApiResponse<T> = {
   success: boolean;
   code: string;
@@ -808,4 +809,56 @@ export type ReviewUpdateRequest = {
 export type ReviewDeleteResult = {
   reviewId: number;
   status: ReviewStatus;
+};
+
+// API-ADMIN-DASHBOARD-001 (A-001 관리자 대시보드). AdminDashboardResponse.java 기준.
+export type AdminDashboardStatistics = {
+  totalMemberCount: number;
+  sanctionedMemberCount: number;
+  activeBookCount: number;
+  totalRentalCount: number;
+  freeRentalCount: number;
+  paidRentalCount: number;
+  totalReadBookCount: number;
+  totalPaymentAmount: number;
+  reviewCount: number;
+  reportCount: number;
+  carbonSavedKg: number;
+  treeSavedCount: number;
+};
+
+export type AdminRecentPayment = {
+  paymentId: number;
+  memberName: string;
+  amount: number;
+  paymentStatus: string;
+  paidAt: string;
+};
+
+export type AdminRecentReport = {
+  reportId: number;
+  targetType: 'BOOK' | 'REVIEW';
+  targetId: number;
+  targetTitle: string;
+  reportType: string;
+  reportStatus: string;
+  reporterName: string;
+  createdAt: string;
+};
+
+export type AdminRecentBookRequest = {
+  candidateId: number;
+  title: string;
+  author: string;
+  publisher: string;
+  requestCount: number;
+  candidateStatus: string;
+  firstRequestedAt: string;
+};
+
+export type AdminDashboardResponse = {
+  statistics: AdminDashboardStatistics;
+  recentPayments: AdminRecentPayment[];
+  recentReports: AdminRecentReport[];
+  recentBookRequests: AdminRecentBookRequest[];
 };
