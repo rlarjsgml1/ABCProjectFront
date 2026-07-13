@@ -467,14 +467,13 @@ a.admin-dashboard-kpi-card:focus-visible {
 
 .admin-dashboard-quick-actions {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr;
   gap: var(--space-3);
 }
 
 .admin-dashboard-quick-actions .button {
   width: 100%;
   text-align: center;
-  white-space: nowrap;
 }
 
 .admin-dashboard-table {
