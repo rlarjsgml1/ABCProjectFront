@@ -16,6 +16,11 @@ function formatDateTime(value: string | undefined) {
   return new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(time);
 }
 
+function truncate(value: string | undefined, maxLength: number) {
+  if (!value) return '-';
+  return value.length > maxLength ? `${value.slice(0, maxLength)}…` : value;
+}
+
 const fallbackLogs: AdminAuditLogItem[] = [
   {
     auditLogId: 9931,
@@ -225,6 +230,7 @@ export function AdminAuditLogPage() {
                 <th>관리자</th>
                 <th>작업 유형</th>
                 <th>대상</th>
+                <th>변경 전/후</th>
                 <th>기록일</th>
                 <th>관리</th>
               </tr>
@@ -232,7 +238,7 @@ export function AdminAuditLogPage() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={6}>감사 로그를 불러오는 중입니다.</td>
+                  <td colSpan={7}>감사 로그를 불러오는 중입니다.</td>
                 </tr>
               ) : logs.length > 0 ? (
                 logs.map((log) => (
@@ -243,6 +249,9 @@ export function AdminAuditLogPage() {
                       <span className={`${styles.pill} ${styles.pillPrimary}`}>{log.actionType}</span>
                     </td>
                     <td>{log.targetLabel ?? `${log.targetType} #${log.targetId}`}</td>
+                    <td>
+                      {truncate(log.beforeValue, 12)} → {truncate(log.afterValue, 12)}
+                    </td>
                     <td>{formatDateTime(log.createdAt)}</td>
                     <td>
                       <div className={styles.rowActions}>
@@ -255,7 +264,7 @@ export function AdminAuditLogPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6}>감사 로그가 없습니다.</td>
+                  <td colSpan={7}>감사 로그가 없습니다.</td>
                 </tr>
               )}
             </tbody>

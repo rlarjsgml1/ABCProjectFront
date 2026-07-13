@@ -239,6 +239,16 @@
   font-weight: 600;
 }
 
+.cellLink {
+  color: #1d4ed8;
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.cellLink:hover {
+  text-decoration: underline;
+}
+
 .pill {
   display: inline-flex;
   justify-content: center;
