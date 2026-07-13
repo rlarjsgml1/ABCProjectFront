@@ -13,10 +13,20 @@
   position: relative;
   overflow: hidden;
   margin: var(--space-6) auto 0;
-  width: min(calc(100% - (var(--home-page-gutter) * 2)), 1280px);
+  width: calc(100% - (var(--home-page-gutter) * 2));
   min-height: 330px;
   border-radius: var(--radius-lg);
-  background: #d7d7d7;
+  border: 1px solid rgba(0, 61, 45, 0.1);
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+  user-select: none;
+}
+
+.home-hero-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .home-hero-track {
@@ -28,39 +38,51 @@
 .home-hero-slide {
   flex: 0 0 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1.25fr) 240px;
   align-items: center;
-  gap: clamp(var(--space-8), 8vw, 120px);
+  gap: clamp(var(--space-6), 5vw, 76px);
   padding: clamp(var(--space-8), 7vw, 88px);
-  color: #ffffff;
-  background: #948f8f;
+  color: var(--color-text);
+  background:
+    radial-gradient(circle at 78% 28%, rgba(244, 162, 13, 0.22), transparent 25%),
+    linear-gradient(135deg, #ffffff 0%, #f3fbf7 52%, #eef6ff 100%);
 }
 
 .home-hero-copy {
   display: grid;
   gap: var(--space-3);
-  max-width: 520px;
+  max-width: 680px;
+  min-width: 0;
 }
 
 .home-hero-copy span {
   width: fit-content;
-  border: 1px solid rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(0, 61, 45, 0.28);
   border-radius: 999px;
   padding: 4px 12px;
+  color: var(--home-green);
   font-size: 0.88rem;
   font-weight: 800;
+  background: rgba(255, 255, 255, 0.78);
 }
 
 .home-hero-copy h1 {
+  overflow-wrap: keep-all;
   margin: 0;
-  font-size: clamp(1.7rem, 3vw, 2.55rem);
-  line-height: 1.18;
+  color: var(--home-green);
+  font-size: clamp(1.65rem, 2.4vw, 2.35rem);
+  line-height: 1.22;
+  word-break: keep-all;
 }
 
 .home-hero-copy p {
+  overflow-wrap: keep-all;
   margin: 0;
+  color: var(--color-muted);
   font-size: 1rem;
   font-weight: 700;
+  line-height: 1.55;
+  word-break: keep-all;
 }
 
 .home-hero-book {
@@ -104,13 +126,13 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(0, 61, 45, 0.28);
   cursor: pointer;
   transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .home-hero-dot.is-active {
-  background: #ffffff;
+  background: var(--home-green);
   transform: scale(1.3);
 }
 
