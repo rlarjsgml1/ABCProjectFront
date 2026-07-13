@@ -196,6 +196,7 @@ export function HomePage() {
   return (
     <div className="home-page">
       <section className="home-hero" aria-label="광고 이벤트 배너">
+        <Link className="home-hero-link" to="/events">
         <div className="home-hero-track" style={{ transform: `translateX(-${activeBannerIndex * 100}%)` }}>
           {bannerItems.map((banner) => (
             <article className="home-hero-slide" key={banner.title}>
@@ -213,6 +214,7 @@ export function HomePage() {
             </article>
           ))}
         </div>
+        </Link>
 
         <div className="home-hero-dots" role="tablist" aria-label="배너 슬라이드 이동">
           {bannerItems.map((banner, index) => (
