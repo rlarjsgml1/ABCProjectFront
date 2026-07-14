@@ -95,7 +95,20 @@ export async function getCategories() {
     throw new Error('Invalid categories response');
   }
 
-  return data;
+  const categories = data.map(normalizeCategory);
+  if (categories.length === 1 && categories[0].parentCategoryId == null && categories[0].children?.length) {
+    return categories[0].children;
+  }
+
+  return categories;
+}
+
+function normalizeCategory(category: Category): Category {
+  return {
+    ...category,
+    name: category.name ?? category.categoryName ?? '',
+    children: category.children?.map(normalizeCategory) ?? [],
+  };
 }
 
 export async function searchBooks(page = 0, size = 20, query: BookSearchQuery) {

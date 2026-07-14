@@ -473,7 +473,11 @@ export type LibrarySummaryItem = {
 
 export type Category = {
   categoryId: number;
+  parentCategoryId?: number | null;
   name: string;
+  categoryName?: string;
+  displayOrder?: number;
+  children?: Category[];
 };
 
 export type FavoriteSort = 'recent' | 'title';
