@@ -1,6 +1,7 @@
 // 도서 상세 화면(U008) — 도서 정보 조회, 찜하기, 리뷰 작성/수정/삭제, 신고 모달을 담당한다.
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { AUTH_CHANGED_EVENT } from '../../../api/authApi';
 import { getBookDetail } from '../../../api/bookApi';
 import { createMyFavorite, deleteMyFavorite } from '../../../api/favoritesApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
@@ -52,7 +53,8 @@ function StarPicker({ value, onChange, disabled = false }: { value: number; onCh
 export function BookDetailPage() {
   const { bookId } = useParams();
   const navigate = useNavigate();
-  const isSignedIn = Boolean(localStorage.getItem('accessToken'));
+  const [isSignedIn, setIsSignedIn] = useState(() => Boolean(localStorage.getItem('accessToken')));
+  const [currentMemberId, setCurrentMemberId] = useState(() => Number(localStorage.getItem('memberId')) || null);
   const [book, setBook] = useState<BookDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -73,8 +75,21 @@ export function BookDetailPage() {
   const [reviewListError, setReviewListError] = useState('');
   const [openReviewMenuId, setOpenReviewMenuId] = useState<number | null>(null);
 
-  const currentMemberId = Number(localStorage.getItem('memberId')) || null;
   const myReview = reviewItems.find((review) => review.memberId === currentMemberId) ?? null;
+
+  useEffect(() => {
+    function syncAuthState() {
+      setIsSignedIn(Boolean(localStorage.getItem('accessToken')));
+      setCurrentMemberId(Number(localStorage.getItem('memberId')) || null);
+    }
+
+    window.addEventListener(AUTH_CHANGED_EVENT, syncAuthState);
+    window.addEventListener('storage', syncAuthState);
+    return () => {
+      window.removeEventListener(AUTH_CHANGED_EVENT, syncAuthState);
+      window.removeEventListener('storage', syncAuthState);
+    };
+  }, []);
 
   async function loadReviews() {
     if (!bookId) return;

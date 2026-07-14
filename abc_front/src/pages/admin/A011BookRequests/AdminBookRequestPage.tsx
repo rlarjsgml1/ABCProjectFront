@@ -3,13 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { getAdminBookRequestCandidates, updateAdminBookRequestCandidateStatus } from '../../../api/adminBookRequestApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
-import type {
-  AdminBookRequestCandidate,
-  AdminBookRequestCandidatePage,
-  AdminBookRequestCandidateQuery,
-  AdminBookRequestStatusUpdateRequest,
-  BookRequestStatus,
-} from '../../../types/api';
+import type { AdminBookRequestCandidate, AdminBookRequestCandidatePage, AdminBookRequestCandidateQuery, AdminBookRequestStatusUpdateRequest, BookRequestStatus } from '../../../types/api';
 import styles from '../../../styles/AdminBookRequestPage.module.css';
 
 const PAGE_SIZE = 10;
@@ -101,10 +95,7 @@ function buildFallbackPage(query: AdminBookRequestCandidateQuery): AdminBookRequ
   const filtered = fallbackCandidates.filter((candidate) => {
     const matchesStatus = query.status ? candidate.status === query.status : true;
     const matchesKeyword = keyword
-      ? [candidate.title, candidate.author, candidate.publisher, ...candidate.applicants.flatMap((applicant) => [applicant.name, applicant.loginId])]
-          .join(' ')
-          .toLowerCase()
-          .includes(keyword)
+      ? [candidate.title, candidate.author, candidate.publisher, ...candidate.applicants.flatMap((applicant) => [applicant.name, applicant.loginId])].join(' ').toLowerCase().includes(keyword)
       : true;
 
     return matchesStatus && matchesKeyword;
@@ -131,6 +122,7 @@ export function AdminBookRequestPage() {
   const [statusMessage, setStatusMessage] = useState('');
   const [selectedCandidate, setSelectedCandidate] = useState<AdminBookRequestCandidate | null>(null);
   const [reviewCandidate, setReviewCandidate] = useState<AdminBookRequestCandidate | null>(null);
+  const [openActionMenuId, setOpenActionMenuId] = useState<number | null>(null);
   const [reviewForm, setReviewForm] = useState<ReviewForm>({ status: 'IN_REVIEW', approvedBookId: '', rejectReason: '' });
   const [modalError, setModalError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -194,6 +186,7 @@ export function AdminBookRequestPage() {
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setOpenActionMenuId(null);
 
     const formData = new FormData(event.currentTarget);
     updateQuery({
@@ -204,6 +197,7 @@ export function AdminBookRequestPage() {
   }
 
   function handleReset() {
+    setOpenActionMenuId(null);
     setSearchParams({});
   }
 
@@ -239,6 +233,7 @@ export function AdminBookRequestPage() {
   }
 
   function openReviewModal(candidate: AdminBookRequestCandidate, status: BookRequestStatus) {
+    setOpenActionMenuId(null);
     setReviewCandidate(candidate);
     setReviewForm({
       status,
@@ -250,6 +245,7 @@ export function AdminBookRequestPage() {
 
   function closeReviewModal() {
     if (isSaving) return;
+    setOpenActionMenuId(null);
     setReviewCandidate(null);
     setModalError('');
   }
@@ -356,7 +352,9 @@ export function AdminBookRequestPage() {
                   <th>반려사유</th>
                   <th>승인도서 번호</th>
                   <th>신청일</th>
-                  <th>액션</th>
+                  <th className={styles.actionColumnHeader}>
+                    <span className={styles.visuallyHidden}>액션</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -368,6 +366,7 @@ export function AdminBookRequestPage() {
                   candidates.map((candidate) => {
                     const applicant = getRepresentativeApplicant(candidate);
                     const isClosed = candidate.status === 'APPROVED' || candidate.status === 'REJECTED';
+                    const isActionMenuOpen = openActionMenuId === candidate.candidateId;
 
                     return (
                       <tr key={candidate.candidateId} className={selectedCandidate?.candidateId === candidate.candidateId ? styles.selectedRow : ''}>
@@ -375,7 +374,7 @@ export function AdminBookRequestPage() {
                         <td>
                           <button type="button" className={styles.linkButton} onClick={() => setSelectedCandidate(candidate)}>
                             <strong>{applicant?.name ?? '-'}</strong>
-                            <span>{candidate.requestCount > 1 ? `외 ${candidate.requestCount - 1}명` : applicant?.loginId ?? '-'}</span>
+                            <span>{candidate.requestCount > 1 ? `외 ${candidate.requestCount - 1}명` : (applicant?.loginId ?? '-')}</span>
                           </button>
                         </td>
                         <td>{candidate.title}</td>
@@ -388,21 +387,44 @@ export function AdminBookRequestPage() {
                         <td>{candidate.rejectReason ?? '-'}</td>
                         <td>{candidate.approvedBookId ? `B-${candidate.approvedBookId}` : '-'}</td>
                         <td>{formatDate(candidate.firstRequestedAt)}</td>
-                        <td>
+                        <td className={styles.actionColumnCell}>
                           <div className={styles.rowActions}>
-                            <button type="button" onClick={() => setSelectedCandidate(candidate)}>
-                              상세
+                            <button
+                              type="button"
+                              className={styles.actionMenuButton}
+                              aria-label={`BR-${candidate.candidateId} 액션 메뉴`}
+                              aria-haspopup="menu"
+                              aria-expanded={isActionMenuOpen}
+                              onClick={() => setOpenActionMenuId((current) => (current === candidate.candidateId ? null : candidate.candidateId))}
+                            >
+                              ⋯
                             </button>
-                            <button type="button" onClick={() => openReviewModal(candidate, 'IN_REVIEW')} disabled={isClosed}>
-                              검토 시작
-                            </button>
-                            <Link to={`/admin/books/new?candidateId=${candidate.candidateId}`}>도서 등록</Link>
-                            <button type="button" onClick={() => openReviewModal(candidate, 'APPROVED')} disabled={isClosed}>
-                              승인
-                            </button>
-                            <button type="button" className={styles.rejectButton} onClick={() => openReviewModal(candidate, 'REJECTED')} disabled={isClosed}>
-                              반려
-                            </button>
+                            {isActionMenuOpen ? (
+                              <div className={styles.actionMenu} role="menu">
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  onClick={() => {
+                                    setSelectedCandidate(candidate);
+                                    setOpenActionMenuId(null);
+                                  }}
+                                >
+                                  상세
+                                </button>
+                                <button type="button" role="menuitem" onClick={() => openReviewModal(candidate, 'IN_REVIEW')} disabled={isClosed}>
+                                  검토 시작
+                                </button>
+                                <Link role="menuitem" to={`/admin/books/new?candidateId=${candidate.candidateId}`} onClick={() => setOpenActionMenuId(null)}>
+                                  도서 등록
+                                </Link>
+                                <button type="button" role="menuitem" onClick={() => openReviewModal(candidate, 'APPROVED')} disabled={isClosed}>
+                                  승인
+                                </button>
+                                <button type="button" role="menuitem" className={styles.rejectMenuItem} onClick={() => openReviewModal(candidate, 'REJECTED')} disabled={isClosed}>
+                                  반려
+                                </button>
+                              </div>
+                            ) : null}
                           </div>
                         </td>
                       </tr>
@@ -451,7 +473,12 @@ export function AdminBookRequestPage() {
                 </div>
                 <div>
                   <dt>신청 사유</dt>
-                  <dd>{selectedCandidate.applicants.map((applicant) => applicant.reason).filter(Boolean).join(' / ') || '-'}</dd>
+                  <dd>
+                    {selectedCandidate.applicants
+                      .map((applicant) => applicant.reason)
+                      .filter(Boolean)
+                      .join(' / ') || '-'}
+                  </dd>
                 </div>
                 <div>
                   <dt>최초 신청일</dt>
@@ -498,14 +525,25 @@ export function AdminBookRequestPage() {
             {reviewForm.status === 'APPROVED' ? (
               <label>
                 승인도서 번호
-                <input type="number" min="1" value={reviewForm.approvedBookId} placeholder="도서 등록 후 생성된 번호" onChange={(event) => setReviewForm((current) => ({ ...current, approvedBookId: event.target.value }))} />
+                <input
+                  type="number"
+                  min="1"
+                  value={reviewForm.approvedBookId}
+                  placeholder="도서 등록 후 생성된 번호"
+                  onChange={(event) => setReviewForm((current) => ({ ...current, approvedBookId: event.target.value }))}
+                />
               </label>
             ) : null}
 
             {reviewForm.status === 'REJECTED' ? (
               <label>
                 반려사유
-                <textarea rows={5} value={reviewForm.rejectReason} placeholder="사용자에게 안내할 반려 사유를 입력하세요." onChange={(event) => setReviewForm((current) => ({ ...current, rejectReason: event.target.value }))} />
+                <textarea
+                  rows={5}
+                  value={reviewForm.rejectReason}
+                  placeholder="사용자에게 안내할 반려 사유를 입력하세요."
+                  onChange={(event) => setReviewForm((current) => ({ ...current, rejectReason: event.target.value }))}
+                />
               </label>
             ) : null}
 

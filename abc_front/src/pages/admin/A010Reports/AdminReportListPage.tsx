@@ -4,15 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { getAdminReports, updateAdminReportStatus } from '../../../api/adminReportApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
-import type {
-  AdminReportItem,
-  AdminReportListQuery,
-  AdminReportPage,
-  AdminReportStatusUpdateRequest,
-  AdminSanctionType,
-  ReportStatus,
-  ReportTargetType,
-} from '../../../types/api';
+import type { AdminReportItem, AdminReportListQuery, AdminReportPage, AdminReportStatusUpdateRequest, AdminSanctionType, ReportStatus, ReportTargetType } from '../../../types/api';
 import styles from '../../../styles/AdminReportListPage.module.css';
 
 const PAGE_SIZE = 10;
@@ -114,7 +106,7 @@ function formatDateTime(value: string | undefined) {
 
 function getTargetTitle(report: AdminReportItem) {
   if (report.targetType === 'REVIEW') {
-    return report.targetInfo.bookTitle ? `${report.targetInfo.bookTitle} · 리뷰` : report.targetInfo.title ?? `리뷰 ${report.targetInfo.targetId}`;
+    return report.targetInfo.bookTitle ? `${report.targetInfo.bookTitle} · 리뷰` : (report.targetInfo.title ?? `리뷰 ${report.targetInfo.targetId}`);
   }
 
   return report.targetInfo.title ?? `도서 ${report.targetInfo.targetId}`;
@@ -125,9 +117,7 @@ function buildFallbackReportPage(query: AdminReportListQuery): AdminReportPage {
   const filtered = fallbackReports.filter((report) => {
     const matchesTargetType = query.targetType ? report.targetType === query.targetType : true;
     const matchesStatus = query.status ? report.status === query.status : true;
-    const matchesKeyword = keyword
-      ? [getTargetTitle(report), report.reporter.name, report.reporter.loginId, report.reportType, report.content].join(' ').toLowerCase().includes(keyword)
-      : true;
+    const matchesKeyword = keyword ? [getTargetTitle(report), report.reporter.name, report.reporter.loginId, report.reportType, report.content].join(' ').toLowerCase().includes(keyword) : true;
 
     return matchesTargetType && matchesStatus && matchesKeyword;
   });
@@ -154,6 +144,7 @@ export function AdminReportListPage() {
   const [statusMessage, setStatusMessage] = useState('');
   const [selectedReport, setSelectedReport] = useState<AdminReportItem | null>(null);
   const [processReport, setProcessReport] = useState<AdminReportItem | null>(null);
+  const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
   const [modalError, setModalError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [processForm, setProcessForm] = useState<ProcessForm>({
@@ -227,6 +218,7 @@ export function AdminReportListPage() {
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setOpenActionMenuId(null);
 
     const formData = new FormData(event.currentTarget);
     updateQuery({
@@ -238,10 +230,12 @@ export function AdminReportListPage() {
   }
 
   function handleReset() {
+    setOpenActionMenuId(null);
     setSearchParams({});
   }
 
   function openProcessModal(report: AdminReportItem, nextStatus: ReportStatus = report.status === 'WAITING' ? 'PROCESSING' : report.status) {
+    setOpenActionMenuId(null);
     setProcessReport(report);
     setProcessForm({
       status: nextStatus,
@@ -258,6 +252,7 @@ export function AdminReportListPage() {
 
   function closeProcessModal() {
     if (isSaving) return;
+    setOpenActionMenuId(null);
     setProcessReport(null);
     setModalError('');
   }
@@ -413,7 +408,9 @@ export function AdminReportListPage() {
                   <th>상태</th>
                   <th>접수일</th>
                   <th>담당자</th>
-                  <th>액션</th>
+                  <th className={styles.actionColumnHeader}>
+                    <span className={styles.visuallyHidden}>액션</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -422,46 +419,73 @@ export function AdminReportListPage() {
                     <td colSpan={9}>신고 목록을 불러오는 중입니다.</td>
                   </tr>
                 ) : reports.length > 0 ? (
-                  reports.map((report) => (
-                    <tr key={`${report.targetType}-${report.reportId}`} className={selectedReport?.reportId === report.reportId && selectedReport.targetType === report.targetType ? styles.selectedRow : ''}>
-                      <td>RP-{report.reportId}</td>
-                      <td>
-                        <Link className={styles.memberLink} to={`/admin/members/${report.reporter.memberId}`}>
-                          <strong>{report.reporter.loginId}</strong>
-                          <span>{report.reporter.name}</span>
-                        </Link>
-                      </td>
-                      <td>{getOptionLabel(targetTypeOptions, report.targetType)}</td>
-                      <td>{getTargetTitle(report)}</td>
-                      <td>{report.reportType}</td>
-                      <td>
-                        <span className={`${styles.statusBadge} ${styles[`status${report.status}`]}`}>{getOptionLabel(statusOptions, report.status)}</span>
-                      </td>
-                      <td>{formatDateTime(report.createdAt)}</td>
-                      <td>{report.managerName ?? '-'}</td>
-                      <td>
-                        <div className={styles.rowActions}>
-                          <button type="button" onClick={() => setSelectedReport(report)}>
-                            상세보기
-                          </button>
-                          <button type="button" onClick={() => openProcessModal(report, 'PROCESSING')} disabled={report.status === 'DONE' || report.status === 'REJECTED'}>
-                            처리 중
-                          </button>
-                          <button type="button" onClick={() => openProcessModal(report, 'DONE')} disabled={report.status === 'DONE' || report.status === 'REJECTED'}>
-                            완료
-                          </button>
-                          <button type="button" className={styles.rejectButton} onClick={() => openProcessModal(report, 'REJECTED')} disabled={report.status === 'DONE' || report.status === 'REJECTED'}>
-                            반려
-                          </button>
-                          {report.targetType === 'REVIEW' ? (
-                            <button type="button" onClick={() => openProcessModal(report, 'DONE')} disabled={report.status === 'DONE' || report.status === 'REJECTED'}>
-                              리뷰 숨김
+                  reports.map((report) => {
+                    const reportKey = `${report.targetType}-${report.reportId}`;
+                    const isActionLocked = report.status === 'DONE' || report.status === 'REJECTED';
+                    const isActionMenuOpen = openActionMenuId === reportKey;
+
+                    return (
+                      <tr key={reportKey} className={selectedReport?.reportId === report.reportId && selectedReport.targetType === report.targetType ? styles.selectedRow : ''}>
+                        <td>RP-{report.reportId}</td>
+                        <td>
+                          <Link className={styles.memberLink} to={`/admin/members/${report.reporter.memberId}`}>
+                            <strong>{report.reporter.loginId}</strong>
+                            <span>{report.reporter.name}</span>
+                          </Link>
+                        </td>
+                        <td className={styles.actionColumnCell}>{getOptionLabel(targetTypeOptions, report.targetType)}</td>
+                        <td>{getTargetTitle(report)}</td>
+                        <td>{report.reportType}</td>
+                        <td>
+                          <span className={`${styles.statusBadge} ${styles[`status${report.status}`]}`}>{getOptionLabel(statusOptions, report.status)}</span>
+                        </td>
+                        <td>{formatDateTime(report.createdAt)}</td>
+                        <td>{report.managerName ?? '-'}</td>
+                        <td>
+                          <div className={styles.rowActions}>
+                            <button
+                              type="button"
+                              className={styles.actionMenuButton}
+                              aria-label={`RP-${report.reportId} 액션 메뉴`}
+                              aria-haspopup="menu"
+                              aria-expanded={isActionMenuOpen}
+                              onClick={() => setOpenActionMenuId((current) => (current === reportKey ? null : reportKey))}
+                            >
+                              ⋯
                             </button>
-                          ) : null}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                            {isActionMenuOpen ? (
+                              <div className={styles.actionMenu} role="menu">
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  onClick={() => {
+                                    setSelectedReport(report);
+                                    setOpenActionMenuId(null);
+                                  }}
+                                >
+                                  상세보기
+                                </button>
+                                <button type="button" role="menuitem" onClick={() => openProcessModal(report, 'PROCESSING')} disabled={isActionLocked}>
+                                  처리 중
+                                </button>
+                                <button type="button" role="menuitem" onClick={() => openProcessModal(report, 'DONE')} disabled={isActionLocked}>
+                                  완료
+                                </button>
+                                <button type="button" role="menuitem" className={styles.rejectMenuItem} onClick={() => openProcessModal(report, 'REJECTED')} disabled={isActionLocked}>
+                                  반려
+                                </button>
+                                {report.targetType === 'REVIEW' ? (
+                                  <button type="button" role="menuitem" onClick={() => openProcessModal(report, 'DONE')} disabled={isActionLocked}>
+                                    리뷰 숨김
+                                  </button>
+                                ) : null}
+                              </div>
+                            ) : null}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td colSpan={9}>신고 내역이 없습니다.</td>
@@ -545,7 +569,15 @@ export function AdminReportListPage() {
 
             <label>
               처리 상태
-              <select value={processForm.status} onChange={(event) => setProcessForm((current) => ({ ...current, status: event.target.value as ReportStatus }))}>
+              <select
+                value={processForm.status}
+                onChange={(event) =>
+                  setProcessForm((current) => ({
+                    ...current,
+                    status: event.target.value as ReportStatus,
+                  }))
+                }
+              >
                 {statusOptions.map((option) => (
                   <option value={option.value} key={option.value}>
                     {option.label}
@@ -556,18 +588,46 @@ export function AdminReportListPage() {
 
             <label>
               후속메모
-              <textarea rows={6} value={processForm.processResult} placeholder="처리 결과 또는 반려 사유를 입력하세요." onChange={(event) => setProcessForm((current) => ({ ...current, processResult: event.target.value }))} />
+              <textarea
+                rows={6}
+                value={processForm.processResult}
+                placeholder="처리 결과 또는 반려 사유를 입력하세요."
+                onChange={(event) =>
+                  setProcessForm((current) => ({
+                    ...current,
+                    processResult: event.target.value,
+                  }))
+                }
+              />
             </label>
 
             {processReport.targetType === 'REVIEW' ? (
               <label className={styles.checkLabel}>
-                <input type="checkbox" checked={processForm.hideReviewYn} onChange={(event) => setProcessForm((current) => ({ ...current, hideReviewYn: event.target.checked }))} />
+                <input
+                  type="checkbox"
+                  checked={processForm.hideReviewYn}
+                  onChange={(event) =>
+                    setProcessForm((current) => ({
+                      ...current,
+                      hideReviewYn: event.target.checked,
+                    }))
+                  }
+                />
                 리뷰 숨김 처리
               </label>
             ) : null}
 
             <label className={styles.checkLabel}>
-              <input type="checkbox" checked={processForm.useSanction} onChange={(event) => setProcessForm((current) => ({ ...current, useSanction: event.target.checked }))} />
+              <input
+                type="checkbox"
+                checked={processForm.useSanction}
+                onChange={(event) =>
+                  setProcessForm((current) => ({
+                    ...current,
+                    useSanction: event.target.checked,
+                  }))
+                }
+              />
               회원 제재 함께 등록
             </label>
 
@@ -575,7 +635,15 @@ export function AdminReportListPage() {
               <div className={styles.sanctionFields}>
                 <label>
                   제재 유형
-                  <select value={processForm.sanctionType} onChange={(event) => setProcessForm((current) => ({ ...current, sanctionType: event.target.value as AdminSanctionType }))}>
+                  <select
+                    value={processForm.sanctionType}
+                    onChange={(event) =>
+                      setProcessForm((current) => ({
+                        ...current,
+                        sanctionType: event.target.value as AdminSanctionType,
+                      }))
+                    }
+                  >
                     {sanctionTypeOptions.map((option) => (
                       <option value={option.value} key={option.value}>
                         {option.label}
@@ -585,15 +653,43 @@ export function AdminReportListPage() {
                 </label>
                 <label>
                   시작일
-                  <input type="date" value={processForm.startedAt} onChange={(event) => setProcessForm((current) => ({ ...current, startedAt: event.target.value }))} />
+                  <input
+                    type="date"
+                    value={processForm.startedAt}
+                    onChange={(event) =>
+                      setProcessForm((current) => ({
+                        ...current,
+                        startedAt: event.target.value,
+                      }))
+                    }
+                  />
                 </label>
                 <label>
                   종료일
-                  <input type="date" value={processForm.endedAt} onChange={(event) => setProcessForm((current) => ({ ...current, endedAt: event.target.value }))} />
+                  <input
+                    type="date"
+                    value={processForm.endedAt}
+                    onChange={(event) =>
+                      setProcessForm((current) => ({
+                        ...current,
+                        endedAt: event.target.value,
+                      }))
+                    }
+                  />
                 </label>
                 <label className={styles.fullField}>
                   제재 사유
-                  <textarea rows={3} value={processForm.sanctionReason} placeholder="제재 사유를 입력하세요." onChange={(event) => setProcessForm((current) => ({ ...current, sanctionReason: event.target.value }))} />
+                  <textarea
+                    rows={3}
+                    value={processForm.sanctionReason}
+                    placeholder="제재 사유를 입력하세요."
+                    onChange={(event) =>
+                      setProcessForm((current) => ({
+                        ...current,
+                        sanctionReason: event.target.value,
+                      }))
+                    }
+                  />
                 </label>
               </div>
             ) : null}
