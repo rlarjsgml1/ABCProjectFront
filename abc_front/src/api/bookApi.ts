@@ -133,6 +133,10 @@ export async function getBookDetail(bookId: number) {
   }
 
   const categoryName = data.categoryName ?? data.categories?.[0]?.categoryName ?? data.categories?.[0]?.name;
+  const rentalType = data.rentalType ?? data.rentalInfo?.rentalType;
+  const rentalPrice = data.rentalPrice ?? data.rentalInfo?.rentalPrice;
+  const defaultRentalDays = data.defaultRentalDays ?? data.rentalInfo?.defaultRentalDays;
+  const pageCount = data.pageCount ?? data.totalPages;
 
   return {
     ...data,
@@ -140,11 +144,14 @@ export async function getBookDetail(bookId: number) {
     publisher: data.publisher ?? data.publisherName,
     publishedAt: data.publishedAt ?? data.pubDate,
     categoryName,
-    rentalType: data.rentalType ?? data.rentalInfo?.rentalType,
-    rentalPrice: data.rentalPrice ?? data.rentalInfo?.rentalPrice,
-    defaultRentalDays: data.defaultRentalDays ?? data.rentalInfo?.defaultRentalDays,
-    rentalPeriodDays: data.rentalPeriodDays ?? data.rentalInfo?.defaultRentalDays,
-    pageCount: data.pageCount ?? data.totalPages,
+    rentalType,
+    rentalPrice,
+    defaultRentalDays,
+    rentalPeriodDays: data.rentalPeriodDays ?? defaultRentalDays,
+    pageCount,
+    fileFormat: data.fileFormat ?? (typeof pageCount === 'number' ? '전자책' : undefined),
+    supportedDevice: data.supportedDevice ?? '웹 뷰어 지원 기기',
+    language: data.language ?? '한국어',
     status: data.status ?? 'AVAILABLE',
   };
 }

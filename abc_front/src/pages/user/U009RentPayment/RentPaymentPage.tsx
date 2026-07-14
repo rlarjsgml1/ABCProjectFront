@@ -28,6 +28,19 @@ function formatWon(value: number | undefined) {
   return `${value.toLocaleString('ko-KR')}원`;
 }
 
+function formatDate(value: string | undefined) {
+  if (!value) {
+    return '-';
+  }
+
+  const time = new Date(value).getTime();
+  if (Number.isNaN(time)) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).format(time);
+}
+
 function isUsableCoupon(coupon: CouponHistoryItem) {
   if (coupon.couponStatus !== 'ISSUED') {
     return false;
@@ -139,9 +152,10 @@ export function RentPaymentPage() {
     };
   }, [bookId]);
 
-  const rentalPrice = book?.rentalPrice ?? book?.price;
-  const rentalDays = book?.rentalPeriodDays ?? book?.defaultRentalDays;
-  const isFreeBook = book?.rentalType === 'FREE';
+  const rentalPrice = book?.rentalPrice ?? book?.rentalInfo?.rentalPrice ?? book?.price;
+  const rentalDays = book?.rentalPeriodDays ?? book?.defaultRentalDays ?? book?.rentalInfo?.defaultRentalDays;
+  const rentalType = book?.rentalType ?? book?.rentalInfo?.rentalType;
+  const isFreeBook = rentalType === 'FREE';
   const hasPaymentAmount = isFreeBook || typeof rentalPrice === 'number';
   const canRentBook = Boolean(book && isRentableStatus(book.status) && hasPaymentAmount);
   const pointBalance = pointsPage?.pointBalance;
@@ -304,7 +318,7 @@ export function RentPaymentPage() {
           <div className={styles.bookInfo}>
             <h2 id="rent-book-title">{book?.title ?? (isLoading ? '도서 정보를 불러오는 중입니다.' : '도서 정보가 없습니다.')}</h2>
             <p className={styles.bookMeta}>
-              {book?.author ?? '-'} | {book?.publisher ?? '-'} | -
+              {book?.author ?? '-'} | {book?.publisher ?? '-'} | {book?.categoryName ?? '-'}
             </p>
             <dl className={styles.infoList}>
               <div>
@@ -317,7 +331,7 @@ export function RentPaymentPage() {
               </div>
               <div>
                 <dt>출간일</dt>
-                <dd>{book?.publishedAt ?? '-'}</dd>
+                <dd>{formatDate(book?.publishedAt)}</dd>
               </div>
               <div>
                 <dt>카테고리</dt>

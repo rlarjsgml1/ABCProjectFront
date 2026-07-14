@@ -31,6 +31,39 @@ function formatStars(score: number) {
   return '★'.repeat(clamped) + '☆'.repeat(5 - clamped);
 }
 
+function formatWon(value: number | undefined) {
+  if (typeof value !== 'number') {
+    return '-';
+  }
+
+  return `${value.toLocaleString('ko-KR')}원`;
+}
+
+function formatPageCount(value: number | undefined) {
+  if (typeof value !== 'number') {
+    return '-';
+  }
+
+  return `${value.toLocaleString('ko-KR')}쪽`;
+}
+
+function formatBookDate(value: string | undefined) {
+  if (!value) {
+    return '-';
+  }
+
+  const time = new Date(value).getTime();
+  if (Number.isNaN(time)) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).format(time);
+}
+
+function formatKeywords(keywords: string[] | undefined) {
+  return keywords && keywords.length > 0 ? keywords.join(', ') : '-';
+}
+
 function StarPicker({ value, onChange, disabled = false }: { value: number; onChange: (rating: number) => void; disabled?: boolean }) {
   return (
     <div className={styles.starPicker} aria-label="별점 선택">
@@ -319,15 +352,15 @@ export function BookDetailPage() {
             </div>
             <div>
               <dt>ISBN</dt>
-              <dd>-</dd>
+              <dd>{book?.isbn ?? '-'}</dd>
             </div>
             <div>
               <dt>장르</dt>
-              <dd>-</dd>
+              <dd>{book?.categoryName ?? '-'}</dd>
             </div>
             <div>
               <dt>페이지 수</dt>
-              <dd>-</dd>
+              <dd>{formatPageCount(book?.pageCount)}</dd>
             </div>
             <div>
               <dt>유료 / 무료</dt>
@@ -336,12 +369,16 @@ export function BookDetailPage() {
               </dd>
             </div>
             <div>
+              <dt>대여 금액</dt>
+              <dd>{book?.rentalType === 'FREE' ? '0원' : formatWon(book?.rentalPrice)}</dd>
+            </div>
+            <div>
               <dt>대여 가능일</dt>
-              <dd>-</dd>
+              <dd>{book ? '결제 완료 즉시' : '-'}</dd>
             </div>
             <div>
               <dt>반납 예정일</dt>
-              <dd>-</dd>
+              <dd>{typeof book?.rentalPeriodDays === 'number' ? `대여 시작일로부터 ${book.rentalPeriodDays}일 후` : '-'}</dd>
             </div>
           </dl>
 
@@ -351,7 +388,7 @@ export function BookDetailPage() {
           </div>
 
           <div className={styles.tags} aria-label="키워드">
-            <span>키워드 없음</span>
+            {book?.keywords && book.keywords.length > 0 ? book.keywords.map((keyword) => <span key={keyword}>{keyword}</span>) : <span>키워드 없음</span>}
           </div>
         </div>
 
@@ -402,7 +439,7 @@ export function BookDetailPage() {
         <dl className={styles.spec}>
           <div>
             <dt>ISBN</dt>
-            <dd>-</dd>
+            <dd>{book?.isbn ?? '-'}</dd>
           </div>
           <div>
             <dt>출판사</dt>
@@ -410,27 +447,27 @@ export function BookDetailPage() {
           </div>
           <div>
             <dt>발행일</dt>
-            <dd>-</dd>
+            <dd>{formatBookDate(book?.publishedAt)}</dd>
           </div>
           <div>
             <dt>파일 형식</dt>
-            <dd>-</dd>
+            <dd>{book?.fileFormat ?? '-'}</dd>
           </div>
           <div>
             <dt>지원 기기</dt>
-            <dd>-</dd>
+            <dd>{book?.supportedDevice ?? '-'}</dd>
           </div>
           <div>
             <dt>언어</dt>
-            <dd>-</dd>
+            <dd>{book?.language ?? '-'}</dd>
           </div>
           <div>
             <dt>카테고리</dt>
-            <dd>-</dd>
+            <dd>{book?.categoryName ?? '-'}</dd>
           </div>
           <div>
             <dt>키워드</dt>
-            <dd>-</dd>
+            <dd>{formatKeywords(book?.keywords)}</dd>
           </div>
         </dl>
       </section>
