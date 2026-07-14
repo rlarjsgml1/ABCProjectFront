@@ -32,7 +32,6 @@ type CouponForm = {
 };
 
 type IssueForm = {
-  memberIds: string;
   quantity: string;
 };
 
@@ -239,13 +238,6 @@ function buildFallbackMemberPage(query: AdminMemberListQuery): PageResponse<Admi
   };
 }
 
-function parseMemberIds(value: string) {
-  return value
-    .split(',')
-    .map((item) => Number(item.trim()))
-    .filter((item) => Number.isInteger(item) && item > 0);
-}
-
 export function AdminCouponsPointsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabKey>('coupons');
@@ -261,7 +253,10 @@ export function AdminCouponsPointsPage() {
     validDays: '14',
     status: 'ACTIVE',
   });
-  const [issueForm, setIssueForm] = useState<IssueForm>({ memberIds: '', quantity: '1' });
+  const [issueForm, setIssueForm] = useState<IssueForm>({ quantity: '1' });
+  const [issueMemberQuery, setIssueMemberQuery] = useState('');
+  const [issueMemberResults, setIssueMemberResults] = useState<AdminMemberSummary[]>([]);
+  const [selectedIssueMembers, setSelectedIssueMembers] = useState<AdminMemberSummary[]>([]);
   const [pointForm, setPointForm] = useState<PointForm>({ pointAmount: '', description: '' });
   const [isCouponLoading, setIsCouponLoading] = useState(true);
   const [isMemberLoading, setIsMemberLoading] = useState(false);
@@ -482,15 +477,30 @@ export function AdminCouponsPointsPage() {
     }
   }
 
+  async function searchIssueMembers() {
+    try {
+      const data = await getAdminMembers({ q: issueMemberQuery.trim(), page: 0, size: 10 });
+      setIssueMemberResults(data.content);
+    } catch {
+      setIssueMemberResults(buildFallbackMemberPage({ q: issueMemberQuery.trim(), page: 0, size: 10 }).content);
+    }
+  }
+
+  function toggleIssueMember(member: AdminMemberSummary) {
+    setSelectedIssueMembers((current) =>
+      current.some((item) => item.memberId === member.memberId) ? current.filter((item) => item.memberId !== member.memberId) : [...current, member],
+    );
+  }
+
   async function handleCouponIssue(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!issueCoupon) return;
 
-    const memberIds = parseMemberIds(issueForm.memberIds);
+    const memberIds = selectedIssueMembers.map((member) => member.memberId);
     const quantity = Number(issueForm.quantity);
 
     if (memberIds.length === 0) {
-      setFormError('발급할 회원번호를 1명 이상 입력해 주세요.');
+      setFormError('발급할 회원을 검색해서 1명 이상 선택해 주세요.');
       return;
     }
 
@@ -511,7 +521,10 @@ export function AdminCouponsPointsPage() {
       setStatusMessage('임시 데이터에 쿠폰 발급 수량을 반영했습니다.');
     } finally {
       setIssueCoupon(null);
-      setIssueForm({ memberIds: '', quantity: '1' });
+      setIssueForm({ quantity: '1' });
+      setIssueMemberQuery('');
+      setIssueMemberResults([]);
+      setSelectedIssueMembers([]);
       setIsSaving(false);
     }
   }
@@ -597,7 +610,10 @@ export function AdminCouponsPointsPage() {
 
   function openIssueModal(coupon: AdminCouponSummary) {
     setIssueCoupon(coupon);
-    setIssueForm({ memberIds: selectedMember ? String(selectedMember.memberId) : '', quantity: '1' });
+    setIssueForm({ quantity: '1' });
+    setIssueMemberQuery('');
+    setIssueMemberResults([]);
+    setSelectedIssueMembers(selectedMember ? [selectedMember] : []);
     setFormError('');
   }
 
@@ -605,6 +621,9 @@ export function AdminCouponsPointsPage() {
     if (isSaving) return;
     setIssueCoupon(null);
     setFormError('');
+    setIssueMemberQuery('');
+    setIssueMemberResults([]);
+    setSelectedIssueMembers([]);
   }
 
   const coupons = couponsPage?.content ?? [];
@@ -932,9 +951,43 @@ export function AdminCouponsPointsPage() {
             </div>
             {formError ? <p className={styles.modalError}>{formError}</p> : null}
             <label>
-              회원번호
-              <input value={issueForm.memberIds} onChange={(event) => setIssueForm((current) => ({ ...current, memberIds: event.target.value }))} placeholder="예: 1024, 991" />
+              회원 검색 (아이디 · 이름 · 이메일)
+              <div className={styles.issueSearchRow}>
+                <input value={issueMemberQuery} onChange={(event) => setIssueMemberQuery(event.target.value)} placeholder="예: park_reader" />
+                <Button type="button" variant="secondary" onClick={() => void searchIssueMembers()}>
+                  검색
+                </Button>
+              </div>
             </label>
+            {issueMemberResults.length > 0 ? (
+              <div className={styles.issueResults}>
+                {issueMemberResults.map((member) => (
+                  <button
+                    type="button"
+                    key={member.memberId}
+                    className={`${styles.issueResultItem} ${selectedIssueMembers.some((item) => item.memberId === member.memberId) ? styles.issueResultItemSelected : ''}`}
+                    onClick={() => toggleIssueMember(member)}
+                  >
+                    <span>
+                      {member.loginId} ({member.name})
+                    </span>
+                    <span>{formatPoint(member.pointBalance)}</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            {selectedIssueMembers.length > 0 ? (
+              <div className={styles.selectedChips}>
+                {selectedIssueMembers.map((member) => (
+                  <span className={styles.chip} key={member.memberId}>
+                    {member.loginId}
+                    <button type="button" aria-label={`${member.loginId} 선택 해제`} onClick={() => toggleIssueMember(member)}>
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : null}
             <label>
               발급 수량
               <input type="number" min="1" value={issueForm.quantity} onChange={(event) => setIssueForm((current) => ({ ...current, quantity: event.target.value }))} />
