@@ -4,15 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { changeAdminMemberStatus, getAdminMembers } from '../../../api/adminMemberApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
-import type {
-  AdminMemberListQuery,
-  AdminMemberRole,
-  AdminMemberStatus,
-  AdminMemberStatusChangeRequest,
-  AdminMemberSummary,
-  AdminSanctionType,
-  PageResponse,
-} from '../../../types/api';
+import type { AdminMemberListQuery, AdminMemberRole, AdminMemberStatus, AdminMemberStatusChangeRequest, AdminMemberSummary, AdminSanctionType, PageResponse } from '../../../types/api';
 import styles from '../../../styles/AdminMemberListPage.module.css';
 
 const PAGE_SIZE = 10;
@@ -156,6 +148,7 @@ export function AdminMemberListPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const [selectedMember, setSelectedMember] = useState<AdminMemberSummary | null>(null);
+  const [openActionMenuId, setOpenActionMenuId] = useState<number | null>(null);
   const [statusForm, setStatusForm] = useState<AdminMemberStatusChangeRequest>({
     status: 'JOINED',
     reason: '',
@@ -225,6 +218,7 @@ export function AdminMemberListPage() {
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setOpenActionMenuId(null);
 
     const formData = new FormData(event.currentTarget);
     updateQuery({
@@ -237,10 +231,12 @@ export function AdminMemberListPage() {
   }
 
   function handleReset() {
+    setOpenActionMenuId(null);
     setSearchParams({});
   }
 
   function openStatusModal(member: AdminMemberSummary) {
+    setOpenActionMenuId(null);
     setSelectedMember(member);
     setStatusForm({
       status: member.status,
@@ -254,6 +250,7 @@ export function AdminMemberListPage() {
 
   function closeStatusModal() {
     if (isSavingStatus) return;
+    setOpenActionMenuId(null);
     setSelectedMember(null);
     setModalError('');
   }
@@ -430,7 +427,9 @@ export function AdminMemberListPage() {
                 <th>포인트</th>
                 <th>상태</th>
                 <th>현재 유효 제재</th>
-                <th>관리</th>
+                <th className={styles.actionColumnHeader}>
+                  <span className={styles.visuallyHidden}>관리</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -439,36 +438,54 @@ export function AdminMemberListPage() {
                   <td colSpan={8}>회원 목록을 불러오는 중입니다.</td>
                 </tr>
               ) : members.length > 0 ? (
-                members.map((member) => (
-                  <tr key={member.memberId}>
-                    <td>M-{member.memberId}</td>
-                    <td>
-                      <Link className={styles.memberLink} to={`/admin/members/${member.memberId}`}>
-                        <strong>{member.loginId}</strong>
-                        <span>{member.name}</span>
-                      </Link>
-                    </td>
-                    <td>{member.email}</td>
-                    <td>
-                      {getOptionLabel(roleOptions, member.role)} / {member.gradeName ?? '-'}
-                    </td>
-                    <td>{formatPoint(member.pointBalance)}</td>
-                    <td>
-                      <span className={`${styles.statusBadge} ${styles[`status${member.status}`]}`}>
-                        {getOptionLabel(statusOptions, member.status)}
-                      </span>
-                    </td>
-                    <td>{getSanctionText(member)}</td>
-                    <td>
-                      <div className={styles.rowActions}>
-                        <Link to={`/admin/members/${member.memberId}`}>상세</Link>
-                        <button type="button" onClick={() => openStatusModal(member)}>
-                          상태 변경
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                members.map((member) => {
+                  const isActionMenuOpen = openActionMenuId === member.memberId;
+
+                  return (
+                    <tr key={member.memberId}>
+                      <td>M-{member.memberId}</td>
+                      <td>
+                        <Link className={styles.memberLink} to={`/admin/members/${member.memberId}`}>
+                          <strong>{member.loginId}</strong>
+                          <span>{member.name}</span>
+                        </Link>
+                      </td>
+                      <td>{member.email}</td>
+                      <td>
+                        {getOptionLabel(roleOptions, member.role)} / {member.gradeName ?? '-'}
+                      </td>
+                      <td>{formatPoint(member.pointBalance)}</td>
+                      <td>
+                        <span className={`${styles.statusBadge} ${styles[`status${member.status}`]}`}>{getOptionLabel(statusOptions, member.status)}</span>
+                      </td>
+                      <td>{getSanctionText(member)}</td>
+                      <td className={styles.actionColumnCell}>
+                        <div className={styles.rowActions}>
+                          <button
+                            type="button"
+                            className={styles.actionMenuButton}
+                            aria-label={`M-${member.memberId} 관리 메뉴`}
+                            aria-haspopup="menu"
+                            aria-expanded={isActionMenuOpen}
+                            onClick={() => setOpenActionMenuId((current) => (current === member.memberId ? null : member.memberId))}
+                          >
+                            ⋯
+                          </button>
+                          {isActionMenuOpen ? (
+                            <div className={styles.actionMenu} role="menu">
+                              <Link role="menuitem" to={`/admin/members/${member.memberId}`} onClick={() => setOpenActionMenuId(null)}>
+                                상세
+                              </Link>
+                              <button type="button" role="menuitem" onClick={() => openStatusModal(member)}>
+                                상태 변경
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan={8}>검색 조건에 맞는 회원이 없습니다.</td>
@@ -514,7 +531,7 @@ export function AdminMemberListPage() {
                   setStatusForm((current) => ({
                     ...current,
                     status: event.target.value as AdminMemberStatus,
-                    sanctionType: event.target.value === 'SANCTIONED' ? current.sanctionType ?? 'ACCOUNT_SUSPENSION' : undefined,
+                    sanctionType: event.target.value === 'SANCTIONED' ? (current.sanctionType ?? 'ACCOUNT_SUSPENSION') : undefined,
                   }))
                 }
               >
