@@ -281,7 +281,7 @@ U-014 마이페이지
 | U-001/U-019 | GET | `/api/v1/notices` | 공지 목록 (백엔드 미구현, `NoticeController` 없음) |
 | U-019 | GET | `/api/v1/me/notifications` | 알림 목록 (백엔드 미구현) |
 | U-019 | PATCH | `/api/v1/me/notifications/{notificationId}/read` | 알림 읽음 처리 (백엔드 미구현) |
-| U-026 | GET | `/api/v1/me/statistics` | 독서 통계 |
+| U-026 | GET | `/api/v1/me/statistics` | 조회 시점 실시간 독서 통계. `readPageCount`는 기간 내 순수 페이지가 아니라 `last_read_at` 기준 누적 페이지 합산 근사치 |
 | U-027 | GET | `/api/v1/challenges` | 챌린지 목록 |
 | U-027 | POST | `/api/v1/challenges/{challengeId}/reward` | 챌린지 보상 |
 | U-022 | POST | `/api/v1/book-requests` | 희망도서 신청 (백엔드 미구현, `BookRequestController` 없음) |
@@ -316,7 +316,7 @@ U-014 마이페이지
 | U-023 | 회원별 신청 상태와 후보 신청자 수 표시. `IN_REVIEW`는 후보 상태 표시용. |
 | U-024 | 지도 또는 주소 목록. 실물 대여/예약 버튼 없음. |
 | U-025 | 추천 도서 목록. 도서 카드 클릭 시 U-008. |
-| U-026 | 독서 통계. 탄소/나무 계산값은 API 결과 기준 표시. |
+| U-026 | 독서 통계. 탄소/나무 계산값은 API 결과 기준 표시. `favoriteCount`는 기간별 값이 아니라 현재 즐겨찾기 수, `readingTrend`는 완독 수 추이임에 유의. |
 | U-027 | `DAILY`, `TOTAL` 챌린지만 표시. |
 | U-028 | 최근 읽은 책에서 이어보기 제공. |
 
