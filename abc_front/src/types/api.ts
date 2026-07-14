@@ -445,6 +445,32 @@ export type BookCard = {
   favoriteYn: boolean;
 };
 
+// API-BOOK-006 (U-025 추천 도서). 필드명은 BookRecommendationResponse.java 기준.
+export type BookRecommendationType = 'AUTHOR' | 'CATEGORY' | 'KEYWORD';
+
+export type BookRecommendationQuery = {
+  baseBookId?: number;
+  type?: BookRecommendationType;
+  limit?: number;
+};
+
+export type BookRecommendationResponse = {
+  recommendationType: string;
+  books: BookCard[];
+};
+
+// API-LIBRARY-001 (U-024 책 보유 도서관 위치). 필드명은 LibrarySummaryResponse.java 기준.
+export type LibrarySummaryItem = {
+  bookId: number;
+  title: string;
+  coverImageUrl?: string;
+  libraryName: string;
+  address: string;
+  latitude?: number;
+  longitude?: number;
+  holdingStatus: string;
+};
+
 export type Category = {
   categoryId: number;
   name: string;
