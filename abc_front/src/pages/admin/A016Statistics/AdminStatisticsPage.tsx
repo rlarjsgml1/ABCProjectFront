@@ -6,7 +6,7 @@ import type { TooltipContentProps } from 'recharts';
 import { getAdminStatistics } from '../../../api/adminStatisticApi';
 import { getFallbackAdminDashboard } from '../../../api/adminDashboardApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
-import type { AdminStatisticsAgeBand, AdminStatisticsData } from '../../../types/api';
+import type { AdminDashboardStatistics, AdminStatisticsAgeBand, AdminStatisticsData } from '../../../types/api';
 import listStyles from '../../../styles/AdminOpsListPage.module.css';
 import styles from '../../../styles/AdminStatisticsPage.module.css';
 
@@ -33,6 +33,32 @@ function estimateSeries(seed: number): ChartPoint[] {
 
 function formatNumber(value: number) {
   return value.toLocaleString('ko-KR');
+}
+
+// 실제 backend가 KPI 필드를 statistics로 감싸지 않고 최상위에 바로 내려주거나 일부 필드를 생략하는 경우까지 방어적으로 처리한다.
+function resolveStatistics(result: AdminStatisticsData | null | undefined): AdminDashboardStatistics | null {
+  if (!result) return null;
+
+  const raw = result.statistics && typeof result.statistics.totalMemberCount === 'number' ? result.statistics : (result as unknown as AdminDashboardStatistics);
+
+  if (typeof raw?.totalMemberCount !== 'number') return null;
+
+  const num = (value: unknown) => (typeof value === 'number' && Number.isFinite(value) ? value : 0);
+
+  return {
+    totalMemberCount: num(raw.totalMemberCount),
+    sanctionedMemberCount: num(raw.sanctionedMemberCount),
+    activeBookCount: num(raw.activeBookCount),
+    totalRentalCount: num(raw.totalRentalCount),
+    freeRentalCount: num(raw.freeRentalCount),
+    paidRentalCount: num(raw.paidRentalCount),
+    totalReadBookCount: num(raw.totalReadBookCount),
+    totalPaymentAmount: num(raw.totalPaymentAmount),
+    reviewCount: num(raw.reviewCount),
+    reportCount: num(raw.reportCount),
+    carbonSavedKg: num(raw.carbonSavedKg),
+    treeSavedCount: num(raw.treeSavedCount),
+  };
 }
 
 // Y축 눈금은 자리수가 큰 결제 금액도 겹치지 않도록 만 단위로 축약한다.
@@ -96,7 +122,17 @@ export function AdminStatisticsPage() {
 
       try {
         const result = await getAdminStatistics({ periodType: 'TOTAL', ageBand });
-        if (!ignore) setData(result);
+        const statistics = resolveStatistics(result);
+
+        if (!ignore) {
+          if (statistics) {
+            setData({ periodType: 'TOTAL', ageBand, statistics, trendPoints: result?.trendPoints ?? [] });
+          } else {
+            const fallback = getFallbackAdminDashboard();
+            setData({ periodType: 'TOTAL', ageBand, statistics: fallback.statistics, trendPoints: [] });
+            setErrorMessage('통계 API 응답 형식이 예상과 달라 화면 확인을 위해 임시 통계를 표시합니다.');
+          }
+        }
       } catch (error) {
         if (!ignore) {
           const fallback = getFallbackAdminDashboard();

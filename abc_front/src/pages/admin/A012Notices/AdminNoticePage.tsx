@@ -245,128 +245,146 @@ export function AdminNoticePage() {
       {errorMessage ? <p className={styles.notice}>{errorMessage}</p> : null}
       {statusMessage ? <p className={styles.success}>{statusMessage}</p> : null}
 
-      <div className={`${styles.contentGrid} ${styles.withDetail}`}>
-        <section className={styles.tablePanel} aria-label="공지 목록">
-          <div className={styles.tableHeader}>
-            <div>
-              <h2>공지 목록</h2>
-              <p>총 {(noticesPage?.totalElements ?? 0).toLocaleString('ko-KR')}건</p>
-            </div>
-            <span>
-              {shownPage} / {totalPages}
-            </span>
+      <section className={styles.tablePanel} aria-label="공지 목록">
+        <div className={styles.tableHeader}>
+          <div>
+            <h2>공지 목록</h2>
+            <p>총 {(noticesPage?.totalElements ?? 0).toLocaleString('ko-KR')}건</p>
           </div>
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
+          <span>
+            {shownPage} / {totalPages}
+          </span>
+        </div>
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>공지번호</th>
+                <th>제목</th>
+                <th>상태</th>
+                <th>작성일</th>
+                <th>수정일</th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
                 <tr>
-                  <th>공지번호</th>
-                  <th>제목</th>
-                  <th>상태</th>
-                  <th>작성일</th>
-                  <th>수정일</th>
-                  <th>관리</th>
+                  <td colSpan={6}>공지 목록을 불러오는 중입니다.</td>
                 </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={6}>공지 목록을 불러오는 중입니다.</td>
+              ) : notices.length > 0 ? (
+                notices.map((notice) => (
+                  <tr key={notice.noticeId}>
+                    <td>N-{notice.noticeId}</td>
+                    <td>{notice.title}</td>
+                    <td>
+                      <span className={`${styles.pill} ${statusPillClass[notice.status]}`}>{getLabel(statusOptions, notice.status)}</span>
+                    </td>
+                    <td>{formatDate(notice.createdAt)}</td>
+                    <td>{formatDate(notice.updatedAt)}</td>
+                    <td>
+                      <div className={styles.rowActions}>
+                        <button type="button" onClick={() => startEdit(notice)}>
+                          수정
+                        </button>
+                        <button type="button" onClick={() => handleHide(notice)} disabled={notice.status === 'HIDDEN'}>
+                          숨김
+                        </button>
+                      </div>
+                    </td>
                   </tr>
-                ) : notices.length > 0 ? (
-                  notices.map((notice) => (
-                    <tr key={notice.noticeId}>
-                      <td>N-{notice.noticeId}</td>
-                      <td>{notice.title}</td>
-                      <td>
-                        <span className={`${styles.pill} ${statusPillClass[notice.status]}`}>{getLabel(statusOptions, notice.status)}</span>
-                      </td>
-                      <td>{formatDate(notice.createdAt)}</td>
-                      <td>{formatDate(notice.updatedAt)}</td>
-                      <td>
-                        <div className={styles.rowActions}>
-                          <button type="button" onClick={() => startEdit(notice)}>
-                            수정
-                          </button>
-                          <button type="button" onClick={() => handleHide(notice)} disabled={notice.status === 'HIDDEN'}>
-                            숨김
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={6}>등록된 공지가 없습니다.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          <div className={styles.pagination}>
-            <Button type="button" variant="secondary" disabled={shownPage <= 1} onClick={() => updateQuery({ page: String(shownPage - 1) })}>
-              이전
-            </Button>
-            <span>{shownPage} 페이지</span>
-            <Button type="button" variant="secondary" disabled={shownPage >= totalPages} onClick={() => updateQuery({ page: String(shownPage + 1) })}>
-              다음
-            </Button>
-          </div>
-        </section>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6}>등록된 공지가 없습니다.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className={styles.pagination}>
+          <Button type="button" variant="secondary" disabled={shownPage <= 1} onClick={() => updateQuery({ page: String(shownPage - 1) })}>
+            이전
+          </Button>
+          <span>{shownPage} 페이지</span>
+          <Button type="button" variant="secondary" disabled={shownPage >= totalPages} onClick={() => updateQuery({ page: String(shownPage + 1) })}>
+            다음
+          </Button>
+        </div>
+      </section>
 
-        <aside className={styles.detailPanel} aria-label="공지 작성/수정">
-          {isEditing ? (
-            <form onSubmit={handleFormSubmit}>
-              <div className={styles.detailHeader}>
-                <h2>{isCreating ? '공지 등록' : `공지 수정 · N-${editingNotice?.noticeId}`}</h2>
-              </div>
-              <div className={styles.formGrid}>
-                <label className={styles.fullField}>
-                  제목
-                  <input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} required />
-                </label>
-                <label className={styles.fullField}>
-                  내용
-                  <textarea rows={5} value={form.content} onChange={(event) => setForm((current) => ({ ...current, content: event.target.value }))} required />
-                </label>
+      {isEditing ? (
+        <div
+          className={styles.modalBackdrop}
+          role="presentation"
+          onMouseDown={() => {
+            if (isSaving) return;
+            setIsCreating(false);
+            setEditingNotice(null);
+          }}
+        >
+          <form className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="notice-form-title" onSubmit={handleFormSubmit} onMouseDown={(event) => event.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 id="notice-form-title">{isCreating ? '공지 등록' : `공지 수정 · N-${editingNotice?.noticeId}`}</h2>
+              <button
+                type="button"
+                aria-label="닫기"
+                onClick={() => {
+                  setIsCreating(false);
+                  setEditingNotice(null);
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <div className={styles.formGrid}>
+              <label className={styles.fullField}>
+                제목
+                <input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} required />
+              </label>
+              <label className={styles.fullField}>
+                내용
+                <textarea rows={5} value={form.content} onChange={(event) => setForm((current) => ({ ...current, content: event.target.value }))} required />
+              </label>
+              <label>
+                상태
+                <select value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as AdminNoticeStatus }))}>
+                  {statusOptions.map((option) => (
+                    <option value={option.value} key={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {isCreating ? (
                 <label>
-                  상태
-                  <select value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as AdminNoticeStatus }))}>
-                    {statusOptions.map((option) => (
-                      <option value={option.value} key={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+                  <span>&nbsp;</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700 }}>
+                    <input type="checkbox" style={{ width: 18, height: 18 }} checked={form.notifyYn} onChange={(event) => setForm((current) => ({ ...current, notifyYn: event.target.checked }))} />
+                    회원에게 알림 발송
+                  </span>
                 </label>
-                {isCreating ? (
-                  <label>
-                    <span>&nbsp;</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700 }}>
-                      <input type="checkbox" style={{ width: 18, height: 18 }} checked={form.notifyYn} onChange={(event) => setForm((current) => ({ ...current, notifyYn: event.target.checked }))} />
-                      회원에게 알림 발송
-                    </span>
-                  </label>
-                ) : null}
-              </div>
-              <div className={styles.formActions}>
-                <Button type="button" variant="secondary" onClick={() => { setIsCreating(false); setEditingNotice(null); }} disabled={isSaving}>
-                  취소
-                </Button>
-                <Button type="submit" disabled={isSaving}>
-                  {isSaving ? '저장 중' : isCreating ? '등록' : '저장'}
-                </Button>
-              </div>
-            </form>
-          ) : (
-            <p className={styles.emptyHint}>
-              목록에서 <strong>수정</strong>을 클릭하거나
-              <br />
-              <strong>+ 공지 등록</strong>을 클릭하세요.
-            </p>
-          )}
-        </aside>
-      </div>
+              ) : null}
+            </div>
+            <div className={styles.formActions}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setIsCreating(false);
+                  setEditingNotice(null);
+                }}
+                disabled={isSaving}
+              >
+                취소
+              </Button>
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? '저장 중' : isCreating ? '등록' : '저장'}
+              </Button>
+            </div>
+          </form>
+        </div>
+      ) : null}
     </section>
   );
 }

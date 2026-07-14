@@ -555,6 +555,83 @@
   gap: var(--space-3);
 }
 
+.issueSearchRow {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.issueSearchRow input {
+  flex: 1;
+}
+
+.issueResults {
+  display: grid;
+  gap: var(--space-2);
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.issueResultItem {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+}
+
+.issueResultItem:hover {
+  background: var(--color-surface-muted);
+}
+
+.issueResultItemSelected {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.selectedChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 5px 6px 5px 12px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.chip button {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(29, 78, 216, 0.14);
+  color: #1d4ed8;
+  cursor: pointer;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.chip button:hover {
+  background: rgba(29, 78, 216, 0.24);
+}
+
 @media (max-width: 1280px) {
   .contentGrid {
     grid-template-columns: 1fr;

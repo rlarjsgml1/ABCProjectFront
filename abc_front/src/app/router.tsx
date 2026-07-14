@@ -1,74 +1,91 @@
-// 유저/관리자 전체 페이지 라우팅 설정 — URL 경로와 페이지 컴포넌트를 매핑한다
+import { lazy, Suspense, type ComponentType, type ReactNode } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { ProtectedRoute } from '../components/layout/ProtectedRoute';
 import { UserLayout } from '../components/layout/UserLayout';
-import { AdminDashboardPage } from '../pages/admin/A001Dashboard/AdminDashboardPage';
-import { AdminMemberListPage } from '../pages/admin/A002Members/AdminMemberListPage';
-import { AdminMemberDetailPage } from '../pages/admin/A003MemberDetail/AdminMemberDetailPage';
-import { AdminBookListPage } from '../pages/admin/A004Books/AdminBookListPage';
-import { AdminBookCreatePage } from '../pages/admin/A005BookCreate/AdminBookCreatePage';
-import { AdminBookEditPage } from '../pages/admin/A006BookEdit/AdminBookEditPage';
-import { AdminCategoryPage } from '../pages/admin/A007Categories/AdminCategoryPage';
-import { AdminRentalListPage } from '../pages/admin/A008Rentals/AdminRentalListPage';
-import { AdminPaymentListPage } from '../pages/admin/A009Payments/AdminPaymentListPage';
-import { AdminReportListPage } from '../pages/admin/A010Reports/AdminReportListPage';
-import { AdminBookRequestPage } from '../pages/admin/A011BookRequests/AdminBookRequestPage';
-import { AdminNoticePage } from '../pages/admin/A012Notices/AdminNoticePage';
-import { AdminCouponsPointsPage } from '../pages/admin/A013CouponsPoints/AdminCouponsPointsPage';
-import { AdminChallengePage } from '../pages/admin/A014Challenges/AdminChallengePage';
-import { AdminLibraryPage } from '../pages/admin/A015Libraries/AdminLibraryPage';
-import { AdminStatisticsPage } from '../pages/admin/A016Statistics/AdminStatisticsPage';
-import { AdminAuditLogPage } from '../pages/admin/A017AuditLogs/AdminAuditLogPage';
-import { AdminCollectionPage } from '../pages/admin/A018Collections/AdminCollectionPage';
-import { AdminSettingsPage } from '../pages/admin/AdminSettings/AdminSettingsPage';
-import { BookDetailPage } from '../pages/user/U008BookDetail/BookDetailPage';
-import { BooksPage } from '../pages/user/U006Books/BooksPage';
-import { HomePage } from '../pages/user/U001Home/HomePage';
-import { LoginPage } from '../pages/user/U003Login/LoginPage';
-import { MyPage } from '../pages/user/U014MyPage/MyPage';
-import { AttendancePage } from '../pages/user/U016Attendance/AttendancePage';
-import { PointsCouponsPage } from '../pages/user/U017PointsCoupons/PointsCouponsPage';
-import { ProfileEditPage } from '../pages/user/U015ProfileEdit/ProfileEditPage';
-import { ReadingStatsPage } from '../pages/user/U026ReadingStats/ReadingStatsPage';
-import { SearchResultsPage } from '../pages/user/U007SearchResults/SearchResultsPage';
-import { SignupPage } from '../pages/user/U002Signup/SignupPage';
-import { FindIdPage } from '../pages/user/U004FindId/FindIdPage';
-import { FavoritesPage } from '../pages/user/U012Favorites/FavoritesPage';
-import { RecentBooksPage } from '../pages/user/U028RecentBooks/RecentBooksPage';
-import { PaymentsPage } from '../pages/user/U018Payments/PaymentsPage';
-import { ReportsPage } from '../pages/user/U021Reports/ReportsPage';
-import { BookRequestPage } from '../pages/user/U022BookRequest/BookRequestPage';
-import { BookRequestHistoryPage } from '../pages/user/U023BookRequestHistory/BookRequestHistoryPage';
 import { MyPageProfileLayout } from '../components/mypage/MyPageProfileLayout';
-import { MyRentalsPage } from '../pages/user/U010MyRentals/MyRentalsPage';
-import { ViewerPage } from '../pages/user/U011Viewer/ViewerPage';
-import { RentPaymentPage } from '../pages/user/U009RentPayment/RentPaymentPage';
-import { PaymentCompletePage } from '../pages/user/U030PaymentComplete/PaymentCompletePage';
-import { ChallengesPage } from '../pages/user/U027Challenges/ChallengesPage';
-import { NoticeListPage } from '../pages/user/U029Notices/NoticeListPage';
-import { NoticeDetailPage } from '../pages/user/U029Notices/NoticeDetailPage';
-import { NotificationsPage } from '../pages/user/U019Notifications/NotificationsPage';
-import { EventPage } from '../pages/user/U020Event/EventPage';
 
+function lazyNamed<T extends ComponentType<object>>(
+  loader: () => Promise<Record<string, T>>,
+  exportName: string,
+) {
+  return lazy(async () => {
+    const module = await loader();
+    return { default: module[exportName] };
+  });
+}
 
+function page(element: ReactNode) {
+  return <Suspense fallback={<div className="page-section">불러오는 중입니다...</div>}>{element}</Suspense>;
+}
+
+const AdminDashboardPage = lazyNamed(() => import('../pages/admin/A001Dashboard/AdminDashboardPage'), 'AdminDashboardPage');
+const AdminMemberListPage = lazyNamed(() => import('../pages/admin/A002Members/AdminMemberListPage'), 'AdminMemberListPage');
+const AdminMemberDetailPage = lazyNamed(() => import('../pages/admin/A003MemberDetail/AdminMemberDetailPage'), 'AdminMemberDetailPage');
+const AdminBookListPage = lazyNamed(() => import('../pages/admin/A004Books/AdminBookListPage'), 'AdminBookListPage');
+const AdminBookCreatePage = lazyNamed(() => import('../pages/admin/A005BookCreate/AdminBookCreatePage'), 'AdminBookCreatePage');
+const AdminBookEditPage = lazyNamed(() => import('../pages/admin/A006BookEdit/AdminBookEditPage'), 'AdminBookEditPage');
+const AdminCategoryPage = lazyNamed(() => import('../pages/admin/A007Categories/AdminCategoryPage'), 'AdminCategoryPage');
+const AdminRentalListPage = lazyNamed(() => import('../pages/admin/A008Rentals/AdminRentalListPage'), 'AdminRentalListPage');
+const AdminPaymentListPage = lazyNamed(() => import('../pages/admin/A009Payments/AdminPaymentListPage'), 'AdminPaymentListPage');
+const AdminReportListPage = lazyNamed(() => import('../pages/admin/A010Reports/AdminReportListPage'), 'AdminReportListPage');
+const AdminBookRequestPage = lazyNamed(() => import('../pages/admin/A011BookRequests/AdminBookRequestPage'), 'AdminBookRequestPage');
+const AdminNoticePage = lazyNamed(() => import('../pages/admin/A012Notices/AdminNoticePage'), 'AdminNoticePage');
+const AdminCouponsPointsPage = lazyNamed(() => import('../pages/admin/A013CouponsPoints/AdminCouponsPointsPage'), 'AdminCouponsPointsPage');
+const AdminChallengePage = lazyNamed(() => import('../pages/admin/A014Challenges/AdminChallengePage'), 'AdminChallengePage');
+const AdminLibraryPage = lazyNamed(() => import('../pages/admin/A015Libraries/AdminLibraryPage'), 'AdminLibraryPage');
+const AdminStatisticsPage = lazyNamed(() => import('../pages/admin/A016Statistics/AdminStatisticsPage'), 'AdminStatisticsPage');
+const AdminAuditLogPage = lazyNamed(() => import('../pages/admin/A017AuditLogs/AdminAuditLogPage'), 'AdminAuditLogPage');
+const AdminCollectionPage = lazyNamed(() => import('../pages/admin/A018Collections/AdminCollectionPage'), 'AdminCollectionPage');
+const AdminSettingsPage = lazyNamed(() => import('../pages/admin/AdminSettings/AdminSettingsPage'), 'AdminSettingsPage');
+const BookDetailPage = lazyNamed(() => import('../pages/user/U008BookDetail/BookDetailPage'), 'BookDetailPage');
+const BooksPage = lazyNamed(() => import('../pages/user/U006Books/BooksPage'), 'BooksPage');
+const HomePage = lazyNamed(() => import('../pages/user/U001Home/HomePage'), 'HomePage');
+const LoginPage = lazyNamed(() => import('../pages/user/U003Login/LoginPage'), 'LoginPage');
+const MyPage = lazyNamed(() => import('../pages/user/U014MyPage/MyPage'), 'MyPage');
+const AttendancePage = lazyNamed(() => import('../pages/user/U016Attendance/AttendancePage'), 'AttendancePage');
+const PointsCouponsPage = lazyNamed(() => import('../pages/user/U017PointsCoupons/PointsCouponsPage'), 'PointsCouponsPage');
+const ProfileEditPage = lazyNamed(() => import('../pages/user/U015ProfileEdit/ProfileEditPage'), 'ProfileEditPage');
+const ReadingStatsPage = lazyNamed(() => import('../pages/user/U026ReadingStats/ReadingStatsPage'), 'ReadingStatsPage');
+const SearchResultsPage = lazyNamed(() => import('../pages/user/U007SearchResults/SearchResultsPage'), 'SearchResultsPage');
+const SignupPage = lazyNamed(() => import('../pages/user/U002Signup/SignupPage'), 'SignupPage');
+const FindIdPage = lazyNamed(() => import('../pages/user/U004FindId/FindIdPage'), 'FindIdPage');
+const FavoritesPage = lazyNamed(() => import('../pages/user/U012Favorites/FavoritesPage'), 'FavoritesPage');
+const RecentBooksPage = lazyNamed(() => import('../pages/user/U028RecentBooks/RecentBooksPage'), 'RecentBooksPage');
+const PaymentsPage = lazyNamed(() => import('../pages/user/U018Payments/PaymentsPage'), 'PaymentsPage');
+const ReportsPage = lazyNamed(() => import('../pages/user/U021Reports/ReportsPage'), 'ReportsPage');
+const BookRequestPage = lazyNamed(() => import('../pages/user/U022BookRequest/BookRequestPage'), 'BookRequestPage');
+const BookRequestHistoryPage = lazyNamed(() => import('../pages/user/U023BookRequestHistory/BookRequestHistoryPage'), 'BookRequestHistoryPage');
+const MyRentalsPage = lazyNamed(() => import('../pages/user/U010MyRentals/MyRentalsPage'), 'MyRentalsPage');
+const ViewerPage = lazyNamed(() => import('../pages/user/U011Viewer/ViewerPage'), 'ViewerPage');
+const RentPaymentPage = lazyNamed(() => import('../pages/user/U009RentPayment/RentPaymentPage'), 'RentPaymentPage');
+const PaymentCompletePage = lazyNamed(() => import('../pages/user/U030PaymentComplete/PaymentCompletePage'), 'PaymentCompletePage');
+const ChallengesPage = lazyNamed(() => import('../pages/user/U027Challenges/ChallengesPage'), 'ChallengesPage');
+const NoticeListPage = lazyNamed(() => import('../pages/user/U029Notices/NoticeListPage'), 'NoticeListPage');
+const NoticeDetailPage = lazyNamed(() => import('../pages/user/U029Notices/NoticeDetailPage'), 'NoticeDetailPage');
+const NotificationsPage = lazyNamed(() => import('../pages/user/U019Notifications/NotificationsPage'), 'NotificationsPage');
+const EventPage = lazyNamed(() => import('../pages/user/U020Event/EventPage'), 'EventPage');
+const BookLibrariesPage = lazyNamed(() => import('../pages/user/U024Libraries/BookLibrariesPage'), 'BookLibrariesPage');
+const RecommendedBooksPage = lazyNamed(() => import('../pages/user/U025Recommendations/RecommendedBooksPage'), 'RecommendedBooksPage');
 
 export const router = createBrowserRouter([
   {
     element: <UserLayout />,
     children: [
-      { path: '/', element: <HomePage /> },
-      { path: '/events', element: <EventPage /> },
-      { path: '/books', element: <BooksPage /> },
-      { path: '/search', element: <SearchResultsPage /> },
-      { path: '/notices', element: <NoticeListPage /> },
-      { path: '/notices/:noticeId', element: <NoticeDetailPage /> },
-      { path: '/books/:bookId', element: <BookDetailPage /> },
+      { path: '/', element: page(<HomePage />) },
+      { path: '/events', element: page(<EventPage />) },
+      { path: '/books', element: page(<BooksPage />) },
+      { path: '/search', element: page(<SearchResultsPage />) },
+      { path: '/notices', element: page(<NoticeListPage />) },
+      { path: '/notices/:noticeId', element: page(<NoticeDetailPage />) },
+      { path: '/books/:bookId', element: page(<BookDetailPage />) },
+      { path: '/books/:bookId/libraries', element: page(<BookLibrariesPage />) },
+      { path: '/books/:bookId/recommendations', element: page(<RecommendedBooksPage />) },
       {
         path: '/books/:bookId/rent',
         element: (
           <ProtectedRoute>
-            <RentPaymentPage />
+            {page(<RentPaymentPage />)}
           </ProtectedRoute>
         ),
       },
@@ -76,32 +93,31 @@ export const router = createBrowserRouter([
         path: '/books/:bookId/rent/complete',
         element: (
           <ProtectedRoute>
-            <PaymentCompletePage />
+            {page(<PaymentCompletePage />)}
           </ProtectedRoute>
         ),
       },
-      { path: '/login', element: <LoginPage /> },
-      { path: '/signup', element: <SignupPage /> },
-      { path: '/find-id', element: <FindIdPage /> },
-
+      { path: '/login', element: page(<LoginPage />) },
+      { path: '/signup', element: page(<SignupPage />) },
+      { path: '/find-id', element: page(<FindIdPage />) },
       {
         path: '/me',
         element: <MyPageProfileLayout />,
         children: [
-          { index: true, element: <MyPage /> },
-          { path: 'notifications', element: <NotificationsPage /> },
-          { path: 'profile', element: <ProfileEditPage /> },
-          { path: 'attendance', element: <AttendancePage /> },
-          { path: 'challenges', element: <ChallengesPage /> },
-          { path: 'points-coupons', element: <PointsCouponsPage /> },
-          { path: 'statistics', element: <ReadingStatsPage /> },
-          { path: 'favorites', element: <FavoritesPage /> },
-          { path: 'recent-books', element: <RecentBooksPage /> },
-          { path: 'payments', element: <PaymentsPage /> },
-          { path: 'reports', element: <ReportsPage /> },
-          { path: 'book-requests', element: <BookRequestPage /> },
-          { path: 'book-requests/history', element: <BookRequestHistoryPage /> },
-          { path: 'rentals', element: <MyRentalsPage /> },
+          { index: true, element: page(<MyPage />) },
+          { path: 'notifications', element: page(<NotificationsPage />) },
+          { path: 'profile', element: page(<ProfileEditPage />) },
+          { path: 'attendance', element: page(<AttendancePage />) },
+          { path: 'challenges', element: page(<ChallengesPage />) },
+          { path: 'points-coupons', element: page(<PointsCouponsPage />) },
+          { path: 'statistics', element: page(<ReadingStatsPage />) },
+          { path: 'favorites', element: page(<FavoritesPage />) },
+          { path: 'recent-books', element: page(<RecentBooksPage />) },
+          { path: 'payments', element: page(<PaymentsPage />) },
+          { path: 'reports', element: page(<ReportsPage />) },
+          { path: 'book-requests', element: page(<BookRequestPage />) },
+          { path: 'book-requests/history', element: page(<BookRequestHistoryPage />) },
+          { path: 'rentals', element: page(<MyRentalsPage />) },
         ],
       },
     ],
@@ -110,7 +126,7 @@ export const router = createBrowserRouter([
     path: '/rentals/:rentalId/read',
     element: (
       <ProtectedRoute>
-        <ViewerPage />
+        {page(<ViewerPage />)}
       </ProtectedRoute>
     ),
   },
@@ -122,25 +138,25 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { index: true, element: <AdminDashboardPage /> },
-      { path: 'members', element: <AdminMemberListPage /> },
-      { path: 'members/:memberId', element: <AdminMemberDetailPage /> },
-      { path: 'books', element: <AdminBookListPage /> },
-      { path: 'books/new', element: <AdminBookCreatePage /> },
-      { path: 'books/:bookId/edit', element: <AdminBookEditPage /> },
-      { path: 'categories', element: <AdminCategoryPage /> },
-      { path: 'rentals', element: <AdminRentalListPage /> },
-      { path: 'payments', element: <AdminPaymentListPage /> },
-      { path: 'reports', element: <AdminReportListPage /> },
-      { path: 'book-requests', element: <AdminBookRequestPage /> },
-      { path: 'notices', element: <AdminNoticePage /> },
-      { path: 'coupons-points', element: <AdminCouponsPointsPage /> },
-      { path: 'challenges', element: <AdminChallengePage /> },
-      { path: 'libraries', element: <AdminLibraryPage /> },
-      { path: 'statistics', element: <AdminStatisticsPage /> },
-      { path: 'audit-logs', element: <AdminAuditLogPage /> },
-      { path: 'collections', element: <AdminCollectionPage /> },
-      { path: 'settings', element: <AdminSettingsPage /> },
+      { index: true, element: page(<AdminDashboardPage />) },
+      { path: 'members', element: page(<AdminMemberListPage />) },
+      { path: 'members/:memberId', element: page(<AdminMemberDetailPage />) },
+      { path: 'books', element: page(<AdminBookListPage />) },
+      { path: 'books/new', element: page(<AdminBookCreatePage />) },
+      { path: 'books/:bookId/edit', element: page(<AdminBookEditPage />) },
+      { path: 'categories', element: page(<AdminCategoryPage />) },
+      { path: 'rentals', element: page(<AdminRentalListPage />) },
+      { path: 'payments', element: page(<AdminPaymentListPage />) },
+      { path: 'reports', element: page(<AdminReportListPage />) },
+      { path: 'book-requests', element: page(<AdminBookRequestPage />) },
+      { path: 'notices', element: page(<AdminNoticePage />) },
+      { path: 'coupons-points', element: page(<AdminCouponsPointsPage />) },
+      { path: 'challenges', element: page(<AdminChallengePage />) },
+      { path: 'libraries', element: page(<AdminLibraryPage />) },
+      { path: 'statistics', element: page(<AdminStatisticsPage />) },
+      { path: 'audit-logs', element: page(<AdminAuditLogPage />) },
+      { path: 'collections', element: page(<AdminCollectionPage />) },
+      { path: 'settings', element: page(<AdminSettingsPage />) },
     ],
   },
 ]);
