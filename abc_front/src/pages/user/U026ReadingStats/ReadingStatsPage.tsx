@@ -100,7 +100,7 @@ export function ReadingStatsPage() {
   ];
   const secondaryMetrics = [
     { label: '리뷰 수', value: `${formatNumber(statistics.summary.reviewCount)}건` },
-    { label: '즐겨찾기 수', value: `${formatNumber(statistics.summary.favoriteCount)}권` },
+    { label: '즐겨찾기 수 (현재)', value: `${formatNumber(statistics.summary.favoriteCount)}권` },
   ];
   return (
     <MyPageLayout titleId="reading-stats-title">
