@@ -579,9 +579,9 @@ export type PaymentHistoryPage = PageResponse<PaymentHistoryItem>;
 
 export type RentalPaymentRequest = {
   bookId: number;
-  couponId?: number;
+  memberCouponId?: number;
   pointAmount: number;
-  paymentMethod: 'CARD';
+  cardApprovalToken: string;
 };
 
 export type RentalPaymentResult = {
@@ -598,6 +598,9 @@ export type RentalPaymentResult = {
   couponDiscountAmount?: number;
   pointUsedAmount?: number;
   usedPointAmount?: number;
+  amount?: number;
+  paymentMethod?: string;
+  paymentStatus?: string;
   finalAmount?: number;
   finalPaymentAmount?: number;
 };

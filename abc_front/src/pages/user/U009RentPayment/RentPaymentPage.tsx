@@ -29,7 +29,12 @@ function formatWon(value: number | undefined) {
 }
 
 function isUsableCoupon(coupon: CouponHistoryItem) {
-  return coupon.couponStatus === 'ISSUED';
+  if (coupon.couponStatus !== 'ISSUED') {
+    return false;
+  }
+
+  const expiresAtTime = Date.parse(coupon.expiresAt);
+  return Number.isNaN(expiresAtTime) || expiresAtTime >= Date.now();
 }
 
 function getCouponName(coupon: CouponHistoryItem) {
@@ -254,9 +259,9 @@ export function RentPaymentPage() {
         ? await createFreeRental(numericBookId)
         : await createPaidRental({
             bookId: numericBookId,
-            couponId: appliedCouponId ? Number(appliedCouponId) : undefined,
+            memberCouponId: appliedCouponId ? Number(appliedCouponId) : undefined,
             pointAmount: pointDiscountAmount,
-            paymentMethod: 'CARD',
+            cardApprovalToken: `demo-card-${Date.now()}`,
           });
 
       navigate(`/books/${bookId}/rent/complete`, {
@@ -269,7 +274,7 @@ export function RentPaymentPage() {
           usedPointAmount: result.usedPointAmount ?? result.pointUsedAmount ?? pointDiscountAmount,
           usedCouponName: result.usedCouponName ?? result.couponName ?? (appliedCoupon ? getCouponName(appliedCoupon) : '-'),
           couponDiscountAmount: result.couponDiscountAmount ?? couponDiscountAmount,
-          finalPaymentAmount: result.finalPaymentAmount ?? result.finalAmount ?? finalPaymentAmount ?? 0,
+          finalPaymentAmount: result.finalPaymentAmount ?? result.finalAmount ?? result.amount ?? finalPaymentAmount ?? 0,
         },
       });
     } catch (error) {

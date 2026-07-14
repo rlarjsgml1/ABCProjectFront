@@ -114,5 +114,24 @@ export async function searchBooks(page = 0, size = 20, query: BookSearchQuery) {
 export async function getBookDetail(bookId: number) {
   const response = await apiClient.get<ApiResponse<BookDetail>>(`/books/${bookId}`);
 
-  return response.data.data;
+  const data = response.data.data;
+  if (!data) {
+    throw new Error('Invalid book detail response');
+  }
+
+  const categoryName = data.categoryName ?? data.categories?.[0]?.categoryName ?? data.categories?.[0]?.name;
+
+  return {
+    ...data,
+    author: data.author ?? data.authors?.join(', '),
+    publisher: data.publisher ?? data.publisherName,
+    publishedAt: data.publishedAt ?? data.pubDate,
+    categoryName,
+    rentalType: data.rentalType ?? data.rentalInfo?.rentalType,
+    rentalPrice: data.rentalPrice ?? data.rentalInfo?.rentalPrice,
+    defaultRentalDays: data.defaultRentalDays ?? data.rentalInfo?.defaultRentalDays,
+    rentalPeriodDays: data.rentalPeriodDays ?? data.rentalInfo?.defaultRentalDays,
+    pageCount: data.pageCount ?? data.totalPages,
+    status: data.status ?? 'AVAILABLE',
+  };
 }
