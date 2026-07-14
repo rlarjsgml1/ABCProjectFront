@@ -445,6 +445,13 @@ export type BookCard = {
   favoriteYn: boolean;
 };
 
+// GET /api/v1/books/search 실제 응답 봉투. BookSearchResponse.java 기준 (content는 page 안에 들어있다).
+export type BookSearchResponse = {
+  keyword: string;
+  totalCount: number;
+  page: PageResponse<BookCard>;
+};
+
 // API-BOOK-006 (U-025 추천 도서). 필드명은 BookRecommendationResponse.java 기준.
 export type BookRecommendationType = 'AUTHOR' | 'CATEGORY' | 'KEYWORD';
 

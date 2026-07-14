@@ -1,8 +1,11 @@
 // 사이트 공통 헤더 — 로고, 도서 검색, 주요 내비게이션, 로그인/알림 상태를 표시
-import { FormEvent, MouseEvent, useEffect, useState } from 'react';
+import axios from 'axios';
+import { ChangeEvent, CompositionEvent, FocusEvent, FormEvent, KeyboardEvent, MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AUTH_CHANGED_EVENT } from '../../api/authApi';
+import { searchBooks } from '../../api/bookApi';
 import { NOTIFICATIONS_UPDATED_EVENT, getMyNotifications } from '../../api/notificationsApi';
+import type { BookCard } from '../../types/api';
 import abcLogo from '../../assets/abc-logo.png';
 
 const authStorageKeys = ['accessToken', 'memberRole', 'memberId', 'loginId', 'memberName'];
@@ -21,11 +24,10 @@ const navItems = [
     { to: '/notices', label: '공지사항' },
 ];
 
-const searchTypeOptions = [
-    { label: '제목에서 검색', value: 'TITLE' },
-    { label: '저자에서 검색', value: 'AUTHOR' },
-    { label: '출판사에서 검색', value: 'PUBLISHER' },
-];
+const SUGGESTION_MIN_LENGTH = 2;
+const SUGGESTION_DEBOUNCE_MS = 300;
+
+type SuggestionStatus = 'idle' | 'loading' | 'success' | 'empty' | 'error';
 
 export function Header() {
     const navigate = useNavigate();
@@ -34,6 +36,12 @@ export function Header() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [isSearchFocused, setIsSearchFocused] = useState(false);
     const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+    const [suggestions, setSuggestions] = useState<BookCard[]>([]);
+    const [suggestionStatus, setSuggestionStatus] = useState<SuggestionStatus>('idle');
+
+    const timerRef = useRef<number>();
+    const abortRef = useRef<AbortController | null>(null);
+    const generationRef = useRef(0);
 
     useEffect(() => {
         setIsLoggedIn(hasLoginSession());
@@ -81,6 +89,56 @@ export function Header() {
         };
     }, []);
 
+    useEffect(() => {
+        return () => {
+            // unmount 시점의 최신 ref 값을 무효화해야 하므로 effect 밖으로 값을 복사하지 않는다.
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+            ++generationRef.current;
+            window.clearTimeout(timerRef.current);
+            abortRef.current?.abort();
+        };
+    }, []);
+
+    const cancelPendingSearch = useCallback(() => {
+        ++generationRef.current;
+        window.clearTimeout(timerRef.current);
+        abortRef.current?.abort();
+        abortRef.current = null;
+        setSuggestions([]);
+        setSuggestionStatus('idle');
+    }, []);
+
+    const scheduleSearch = useCallback((value: string) => {
+        const trimmed = value.trim();
+        const generation = ++generationRef.current;
+        window.clearTimeout(timerRef.current);
+        abortRef.current?.abort();
+
+        setSuggestions([]);
+        setSuggestionStatus('idle');
+
+        if (trimmed.length < SUGGESTION_MIN_LENGTH) return;
+
+        timerRef.current = window.setTimeout(async () => {
+            if (generation !== generationRef.current) return;
+
+            const controller = new AbortController();
+            abortRef.current = controller;
+            setSuggestionStatus('loading');
+
+            try {
+                const page = await searchBooks(0, 5, { q: trimmed }, controller.signal);
+                if (generation !== generationRef.current) return;
+                setSuggestions(page.content);
+                setSuggestionStatus(page.content.length ? 'success' : 'empty');
+            } catch (error) {
+                if (generation !== generationRef.current) return;
+                if (axios.isCancel(error)) return;
+                setSuggestionStatus('error');
+            }
+        }, SUGGESTION_DEBOUNCE_MS);
+    }, []);
+
     const isActiveNav = (to: string) => {
         const searchParams = new URLSearchParams(location.search);
         const isHomeMorePage = location.pathname === '/books' && searchParams.get('source') === 'home';
@@ -93,16 +151,14 @@ export function Header() {
     const handleSearch = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const query = keyword.trim();
+        cancelPendingSearch();
+        setIsSearchFocused(false);
         if (!query) return;
         navigate(`/search?q=${encodeURIComponent(query)}`);
-        setIsSearchFocused(false);
     };
 
-    const handleSuggestionClick = (event: MouseEvent<HTMLButtonElement>, searchType: string) => {
-        event.preventDefault();
-        const query = keyword.trim();
-        if (!query) return;
-        navigate(`/search?q=${encodeURIComponent(query)}&type=${searchType}`);
+    const handleSuggestionSelect = () => {
+        cancelPendingSearch();
         setIsSearchFocused(false);
     };
 
@@ -111,7 +167,54 @@ export function Header() {
         const query = keyword.trim();
         if (!query) return;
         navigate(`/search?q=${encodeURIComponent(query)}&request=1`);
+        cancelPendingSearch();
         setIsSearchFocused(false);
+    };
+
+    const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const value = event.target.value;
+        setKeyword(value);
+        setIsSearchFocused(true);
+        // 조합 중이어도 예약한다: compositionend가 늦게(또는 안) 오는 경우에도 debounce로 검색이 실행되게 한다.
+        scheduleSearch(value);
+    };
+
+    const handleSearchFocus = () => {
+        setIsSearchFocused(true);
+        if (keyword.trim().length >= SUGGESTION_MIN_LENGTH && suggestionStatus === 'idle') {
+            scheduleSearch(keyword);
+        }
+    };
+
+    const handleSearchCompositionStart = () => {
+        window.clearTimeout(timerRef.current);
+        abortRef.current?.abort();
+    };
+
+    const handleSearchCompositionEnd = (event: CompositionEvent<HTMLInputElement>) => {
+        scheduleSearch(event.currentTarget.value);
+    };
+
+    const handleSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+        // Safari 등에서 한글 조합 확정 Enter가 그대로 폼 제출로 이어지는 것을 막는다.
+        if (event.key === 'Enter' && event.nativeEvent.isComposing) {
+            event.preventDefault();
+        }
+    };
+
+    const handleSearchFormKeyDown = (event: KeyboardEvent<HTMLFormElement>) => {
+        // input이 아니라 결과 Link에 focus가 있어도 Escape가 동작하도록 form 레벨에서 처리한다.
+        if (event.key === 'Escape') {
+            cancelPendingSearch();
+            setIsSearchFocused(false);
+        }
+    };
+
+    const handleSearchBlur = (event: FocusEvent<HTMLFormElement>) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+            cancelPendingSearch();
+            setIsSearchFocused(false);
+        }
     };
 
     const handleLogout = () => {
@@ -129,7 +232,7 @@ export function Header() {
                     <img src={abcLogo} alt="ABC" />
                 </Link>
 
-                <form className="abc-search" onSubmit={handleSearch}>
+                <form className="abc-search" onSubmit={handleSearch} onBlur={handleSearchBlur} onKeyDown={handleSearchFormKeyDown}>
                     <button className="abc-search-button" type="submit" aria-label="검색">
                         <svg viewBox="0 0 24 24" aria-hidden="true">
                             <circle cx="11" cy="11" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
@@ -139,26 +242,56 @@ export function Header() {
                     <input
                         className="abc-search-input"
                         value={keyword}
-                        onChange={(event) => setKeyword(event.target.value)}
+                        onChange={handleSearchChange}
+                        onCompositionStart={handleSearchCompositionStart}
+                        onCompositionEnd={handleSearchCompositionEnd}
+                        onKeyDown={handleSearchKeyDown}
                         onClick={() => setIsSearchFocused(true)}
-                        onFocus={() => setIsSearchFocused(true)}
-                        onBlur={() => window.setTimeout(() => setIsSearchFocused(false), 120)}
+                        onFocus={handleSearchFocus}
                         aria-label="도서 검색"
                     />
-                    {isSearchFocused && keyword.trim() ? (
+                    {isSearchFocused && keyword.trim().length >= SUGGESTION_MIN_LENGTH && suggestionStatus !== 'idle' ? (
                         <div className="abc-search-suggestions">
-                            {searchTypeOptions.map((option) => (
-                                <button type="button" onMouseDown={(event) => handleSuggestionClick(event, option.value)} key={option.value}>
-                                    <strong>{keyword.trim()}</strong>
-                                    <span>{option.label}</span>
-                                </button>
-                            ))}
-                            <div className="abc-search-no-result">
-                                <span>검색 결과 없음</span>
-                                <button type="button" onMouseDown={handleNoResultClick}>
-                                    희망 도서 신청
-                                </button>
-                            </div>
+                            {suggestionStatus === 'loading' ? (
+                                <div className="abc-search-status" role="status" aria-live="polite">
+                                    검색 중
+                                </div>
+                            ) : null}
+
+                            {suggestionStatus === 'success' ? (
+                                <ul className="abc-search-result-list">
+                                    {suggestions.map((book) => (
+                                        <li key={book.bookId}>
+                                            <Link to={`/books/${book.bookId}`} onClick={handleSuggestionSelect}>
+                                                {book.coverImageUrl ? (
+                                                    <img src={book.coverImageUrl} alt="" />
+                                                ) : (
+                                                    <span className="abc-search-result-cover-placeholder" />
+                                                )}
+                                                <span className="abc-search-result-text">
+                                                    <strong>{book.title}</strong>
+                                                    <small>{book.authors.join(', ') || book.publisherName}</small>
+                                                </span>
+                                            </Link>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : null}
+
+                            {suggestionStatus === 'empty' ? (
+                                <div className="abc-search-no-result" role="status" aria-live="polite">
+                                    <span>검색 결과 없음</span>
+                                    <button type="button" onClick={handleNoResultClick}>
+                                        희망 도서 신청
+                                    </button>
+                                </div>
+                            ) : null}
+
+                            {suggestionStatus === 'error' ? (
+                                <div className="abc-search-status" role="status" aria-live="polite">
+                                    검색 결과를 불러오지 못했습니다
+                                </div>
+                            ) : null}
                         </div>
                     ) : null}
                 </form>

@@ -2923,40 +2923,65 @@ a.count-card:focus-visible {
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.22);
 }
 
-.abc-search-suggestions button {
-  width: 100%;
-  min-height: 44px;
-  border: 0;
-  padding: 0 var(--space-6);
-  color: var(--color-text);
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-  font-weight: 700;
-}
-
-.abc-search-suggestions button strong {
-  margin-right: var(--space-2);
-}
-
-.abc-search-suggestions button span {
+.abc-search-status {
+  padding: var(--space-4) var(--space-6);
   color: var(--color-muted);
   font-size: 0.9rem;
   font-weight: 700;
 }
 
-.abc-search-suggestions button:hover,
-.abc-search-suggestions button:focus-visible {
+.abc-search-result-list {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-2) 0;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.abc-search-result-list a {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-6);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.abc-search-result-list a:hover,
+.abc-search-result-list a:focus-visible {
   background: var(--color-surface-muted);
   outline: 0;
 }
 
-.abc-search-suggestions button:active {
-  font-weight: 900;
+.abc-search-result-list img,
+.abc-search-result-cover-placeholder {
+  width: 32px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  background: var(--color-surface-muted);
+  object-fit: cover;
 }
 
-.abc-search-suggestions button:active span {
-  font-weight: 900;
+.abc-search-result-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.abc-search-result-text strong {
+  overflow: hidden;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.abc-search-result-text small {
+  color: var(--color-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
 .abc-search-no-result {
@@ -2976,9 +3001,20 @@ a.count-card:focus-visible {
 .abc-search-no-result button {
   width: auto;
   height: 44px;
+  border: 0;
+  padding: 0 var(--space-6);
   color: var(--color-muted);
+  background: transparent;
+  cursor: pointer;
   font-size: 0.9rem;
+  font-weight: 700;
   white-space: nowrap;
+}
+
+.abc-search-no-result button:hover,
+.abc-search-no-result button:focus-visible {
+  color: var(--color-text);
+  outline: 0;
 }
 
 .abc-actions {
