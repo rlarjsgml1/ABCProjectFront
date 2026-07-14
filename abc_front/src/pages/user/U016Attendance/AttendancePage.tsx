@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { checkInToday, getCurrentAttendanceQuery, getMonthlyAttendance } from '../../../api/attendanceApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
+import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
 import type { AttendanceMonthlyData } from '../../../types/api';
 
 type AttendanceProgressStyle = CSSProperties & {
@@ -77,6 +78,7 @@ export function AttendancePage() {
   const isTodayCheckedIn = attendanceData?.todayCheckedIn ?? false;
 
   return (
+    <MyPageLayout titleId="attendance-title">
       <section className="page-section attendance-page" aria-labelledby="attendance-title">
         <div className="section-heading-row attendance-heading-row">
           <div>
@@ -171,5 +173,6 @@ export function AttendancePage() {
           </ul>
         </section>
       </section>
+    </MyPageLayout>
   );
 }

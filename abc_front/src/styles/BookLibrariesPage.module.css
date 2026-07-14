@@ -1,0 +1,53 @@
+.page {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.libraryList {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.libraryItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-surface);
+}
+
+.libraryItem strong {
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.libraryItem p {
+  margin: 4px 0 0;
+  color: var(--color-muted);
+  font-size: 0.88rem;
+}
+
+.statusBadge {
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.statusAvailable {
+  color: var(--color-success);
+  background: var(--color-success-soft);
+}
+
+.statusUnavailable {
+  color: var(--color-muted);
+  background: var(--color-surface-muted);
+}

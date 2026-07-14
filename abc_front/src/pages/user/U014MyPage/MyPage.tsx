@@ -1,14 +1,53 @@
-// 내 서재 화면(U014) — 대여/완독/리뷰 이용 현황을 보여주는 마이페이지 메인(현재는 자리표시 미리보기)이다.
+// 내 서재 화면(U014) — 대여 중/소장 도서 현황을 보여주는 마이페이지 메인
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { getMyRentals } from '../../../api/myRentalsApi';
+import { getApiErrorMessage } from '../../../api/profileApi';
 import { EmptyState } from '../../../components/common/EmptyState';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
+import type { MyRentalItem } from '../../../types/api';
 
-const libraryItems = [
-  { title: '대여 중인 도서', description: '현재 읽고 있는 전자책 목록이 연결될 영역입니다.' },
-  { title: '완독 도서', description: '완독 처리한 도서와 최근 독서 기록을 표시합니다.' },
-  { title: '나의 리뷰', description: '작성한 리뷰와 별점 활동이 모이는 공간입니다.' },
-];
+const PREVIEW_SIZE = 3;
 
 export function MyPage() {
+  const [readingBooks, setReadingBooks] = useState<MyRentalItem[]>([]);
+  const [ownedBooks, setOwnedBooks] = useState<MyRentalItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadPreview() {
+      setIsLoading(true);
+      setErrorMessage('');
+
+      try {
+        const [readingPage, ownedPage] = await Promise.all([
+          getMyRentals({ status: 'READING', page: 0, size: PREVIEW_SIZE }),
+          getMyRentals({ status: 'OWNED', page: 0, size: PREVIEW_SIZE }),
+        ]);
+
+        if (!ignore) {
+          setReadingBooks(readingPage.content);
+          setOwnedBooks(ownedPage.content);
+        }
+      } catch (error) {
+        if (!ignore) setErrorMessage(getApiErrorMessage(error));
+      } finally {
+        if (!ignore) setIsLoading(false);
+      }
+    }
+
+    void loadPreview();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const hasAnyBooks = readingBooks.length > 0 || ownedBooks.length > 0;
+
   return (
     <MyPageLayout titleId="mypage-library-title">
       <section className="page-section usage-history-panel">
@@ -18,16 +57,56 @@ export function MyPage() {
           </div>
           <span>이용 현황</span>
         </div>
-        <p>대여, 완독, 리뷰 활동이 연결되면 이 영역에서 내 독서 흐름을 확인합니다.</p>
-        <div className="library-preview-list" aria-label="내 서재 미리보기">
-          {libraryItems.map((item) => (
-            <article className="library-preview-item" key={item.title}>
-              <h3>{item.title}</h3>
-              <p>{item.description}</p>
+        <p>최근 대여/소장 도서 현황입니다. 전체 목록은 대여 현황에서 확인하세요.</p>
+
+        {errorMessage ? <div className="status-banner status-banner-error">{errorMessage}</div> : null}
+        {isLoading ? <div className="status-banner">이용 현황을 불러오는 중입니다.</div> : null}
+
+        {!isLoading ? (
+          <div className="library-preview-list" aria-label="내 서재 미리보기">
+            <article className="library-preview-item">
+              <h3>읽고 있는 도서</h3>
+              {readingBooks.length > 0 ? (
+                <ul>
+                  {readingBooks.map((book) => (
+                    <li key={book.rentalId}>
+                      <Link to={`/books/${book.bookId}`}>{book.title}</Link> · {book.progressRate}%
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>현재 읽고 있는 도서가 없습니다.</p>
+              )}
+              <Link to="/me/rentals">대여 현황 전체보기</Link>
             </article>
-          ))}
-        </div>
-        <EmptyState title="표시할 이용 내역이 없습니다." description="대여, 완독, 리뷰 API 연결 후 목록을 표시합니다." />
+
+            <article className="library-preview-item">
+              <h3>소장한 도서</h3>
+              {ownedBooks.length > 0 ? (
+                <ul>
+                  {ownedBooks.map((book) => (
+                    <li key={book.rentalId}>
+                      <Link to={`/books/${book.bookId}`}>{book.title}</Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>소장한 도서가 없습니다.</p>
+              )}
+              <Link to="/me/rentals">대여 현황 전체보기</Link>
+            </article>
+
+            <article className="library-preview-item">
+              <h3>나의 리뷰</h3>
+              <p>작성한 리뷰와 별점 활동이 모이는 공간입니다.</p>
+              <span aria-disabled="true">내 리뷰 목록 조회 API 준비 중</span>
+            </article>
+          </div>
+        ) : null}
+
+        {!isLoading && !errorMessage && !hasAnyBooks ? (
+          <EmptyState title="표시할 이용 내역이 없습니다." description="도서를 대여하면 이 영역에서 독서 흐름을 확인할 수 있습니다." />
+        ) : null}
       </section>
     </MyPageLayout>
   );

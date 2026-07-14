@@ -10,6 +10,7 @@ export function UserLayout() {
 
     useEffect(() => {
         // 마이페이지 내부 이동은 사이드바/헤더가 고정된 대시보드형 화면이라 스크롤 위치를 유지한다.
+        // (콘텐츠 높이가 달라 스크롤이 부득이 조정되는 경우는 전역 scroll-behavior: smooth로 부드럽게 처리)
         if (location.pathname.startsWith('/me')) {
             return;
         }
