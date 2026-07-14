@@ -1,6 +1,6 @@
 // 도서 목록/추천/최신/베스트/카테고리/검색/상세 조회 API 클라이언트
 import { apiClient } from './apiClient';
-import type { ApiResponse, BookCard, BookRecommendationResponse, BookRecommendationType, Category, PageResponse } from '../types/api';
+import type { ApiResponse, BookCard, BookRecommendationResponse, BookRecommendationType, BookSearchResponse, Category, PageResponse } from '../types/api';
 import type { BookDetail } from '../types/book';
 
 export type BookListQuery = {
@@ -111,17 +111,18 @@ function normalizeCategory(category: Category): Category {
   };
 }
 
-export async function searchBooks(page = 0, size = 20, query: BookSearchQuery) {
-  const response = await apiClient.get<ApiResponse<PageResponse<BookCard>>>('/books/search', {
+export async function searchBooks(page = 0, size = 20, query: BookSearchQuery, signal?: AbortSignal) {
+  const response = await apiClient.get<ApiResponse<BookSearchResponse>>('/books/search', {
     params: { page, size, ...query },
+    signal,
   });
 
   const data = response.data.data;
-  if (!data?.content) {
+  if (!data?.page?.content) {
     throw new Error('Invalid search response');
   }
 
-  return data;
+  return data.page;
 }
 
 export async function getBookDetail(bookId: number) {
