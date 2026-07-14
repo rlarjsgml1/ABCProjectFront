@@ -65,6 +65,8 @@ const NoticeListPage = lazyNamed(() => import('../pages/user/U029Notices/NoticeL
 const NoticeDetailPage = lazyNamed(() => import('../pages/user/U029Notices/NoticeDetailPage'), 'NoticeDetailPage');
 const NotificationsPage = lazyNamed(() => import('../pages/user/U019Notifications/NotificationsPage'), 'NotificationsPage');
 const EventPage = lazyNamed(() => import('../pages/user/U020Event/EventPage'), 'EventPage');
+const BookLibrariesPage = lazyNamed(() => import('../pages/user/U024Libraries/BookLibrariesPage'), 'BookLibrariesPage');
+const RecommendedBooksPage = lazyNamed(() => import('../pages/user/U025Recommendations/RecommendedBooksPage'), 'RecommendedBooksPage');
 
 export const router = createBrowserRouter([
   {
@@ -77,6 +79,8 @@ export const router = createBrowserRouter([
       { path: '/notices', element: page(<NoticeListPage />) },
       { path: '/notices/:noticeId', element: page(<NoticeDetailPage />) },
       { path: '/books/:bookId', element: page(<BookDetailPage />) },
+      { path: '/books/:bookId/libraries', element: page(<BookLibrariesPage />) },
+      { path: '/books/:bookId/recommendations', element: page(<RecommendedBooksPage />) },
       {
         path: '/books/:bookId/rent',
         element: (

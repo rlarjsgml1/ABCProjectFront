@@ -1,13 +1,13 @@
 // 도서 상세 화면(U008) — 도서 정보 조회, 찜하기, 리뷰 작성/수정/삭제, 신고 모달을 담당한다.
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { getBookDetail } from '../../../api/bookApi';
+import { getBookDetail, getRelatedBooks } from '../../../api/bookApi';
 import { createMyFavorite, deleteMyFavorite } from '../../../api/favoritesApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { createReview, deleteReview, getBookReviews, updateReview } from '../../../api/reviewApi';
 import { Modal } from '../../../components/common/Modal';
 import type { BookDetail } from '../../../types/book';
-import type { ReviewItem, ReviewSummary } from '../../../types/api';
+import type { BookCard, ReviewItem, ReviewSummary } from '../../../types/api';
 import styles from '../../../styles/BookDetailPage.module.css';
 
 type DetailTab = 'description' | 'recommendations' | 'reviews';
@@ -72,6 +72,8 @@ export function BookDetailPage() {
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([]);
   const [reviewListError, setReviewListError] = useState('');
   const [openReviewMenuId, setOpenReviewMenuId] = useState<number | null>(null);
+  const [sameAuthorBooks, setSameAuthorBooks] = useState<BookCard[]>([]);
+  const [sameCategoryBooks, setSameCategoryBooks] = useState<BookCard[]>([]);
 
   const currentMemberId = Number(localStorage.getItem('memberId')) || null;
   const myReview = reviewItems.find((review) => review.memberId === currentMemberId) ?? null;
@@ -116,6 +118,31 @@ export function BookDetailPage() {
   useEffect(() => {
     void loadReviews();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookId]);
+
+  useEffect(() => {
+    if (!bookId) return;
+    let ignore = false;
+
+    getRelatedBooks(Number(bookId), 'AUTHOR', 6)
+      .then((books) => {
+        if (!ignore) setSameAuthorBooks(books);
+      })
+      .catch(() => {
+        if (!ignore) setSameAuthorBooks([]);
+      });
+
+    getRelatedBooks(Number(bookId), 'CATEGORY', 6)
+      .then((books) => {
+        if (!ignore) setSameCategoryBooks(books);
+      })
+      .catch(() => {
+        if (!ignore) setSameCategoryBooks([]);
+      });
+
+    return () => {
+      ignore = true;
+    };
   }, [bookId]);
 
   async function handleFavoriteClick() {
@@ -396,17 +423,39 @@ export function BookDetailPage() {
       <section className={styles.section} id="book-recommendations">
         <div className={styles.rowTitle}>
           <h2>같은 작가의 다른 책</h2>
-          <Link to={`/books/${bookId}/recommendations`}>더보기</Link>
+          <Link to={`/books/${bookId}/recommendations?type=AUTHOR`}>더보기</Link>
         </div>
-        <p className={styles.emptyState}>추천 도서 API 연결 후 표시됩니다.</p>
+        {sameAuthorBooks.length > 0 ? (
+          <div className={styles.bookGrid} aria-label="같은 작가의 다른 책 목록">
+            {sameAuthorBooks.map((related) => (
+              <Link className={styles.bookCard} to={`/books/${related.bookId}`} key={related.bookId}>
+                {related.coverImageUrl ? <img className={styles.bookThumb} src={related.coverImageUrl} alt="" /> : <span className={styles.bookThumb}>표지</span>}
+                <strong>{related.title}</strong>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className={styles.emptyState}>같은 작가의 다른 책이 없습니다.</p>
+        )}
       </section>
 
       <section className={styles.section}>
         <div className={styles.rowTitle}>
           <h2>같은 장르의 다른 책</h2>
-          <Link to={`/books/${bookId}/recommendations`}>더보기</Link>
+          <Link to={`/books/${bookId}/recommendations?type=CATEGORY`}>더보기</Link>
         </div>
-        <p className={styles.emptyState}>추천 도서 API 연결 후 표시됩니다.</p>
+        {sameCategoryBooks.length > 0 ? (
+          <div className={styles.bookGrid} aria-label="같은 장르의 다른 책 목록">
+            {sameCategoryBooks.map((related) => (
+              <Link className={styles.bookCard} to={`/books/${related.bookId}`} key={related.bookId}>
+                {related.coverImageUrl ? <img className={styles.bookThumb} src={related.coverImageUrl} alt="" /> : <span className={styles.bookThumb}>표지</span>}
+                <strong>{related.title}</strong>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className={styles.emptyState}>같은 장르의 다른 책이 없습니다.</p>
+        )}
       </section>
 
       <section className={styles.section} id="book-reviews">
