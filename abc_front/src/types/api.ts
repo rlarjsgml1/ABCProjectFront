@@ -445,6 +445,48 @@ export type BookCard = {
   favoriteYn: boolean;
 };
 
+export type AdminBookStatus = 'AVAILABLE' | 'HIDDEN' | 'INACTIVE';
+
+export type AdminBookRentalType = 'FREE' | 'PAID';
+
+export type AdminBookListQuery = {
+  q?: string;
+  categoryId?: number;
+  rentalType?: AdminBookRentalType;
+  status?: AdminBookStatus;
+  page?: number;
+  size?: number;
+};
+
+export type AdminBookSummary = {
+  bookId: number;
+  title: string;
+  coverImageUrl?: string;
+  authors?: string[];
+  author?: string;
+  publisherName?: string;
+  publisher?: string;
+  isbn?: string;
+  categoryId?: number;
+  categoryName?: string;
+  categories?: Category[];
+  rentalType: AdminBookRentalType;
+  rentalPrice: number;
+  status: AdminBookStatus;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type AdminBookStatusChangeRequest = {
+  status: AdminBookStatus;
+  reason: string;
+};
+
+export type AdminBookStatusChangeResponse = {
+  bookId: number;
+  status: AdminBookStatus;
+};
+
 // GET /api/v1/books/search 실제 응답 봉투. BookSearchResponse.java 기준 (content는 page 안에 들어있다).
 export type BookSearchResponse = {
   keyword: string;
