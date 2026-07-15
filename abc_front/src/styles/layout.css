@@ -598,6 +598,27 @@ a.admin-dashboard-kpi-card:focus-visible {
   color: var(--color-danger);
 }
 
+.field-success {
+  font-weight: 700;
+  font-size: 0.8125rem;
+  color: var(--color-success);
+}
+
+.field-inline-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.field-inline-row input {
+  flex: 1;
+}
+
+.field-inline-button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .form-checkbox-row {
   display: grid;
   gap: var(--space-2);
@@ -1913,6 +1934,63 @@ a.count-card:focus-visible {
 .membership-modal-body {
   display: grid;
   gap: var(--space-4);
+}
+
+.agreement-checkbox-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.agreement-view-button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.agreement-view-button:hover,
+.agreement-view-button:focus-visible {
+  outline: 0;
+  opacity: 0.8;
+}
+
+.agreement-modal {
+  width: min(100%, calc(var(--space-10) * 14));
+}
+
+.agreement-scroll-box {
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background: var(--color-surface-muted);
+}
+
+.agreement-scroll-text {
+  margin: 0;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.agreement-scroll-hint {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.agreement-confirm-checkbox {
+  justify-content: flex-start;
 }
 
 .membership-grade-current,
