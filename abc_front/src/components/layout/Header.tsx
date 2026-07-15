@@ -50,8 +50,9 @@ export function Header() {
     }, [location.pathname, location.search]);
 
     useEffect(() => {
+        // 로그인/로그아웃으로 계정이 바뀌면 그 계정에 맞는 검색 기록으로 다시 불러온다.
         setRecentSearches(getRecentSearches());
-    }, []);
+    }, [isLoggedIn]);
 
     useEffect(() => {
         if (!isLoggedIn) {

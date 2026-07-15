@@ -1,10 +1,16 @@
-// 헤더 검색창의 최근 검색어 — 브라우저 localStorage에만 저장한다 (계정/서버 연동 없음).
-const STORAGE_KEY = 'abc_recent_searches';
+// 헤더 검색창의 최근 검색어 — 브라우저 localStorage에만 저장한다 (서버 연동 없음).
+// 로그인한 memberId별로 키를 분리해서, 같은 브라우저를 여러 계정이 돌려 쓰더라도 서로의 검색 기록이 섞이지 않게 한다.
+const STORAGE_KEY_PREFIX = 'abc_recent_searches';
 const MAX_ITEMS = 8;
+
+function getStorageKey() {
+  const memberId = window.localStorage.getItem('memberId');
+  return `${STORAGE_KEY_PREFIX}:${memberId || 'guest'}`;
+}
 
 export function getRecentSearches(): string[] {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(getStorageKey());
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [];
@@ -15,7 +21,7 @@ export function getRecentSearches(): string[] {
 
 function saveRecentSearches(items: string[]) {
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    window.localStorage.setItem(getStorageKey(), JSON.stringify(items));
   } catch {
     // localStorage를 쓸 수 없는 환경(프라이빗 모드 등)에서는 조용히 무시한다.
   }
