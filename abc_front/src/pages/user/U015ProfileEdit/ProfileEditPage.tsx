@@ -179,6 +179,7 @@ export function ProfileEditPage() {
                 type="text"
                 value={form.name}
                 onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+                onFocus={(event) => event.target.select()}
               />
             </label>
             <label>
@@ -188,6 +189,7 @@ export function ProfileEditPage() {
                 type="email"
                 value={form.email}
                 onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+                onFocus={(event) => event.target.select()}
               />
             </label>
             <label>
@@ -197,6 +199,7 @@ export function ProfileEditPage() {
                 type="tel"
                 value={form.phone}
                 onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
+                onFocus={(event) => event.target.select()}
               />
             </label>
             <label>
