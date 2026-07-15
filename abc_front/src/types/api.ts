@@ -487,7 +487,8 @@ export type Category = {
   children?: Category[];
 };
 
-export type FavoriteSort = 'recent' | 'title';
+// 백엔드가 정렬 파라미터를 받지 않고 항상 등록 최신순으로 고정 정렬한다 (FavoriteBookRepository.findMyFavorites 참고).
+export type FavoriteSort = 'recent';
 
 export type FavoriteBooksQuery = {
   sort?: FavoriteSort;

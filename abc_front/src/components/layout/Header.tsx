@@ -7,6 +7,7 @@ import { searchBooks } from '../../api/bookApi';
 import { NOTIFICATIONS_UPDATED_EVENT, getMyNotifications } from '../../api/notificationsApi';
 import type { BookCard } from '../../types/api';
 import abcLogo from '../../assets/abc-logo.png';
+import { addRecentSearch, clearRecentSearches, getRecentSearches, removeRecentSearch } from '../../utils/recentSearches';
 
 const authStorageKeys = ['accessToken', 'memberRole', 'memberId', 'loginId', 'memberName'];
 
@@ -38,6 +39,7 @@ export function Header() {
     const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
     const [suggestions, setSuggestions] = useState<BookCard[]>([]);
     const [suggestionStatus, setSuggestionStatus] = useState<SuggestionStatus>('idle');
+    const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
     const timerRef = useRef<number>();
     const abortRef = useRef<AbortController | null>(null);
@@ -46,6 +48,10 @@ export function Header() {
     useEffect(() => {
         setIsLoggedIn(hasLoginSession());
     }, [location.pathname, location.search]);
+
+    useEffect(() => {
+        setRecentSearches(getRecentSearches());
+    }, []);
 
     useEffect(() => {
         if (!isLoggedIn) {
@@ -148,13 +154,32 @@ export function Header() {
         return `${location.pathname}${location.search}` === to;
     };
 
-    const handleSearch = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const query = keyword.trim();
+    const runSearch = (query: string) => {
         cancelPendingSearch();
         setIsSearchFocused(false);
         if (!query) return;
+        setRecentSearches(addRecentSearch(query));
         navigate(`/search?q=${encodeURIComponent(query)}`);
+    };
+
+    const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        runSearch(keyword.trim());
+    };
+
+    const handleRecentSearchSelect = (query: string) => {
+        setKeyword(query);
+        runSearch(query);
+    };
+
+    const handleRecentSearchRemove = (event: MouseEvent<HTMLButtonElement>, query: string) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setRecentSearches(removeRecentSearch(query));
+    };
+
+    const handleRecentSearchClear = () => {
+        setRecentSearches(clearRecentSearches());
     };
 
     const handleSuggestionSelect = () => {
@@ -250,6 +275,40 @@ export function Header() {
                         onFocus={handleSearchFocus}
                         aria-label="도서 검색"
                     />
+                    {isSearchFocused && keyword.trim().length === 0 ? (
+                        <div className="abc-search-suggestions">
+                            <div className="abc-search-recent-header">
+                                <span>최근 검색어</span>
+                                {recentSearches.length > 0 ? (
+                                    <button type="button" onClick={handleRecentSearchClear}>
+                                        전체 삭제
+                                    </button>
+                                ) : null}
+                            </div>
+                            {recentSearches.length > 0 ? (
+                                <ul className="abc-search-recent-list">
+                                    {recentSearches.map((query) => (
+                                        <li key={query}>
+                                            <button type="button" onClick={() => handleRecentSearchSelect(query)}>
+                                                {query}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="abc-search-recent-remove"
+                                                aria-label={`${query} 최근 검색어 삭제`}
+                                                onClick={(event) => handleRecentSearchRemove(event, query)}
+                                            >
+                                                ×
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <div className="abc-search-status">최근 검색어가 없습니다</div>
+                            )}
+                        </div>
+                    ) : null}
+
                     {isSearchFocused && keyword.trim().length >= SUGGESTION_MIN_LENGTH && suggestionStatus !== 'idle' ? (
                         <div className="abc-search-suggestions">
                             {suggestionStatus === 'loading' ? (
