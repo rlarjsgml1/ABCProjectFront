@@ -1,6 +1,13 @@
 // 내 독서 통계 조회 API와 백엔드 미구현 기간 대비 fallback 통계 데이터 생성 로직
 import { apiClient } from './apiClient';
-import type { ApiResponse, ReadingStatisticsData, ReadingStatisticsPeriodType, ReadingStatisticsQuery, ReadingTrendPoint } from '../types/api';
+import type {
+  ApiResponse,
+  RawReadingStatisticsResponse,
+  ReadingStatisticsData,
+  ReadingStatisticsPeriodType,
+  ReadingStatisticsQuery,
+  ReadingTrendPoint,
+} from '../types/api';
 
 const periodTrendLabels: Record<ReadingStatisticsPeriodType, string[]> = {
   TOTAL: ['1월', '2월', '3월', '4월', '5월', '6월'],
@@ -44,12 +51,42 @@ function getSummaryFromTrend(trendPoints: ReadingTrendPoint[]) {
   );
 }
 
+// 백엔드가 summary/environmentMetrics 껍데기 없이 필드를 최상위에 바로 내려주고,
+// readingTrend 각 항목은 완독 수(count) 하나만 주는 것을 프론트 표시 모양으로 변환한다.
+function mapReadingStatistics(raw: RawReadingStatisticsResponse, baseDate?: string): ReadingStatisticsData {
+  return {
+    periodType: raw.periodType,
+    baseDate,
+    summary: {
+      rentalCount: raw.rentalCount,
+      readBookCount: raw.readBookCount,
+      readPageCount: raw.readPageCount,
+      reviewCount: raw.reviewCount,
+      favoriteCount: raw.favoriteCount,
+    },
+    environmentMetrics: {
+      carbonSavedKg: raw.carbonSavedKg,
+      treeSavedCount: raw.treeSavedCount,
+      calculationDescription: '완독 도서 수 × 탄소 2kg, 완독 도서 수 × 나무 0.04그루',
+    },
+    trendPoints: raw.readingTrend.map((point) => ({
+      label: point.label,
+      periodStartDate: point.periodStartDate,
+      periodEndDate: point.periodEndDate,
+      rentalCount: 0,
+      readBookCount: point.count,
+      readPageCount: 0,
+    })),
+    generatedAt: raw.updatedAt,
+  };
+}
+
 export async function getMyReadingStatistics(params: ReadingStatisticsQuery) {
-  const response = await apiClient.get<ApiResponse<ReadingStatisticsData>>('/me/statistics', {
+  const response = await apiClient.get<ApiResponse<RawReadingStatisticsResponse>>('/me/statistics', {
     params,
   });
 
-  return response.data.data;
+  return mapReadingStatistics(response.data.data, params.baseDate);
 }
 
 export function getFallbackReadingStatistics(params: ReadingStatisticsQuery): ReadingStatisticsData {

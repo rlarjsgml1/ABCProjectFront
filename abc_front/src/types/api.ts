@@ -428,6 +428,23 @@ export type ReadingStatisticsData = {
   generatedAt?: string;
 };
 
+// 실제 백엔드 응답(UserReadingStatisticResponse.java) 원본 모양. summary/environmentMetrics 껍데기 없이 필드가 최상위에 있고,
+// readingTrend 각 항목은 완독 수(count) 하나만 준다 — 프론트 표시용 ReadingStatisticsData와 모양이 다르다.
+export type RawReadingStatisticsResponse = {
+  periodType: ReadingStatisticsPeriodType;
+  periodStartDate?: string;
+  periodEndDate?: string;
+  rentalCount: number;
+  readBookCount: number;
+  readPageCount: number;
+  reviewCount: number;
+  favoriteCount: number;
+  carbonSavedKg: number;
+  treeSavedCount: number;
+  readingTrend: Array<{ label: string; periodStartDate?: string; periodEndDate?: string; count: number }>;
+  updatedAt?: string;
+};
+
 
 export type AttendanceMonthlyQuery = {
   year: number;
