@@ -1,5 +1,7 @@
 import { apiClient } from './apiClient';
 import type {
+  AdminBookCreateRequest,
+  AdminBookCreateResponse,
   AdminBookListQuery,
   AdminBookStatusChangeRequest,
   AdminBookStatusChangeResponse,
@@ -12,6 +14,12 @@ export async function getAdminBooks(query: AdminBookListQuery) {
   const response = await apiClient.get<ApiResponse<PageResponse<AdminBookSummary>>>('/admin/books', {
     params: query,
   });
+
+  return response.data.data;
+}
+
+export async function createAdminBook(payload: AdminBookCreateRequest) {
+  const response = await apiClient.post<ApiResponse<AdminBookCreateResponse>>('/admin/books', payload);
 
   return response.data.data;
 }
