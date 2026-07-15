@@ -121,7 +121,7 @@ export function MyRentalsPage() {
     };
   }, []);
 
-  const activeRentals = rentals.filter((item) => item.rentalStatus === 'READING');
+  const activeRentals = rentals.filter((item) => item.rentalStatus === 'READY' || item.rentalStatus === 'READING');
   const isActiveEmpty = !isLoading && activeRentals.length === 0;
 
   return (

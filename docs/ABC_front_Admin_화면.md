@@ -717,7 +717,7 @@
 |---|---|
 | Route | `/admin/statistics` |
 | Primary API | `API-ADMIN-STAT-001` |
-| Purpose | 기간별 운영 KPI, 추이, 나이대별 통계, 환경 지표 조회 |
+| Purpose | 기간별 이벤트 통계(대여/완독/결제/신고 등) + 조회 시점 현재 KPI(회원/제재 회원/이용 가능 도서) + 나이대 필터 통계 조회 |
 
 ### UI 구성
 
@@ -725,7 +725,7 @@
 |---|---|
 | 기간 필터 | 주간, 월간, 연간, 전체, 기준일 |
 | 나이대 필터 | `10S`, `20S`, `30S`, `40S`, `50_PLUS` |
-| KPI | 회원, 제재 회원, 이용 가능 도서, 대여, 완독, 결제 합계, 리뷰, 신고 |
+| KPI | 회원·제재 회원·이용 가능 도서(현재 기준, 기간 미반영), 대여, 완독, 결제 합계, 리뷰(기간 집계), 신고(미처리 아님 — 기간 내 신고 접수 수). 희망도서 미처리 수·도서별 완독률은 현재 A-016 응답에 없음 |
 | 환경 지표 | 탄소 절약량, 나무 보호량 |
 | 그래프 | 대여 추이, 결제 추이, 완독 추이 |
 
@@ -742,7 +742,7 @@
 ### Flow
 
 1. 기본 기간으로 통계 조회
-2. 필터 변경 시 `GET /api/v1/admin/statistics`
+2. 필터 변경 시 `GET /api/v1/admin/statistics` (저장된 스냅샷이 아니라 조회 시점 실시간 재계산. 단 회원/제재 회원/이용 가능 도서 KPI 3개는 기간 필터와 무관하게 항상 현재 값)
 3. KPI/그래프 렌더링
 4. KPI 카드 클릭 시 관련 화면 이동
 
@@ -903,7 +903,7 @@
 | 화면 | 기능 | Method | Endpoint | Request | Response data | Backend source | Front 처리 |
 |---|---|---|---|---|---|---|---|
 | A-001 | 관리자 대시보드 조회 | GET | `/api/v1/admin/dashboard` | 없음 | KPI 통계, 최근 결제 목록 | `AdminDashboardController` | 실제 연결 가능하나 1차 구현. 최근 신고·최근 희망도서 위젯은 review/request 도메인 Repository 추가 후 후속 작업 |
-| A-016 | 관리자 통계 조회 | GET | `/api/v1/admin/statistics` | query: `periodType`(필수, `WEEKLY\|MONTHLY\|YEARLY\|TOTAL`), `baseDate?`, `ageBand?` | KPI 통계 | `AdminStatisticController` | 현재 `periodType=TOTAL` + `ageBand=ALL`(또는 미지정) 조합만 지원. 그 외 조합은 404(`COMMON_NOT_FOUND`) 반환하므로 화면은 우선 TOTAL 탭만 활성화 |
+| A-016 | 관리자 통계 조회 | GET | `/api/v1/admin/statistics` | query: `periodType`(필수, `WEEKLY\|MONTHLY\|YEARLY\|TOTAL`), `baseDate?`, `ageBand?` | KPI 통계 | `AdminStatisticController` | `WEEKLY`, `MONTHLY`, `YEARLY`, `TOTAL`과 `ageBand` 조합을 모두 지원하도록 업데이트됨. 기간/나이대 필터 탭 전체 활성화 가능 |
 | A-017 | 감사 로그 목록 조회 | GET | `/api/v1/admin/audit-logs` | query: `actionType?`, `targetType?`, `targetId?`, `page=0`, `size=10` | `PageResponse<AdminAuditLogSummaryResponse>` | `AdminAuditLogController` | 실제 연결 가능. 조회 전용 |
 | A-003/A-013 | 회원 포인트 조정 | POST | `/api/v1/admin/members/{memberId}/points` | `pointAmount`, `description` | `pointHistoryId`, `pointAmount`, `pointType`, `pointBalance`, `createdAt` | `AdminMemberPointController` | 실제 연결 가능 |
 | A-013 | 쿠폰 목록 | GET | `/api/v1/admin/coupons` | query: `status?`, `couponType?`, `page=0`, `size=10` | `PageResponse<AdminCouponSummaryResponse>` | `AdminCouponController` | 실제 연결 가능 |

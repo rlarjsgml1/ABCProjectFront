@@ -67,13 +67,36 @@ export function MyPage() {
             <article className="library-preview-item">
               <h3>읽고 있는 도서</h3>
               {readingBooks.length > 0 ? (
-                <ul>
+                <div className="recent-books-list">
                   {readingBooks.map((book) => (
-                    <li key={book.rentalId}>
-                      <Link to={`/books/${book.bookId}`}>{book.title}</Link> · {book.progressRate}%
-                    </li>
+                    <article key={book.rentalId} className="recent-book-card">
+                      <Link to={`/books/${book.bookId}`} className="recent-book-cover-link">
+                        <img className="book-cover-thumb" src={book.coverImageUrl} alt={`${book.title} 표지`} />
+                      </Link>
+
+                      <div className="recent-book-info">
+                        <Link to={`/books/${book.bookId}`} className="recent-book-title">
+                          {book.title}
+                        </Link>
+
+                        <p className="recent-book-progress-text">
+                          {book.currentPage} / {book.totalPages} 페이지 ({book.progressRate}%)
+                        </p>
+
+                        <div className="recent-book-progress-track">
+                          <span className="recent-book-progress-fill" style={{ width: `${book.progressRate}%` }} />
+                        </div>
+                      </div>
+
+                      <Link
+                        to={`/rentals/${book.rentalId}/read?page=${book.currentPage > 0 ? book.currentPage : 1}`}
+                        className="button button-primary recent-book-continue-button"
+                      >
+                        이어보기
+                      </Link>
+                    </article>
                   ))}
-                </ul>
+                </div>
               ) : (
                 <p>현재 읽고 있는 도서가 없습니다.</p>
               )}
@@ -83,13 +106,36 @@ export function MyPage() {
             <article className="library-preview-item">
               <h3>소장한 도서</h3>
               {ownedBooks.length > 0 ? (
-                <ul>
+                <div className="recent-books-list">
                   {ownedBooks.map((book) => (
-                    <li key={book.rentalId}>
-                      <Link to={`/books/${book.bookId}`}>{book.title}</Link>
-                    </li>
+                    <article key={book.rentalId} className="recent-book-card">
+                      <Link to={`/books/${book.bookId}`} className="recent-book-cover-link">
+                        <img className="book-cover-thumb" src={book.coverImageUrl} alt={`${book.title} 표지`} />
+                      </Link>
+
+                      <div className="recent-book-info">
+                        <Link to={`/books/${book.bookId}`} className="recent-book-title">
+                          {book.title}
+                        </Link>
+
+                        <p className="recent-book-progress-text">
+                          {book.currentPage} / {book.totalPages} 페이지 ({book.progressRate}%)
+                        </p>
+
+                        <div className="recent-book-progress-track">
+                          <span className="recent-book-progress-fill" style={{ width: `${book.progressRate}%` }} />
+                        </div>
+                      </div>
+
+                      <Link
+                        to={`/rentals/${book.rentalId}/read?page=${book.currentPage > 0 ? book.currentPage : 1}`}
+                        className="button button-primary recent-book-continue-button"
+                      >
+                        읽기
+                      </Link>
+                    </article>
                   ))}
-                </ul>
+                </div>
               ) : (
                 <p>소장한 도서가 없습니다.</p>
               )}

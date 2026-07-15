@@ -42,7 +42,7 @@ function formatRegisteredDate(book: FavoriteBookItem) {
 
 export function FavoritesPage() {
   const [favoriteBooks, setFavoriteBooks] = useState<FavoriteBookItem[]>([]);
-  const [sort, setSort] = useState<FavoriteSort>('recent');
+  const sort: FavoriteSort = 'recent';
   const [isLoading, setIsLoading] = useState(true);
   const [isDeletingBookId, setIsDeletingBookId] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
@@ -55,7 +55,8 @@ export function FavoritesPage() {
       setErrorMessage('');
 
       try {
-        const data = await getMyFavorites({ sort, page: 0, size: pageSize });
+        // 백엔드가 sort 파라미터를 받지 않고 항상 등록 최신순으로 고정 정렬하므로 값을 보내지 않는다.
+        const data = await getMyFavorites({ page: 0, size: pageSize });
 
         if (!ignore) {
           setFavoriteBooks(data.content);
@@ -111,9 +112,8 @@ export function FavoritesPage() {
         <div className="favorites-header">
           <strong>즐겨찾기 {favoriteBooks.length}권</strong>
 
-          <select className="favorites-sort" value={sort} onChange={(event) => setSort(event.target.value as FavoriteSort)}>
+          <select className="favorites-sort" value={sort} disabled>
             <option value="recent">최근 등록순</option>
-            <option value="title">제목순</option>
           </select>
         </div>
 

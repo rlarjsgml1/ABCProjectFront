@@ -179,6 +179,7 @@ export function ProfileEditPage() {
                 type="text"
                 value={form.name}
                 onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+                onFocus={(event) => event.target.select()}
               />
             </label>
             <label>
@@ -188,6 +189,7 @@ export function ProfileEditPage() {
                 type="email"
                 value={form.email}
                 onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+                onFocus={(event) => event.target.select()}
               />
             </label>
             <label>
@@ -197,6 +199,7 @@ export function ProfileEditPage() {
                 type="tel"
                 value={form.phone}
                 onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
+                onFocus={(event) => event.target.select()}
               />
             </label>
             <label>
@@ -209,7 +212,7 @@ export function ProfileEditPage() {
                 <option value="">선택</option>
                 <option value="MALE">남성</option>
                 <option value="FEMALE">여성</option>
-                <option value="OTHER">기타</option>
+                <option value="NONE">선택 안 함</option>
               </select>
             </label>
           </div>

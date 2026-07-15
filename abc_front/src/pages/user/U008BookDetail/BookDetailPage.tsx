@@ -9,7 +9,7 @@ import { getApiErrorMessage } from '../../../api/profileApi';
 import { createReview, deleteReview, getBookReviews, updateReview } from '../../../api/reviewApi';
 import { Modal } from '../../../components/common/Modal';
 import type { BookDetail } from '../../../types/book';
-import type { BookCard, MyRentalItem, RentalStatus, ReviewItem, ReviewSummary } from '../../../types/api';
+import type { BookCard, MyRentalItem, ReviewItem, ReviewSummary } from '../../../types/api';
 import styles from '../../../styles/BookDetailPage.module.css';
 
 type DetailTab = 'description' | 'recommendations' | 'reviews';
@@ -125,10 +125,12 @@ export function BookDetailPage() {
   const [sameCategoryBooks, setSameCategoryBooks] = useState<BookCard[]>([]);
   const [bookActionMessage, setBookActionMessage] = useState('');
   const [isOpeningViewer, setIsOpeningViewer] = useState(false);
+  const [myBookRental, setMyBookRental] = useState<MyRentalItem | null>(null);
 
   const myReview = reviewItems.find((review) => review.memberId === currentMemberId) ?? null;
-  const isRentedBook = isRentedState(book?.myRentalState);
-  const isOwnedBook = isOwnedState(book?.myRentalState);
+  const myBookRentalState = myBookRental?.rentalStatus ?? book?.myRentalState;
+  const isRentedBook = isRentedState(myBookRentalState);
+  const isOwnedBook = isOwnedState(myBookRentalState);
 
   useEffect(() => {
     function syncAuthState() {
@@ -185,6 +187,36 @@ export function BookDetailPage() {
     void loadReviews();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookId]);
+
+  useEffect(() => {
+    if (!bookId || !isSignedIn) {
+      setMyBookRental(null);
+      return;
+    }
+
+    let ignore = false;
+
+    async function loadMyBookRental() {
+      try {
+        const rentalsPage = await getMyRentals({ page: 0, size: 100 });
+        const currentRental = rentalsPage.content.find((rental) => rental.bookId === Number(bookId)) ?? null;
+
+        if (!ignore) {
+          setMyBookRental(currentRental);
+        }
+      } catch {
+        if (!ignore) {
+          setMyBookRental(null);
+        }
+      }
+    }
+
+    void loadMyBookRental();
+
+    return () => {
+      ignore = true;
+    };
+  }, [bookId, isSignedIn, currentMemberId]);
 
   useEffect(() => {
     if (!bookId) return;
@@ -254,14 +286,13 @@ export function BookDetailPage() {
       return;
     }
 
-    const rentalStatus = book?.myRentalState as RentalStatus | undefined;
-
     setIsOpeningViewer(true);
     setBookActionMessage('');
 
     try {
-      const rentalsPage = await getMyRentals({ status: rentalStatus, page: 0, size: 100 });
-      const currentRental = rentalsPage.content.find((rental) => rental.bookId === Number(bookId));
+      const currentRental =
+        myBookRental ??
+        (await getMyRentals({ page: 0, size: 100 })).content.find((rental) => rental.bookId === Number(bookId));
 
       if (!currentRental) {
         setBookActionMessage('내 서재에서 대여/소장 상태를 확인해 주세요.');

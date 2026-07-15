@@ -43,6 +43,55 @@ export type SignupResponse = {
   role: string;
 };
 
+// 백엔드 미구현. GET /api/v1/auth/check-login-id?loginId=... 스펙으로 요청해둔 상태.
+export type CheckLoginIdResponse = {
+  loginId: string;
+  available: boolean;
+};
+
+// API-AUTH-003 (U-004 아이디 찾기). 필드명은 FindIdRequest/FindIdResponse.java 기준.
+export type FindIdRequest = {
+  name: string;
+  email: string;
+};
+
+export type FindIdResponse = {
+  found: boolean;
+  loginId: string | null;
+  joinedAt: string | null;
+};
+
+// 백엔드 미구현. ERD 문서 "13.12 비밀번호 재설정 정책" 기준으로 요청해둔 상태 (password_reset_code 테이블은 schema.sql에 이미 존재).
+export type PasswordResetRequestPayload = {
+  loginId: string;
+  name: string;
+  email: string;
+};
+
+// 회원 존재 여부를 노출하지 않기 위해 항상 200 OK로 동일한 message를 반환하는 정책.
+export type PasswordResetRequestResponse = {
+  message: string;
+};
+
+export type PasswordResetVerifyPayload = {
+  loginId: string;
+  code: string;
+};
+
+export type PasswordResetVerifyResponse = {
+  resetToken: string;
+};
+
+export type PasswordResetConfirmPayload = {
+  resetToken: string;
+  newPassword: string;
+  newPasswordConfirm: string;
+};
+
+export type PasswordResetConfirmResponse = {
+  changedAt: string;
+};
+
 export type LoginRequest = {
   loginId: string;
   password: string;
@@ -379,6 +428,23 @@ export type ReadingStatisticsData = {
   generatedAt?: string;
 };
 
+// 실제 백엔드 응답(UserReadingStatisticResponse.java) 원본 모양. summary/environmentMetrics 껍데기 없이 필드가 최상위에 있고,
+// readingTrend 각 항목은 완독 수(count) 하나만 준다 — 프론트 표시용 ReadingStatisticsData와 모양이 다르다.
+export type RawReadingStatisticsResponse = {
+  periodType: ReadingStatisticsPeriodType;
+  periodStartDate?: string;
+  periodEndDate?: string;
+  rentalCount: number;
+  readBookCount: number;
+  readPageCount: number;
+  reviewCount: number;
+  favoriteCount: number;
+  carbonSavedKg: number;
+  treeSavedCount: number;
+  readingTrend: Array<{ label: string; periodStartDate?: string; periodEndDate?: string; count: number }>;
+  updatedAt?: string;
+};
+
 
 export type AttendanceMonthlyQuery = {
   year: number;
@@ -445,6 +511,82 @@ export type BookCard = {
   favoriteYn: boolean;
 };
 
+export type AdminBookStatus = 'AVAILABLE' | 'HIDDEN' | 'INACTIVE';
+
+export type AdminBookRentalType = 'FREE' | 'PAID';
+
+export type AdminBookListQuery = {
+  q?: string;
+  categoryId?: number;
+  rentalType?: AdminBookRentalType;
+  status?: AdminBookStatus;
+  page?: number;
+  size?: number;
+};
+
+export type AdminBookSummary = {
+  bookId: number;
+  title: string;
+  coverImageUrl?: string;
+  authors?: string[];
+  author?: string;
+  publisherName?: string;
+  publisher?: string;
+  isbn?: string;
+  categoryId?: number;
+  categoryName?: string;
+  categories?: Category[];
+  rentalType: AdminBookRentalType;
+  rentalPrice: number;
+  status: AdminBookStatus;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type AdminBookStatusChangeRequest = {
+  status: AdminBookStatus;
+  reason: string;
+};
+
+export type AdminBookStatusChangeResponse = {
+  bookId: number;
+  status: AdminBookStatus;
+};
+
+export type AdminBookPageRequest = {
+  pageNo: number;
+  pageContent: string;
+};
+
+export type AdminBookCreateRequest = {
+  title: string;
+  isbn: string;
+  publisherName: string;
+  authors: string[];
+  categoryIds: number[];
+  keywords: string[];
+  rentalType: AdminBookRentalType;
+  rentalPrice: number;
+  defaultRentalDays: number;
+  coverImageUrl?: string;
+  status: AdminBookStatus;
+  description: string;
+  tableOfContents?: string;
+  publisherReview?: string;
+  pages: AdminBookPageRequest[];
+};
+
+export type AdminBookCreateResponse = {
+  bookId: number;
+};
+
+// GET /api/v1/books/search 실제 응답 봉투. BookSearchResponse.java 기준 (content는 page 안에 들어있다).
+export type BookSearchResponse = {
+  keyword: string;
+  totalCount: number;
+  page: PageResponse<BookCard>;
+};
+
 // API-BOOK-006 (U-025 추천 도서). 필드명은 BookRecommendationResponse.java 기준.
 export type BookRecommendationType = 'AUTHOR' | 'CATEGORY' | 'KEYWORD';
 
@@ -480,7 +622,8 @@ export type Category = {
   children?: Category[];
 };
 
-export type FavoriteSort = 'recent' | 'title';
+// 백엔드가 정렬 파라미터를 받지 않고 항상 등록 최신순으로 고정 정렬한다 (FavoriteBookRepository.findMyFavorites 참고).
+export type FavoriteSort = 'recent';
 
 export type FavoriteBooksQuery = {
   sort?: FavoriteSort;

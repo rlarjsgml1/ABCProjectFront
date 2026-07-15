@@ -84,9 +84,9 @@ export function LoginPage() {
           </label>
 
           <div className="find-links">
-            <a href="#">아이디 찾기</a>
+            <Link to="/find-id">아이디 찾기</Link>
             <span>/</span>
-            <a href="#">비밀번호 찾기</a>
+            <Link to="/find-id?tab=password">비밀번호 찾기</Link>
           </div>
         </div>
       </form>
