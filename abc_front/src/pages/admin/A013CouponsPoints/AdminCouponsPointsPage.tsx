@@ -633,6 +633,17 @@ export function AdminCouponsPointsPage() {
   const memberShownPage = toUiPage(membersPage?.page);
   const memberTotalPages = membersPage?.totalPages ?? 1;
 
+  const renderTabs = () => (
+    <div className={styles.tabs} role="tablist" aria-label="쿠폰/포인트 관리 탭">
+      <button type="button" role="tab" aria-selected={activeTab === 'coupons'} className={activeTab === 'coupons' ? styles.activeTab : ''} onClick={() => setActiveTab('coupons')}>
+        쿠폰 관리
+      </button>
+      <button type="button" role="tab" aria-selected={activeTab === 'points'} className={activeTab === 'points' ? styles.activeTab : ''} onClick={() => setActiveTab('points')}>
+        포인트 조정
+      </button>
+    </div>
+  );
+
   return (
     <section className={`page-section ${styles.page}`} aria-labelledby="admin-benefits-title">
       <div className={styles.header}>
@@ -642,15 +653,6 @@ export function AdminCouponsPointsPage() {
         </div>
       </div>
 
-      <div className={styles.tabs} role="tablist" aria-label="쿠폰/포인트 관리 탭">
-        <button type="button" role="tab" aria-selected={activeTab === 'coupons'} className={activeTab === 'coupons' ? styles.activeTab : ''} onClick={() => setActiveTab('coupons')}>
-          쿠폰 관리
-        </button>
-        <button type="button" role="tab" aria-selected={activeTab === 'points'} className={activeTab === 'points' ? styles.activeTab : ''} onClick={() => setActiveTab('points')}>
-          포인트 조정
-        </button>
-      </div>
-
       {errorMessage ? <p className={styles.notice}>{errorMessage}</p> : null}
       {statusMessage ? <p className={styles.success}>{statusMessage}</p> : null}
 
@@ -658,6 +660,7 @@ export function AdminCouponsPointsPage() {
         <div className={`${styles.contentGrid} ${styles.couponGrid}`}>
           <section className={styles.panel} aria-label="쿠폰 조회 및 등록">
             <form className={styles.filterPanel} onSubmit={handleCouponSearch}>
+              {renderTabs()}
               <label>
                 <span className={styles.filterLabelText}>쿠폰 상태</span>
                 <select name="status" defaultValue={searchParams.get('status') ?? ''}>
@@ -815,6 +818,7 @@ export function AdminCouponsPointsPage() {
         <div className={styles.contentGrid}>
           <section className={styles.panel} aria-label="회원 검색">
             <form className={styles.memberFilterPanel} onSubmit={handleMemberSearch}>
+              {renderTabs()}
               <label>
                 <span className={styles.filterLabelText}>회원 검색</span>
                 <input name="memberQ" type="search" placeholder="회원명, 아이디, 이메일" defaultValue={searchParams.get('memberQ') ?? ''} />

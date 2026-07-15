@@ -465,20 +465,9 @@ export function AdminReportListPage() {
                                 >
                                   상세보기
                                 </button>
-                                <button type="button" role="menuitem" onClick={() => openProcessModal(report, 'PROCESSING')} disabled={isActionLocked}>
-                                  처리 중
+                                <button type="button" role="menuitem" onClick={() => openProcessModal(report, report.status === 'WAITING' ? 'PROCESSING' : report.status)} disabled={isActionLocked}>
+                                  처리
                                 </button>
-                                <button type="button" role="menuitem" onClick={() => openProcessModal(report, 'DONE')} disabled={isActionLocked}>
-                                  완료
-                                </button>
-                                <button type="button" role="menuitem" className={styles.rejectMenuItem} onClick={() => openProcessModal(report, 'REJECTED')} disabled={isActionLocked}>
-                                  반려
-                                </button>
-                                {report.targetType === 'REVIEW' ? (
-                                  <button type="button" role="menuitem" onClick={() => openProcessModal(report, 'DONE')} disabled={isActionLocked}>
-                                    리뷰 숨김
-                                  </button>
-                                ) : null}
                               </div>
                             ) : null}
                           </div>
@@ -505,52 +494,72 @@ export function AdminReportListPage() {
           </div>
         </section>
 
-        <aside className={styles.detailPanel} aria-label="신고 상세">
-          {selectedReport ? (
-            <>
-              <div className={styles.detailHeader}>
-                <div>
-                  <strong>RP-{selectedReport.reportId}</strong>
-                  <h2>{getTargetTitle(selectedReport)}</h2>
-                </div>
-                <span className={`${styles.statusBadge} ${styles[`status${selectedReport.status}`]}`}>{getOptionLabel(statusOptions, selectedReport.status)}</span>
-              </div>
-              <dl className={styles.detailList}>
-                <div>
-                  <dt>대상</dt>
-                  <dd>{getOptionLabel(targetTypeOptions, selectedReport.targetType)}</dd>
-                </div>
-                <div>
-                  <dt>신고자</dt>
-                  <dd>
-                    {selectedReport.reporter.name} / {selectedReport.reporter.loginId}
-                  </dd>
-                </div>
-                <div>
-                  <dt>신고 사유</dt>
-                  <dd>{selectedReport.reportType}</dd>
-                </div>
-                <div>
-                  <dt>신고 내용</dt>
-                  <dd>{selectedReport.content}</dd>
-                </div>
-                {selectedReport.targetType === 'REVIEW' ? (
-                  <div>
-                    <dt>원본 리뷰</dt>
-                    <dd>{selectedReport.targetInfo.reviewContent ?? '-'}</dd>
-                  </div>
-                ) : null}
-                <div>
-                  <dt>처리 결과</dt>
-                  <dd>{selectedReport.processResult ?? '-'}</dd>
-                </div>
-              </dl>
-            </>
-          ) : (
-            <p>상세보기 버튼을 눌러 신고 내용과 원본을 확인하세요.</p>
-          )}
-        </aside>
       </div>
+
+      {selectedReport ? (
+        <div className={styles.modalBackdrop} role="presentation" onMouseDown={() => setSelectedReport(null)}>
+          <section className={`${styles.modal} ${styles.detailModal}`} role="dialog" aria-modal="true" aria-labelledby="report-detail-title" onMouseDown={(event) => event.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <div>
+                <h2 id="report-detail-title">신고 상세</h2>
+                <p>RP-{selectedReport.reportId}</p>
+              </div>
+              <button type="button" aria-label="닫기" onClick={() => setSelectedReport(null)}>
+                ×
+              </button>
+            </div>
+            <div className={styles.detailHeader}>
+              <div>
+                <strong>{getOptionLabel(targetTypeOptions, selectedReport.targetType)}</strong>
+                <h3>{getTargetTitle(selectedReport)}</h3>
+              </div>
+              <span className={`${styles.statusBadge} ${styles[`status${selectedReport.status}`]}`}>{getOptionLabel(statusOptions, selectedReport.status)}</span>
+            </div>
+            <dl className={styles.detailList}>
+              <div>
+                <dt>신고자</dt>
+                <dd>
+                  {selectedReport.reporter.name} / {selectedReport.reporter.loginId}
+                </dd>
+              </div>
+              <div>
+                <dt>신고 사유</dt>
+                <dd>{selectedReport.reportType}</dd>
+              </div>
+              <div>
+                <dt>신고 내용</dt>
+                <dd>{selectedReport.content}</dd>
+              </div>
+              {selectedReport.targetType === 'REVIEW' ? (
+                <div>
+                  <dt>원본 리뷰</dt>
+                  <dd>{selectedReport.targetInfo.reviewContent ?? '-'}</dd>
+                </div>
+              ) : null}
+              <div>
+                <dt>처리 결과</dt>
+                <dd>{selectedReport.processResult ?? '-'}</dd>
+              </div>
+            </dl>
+            <div className={styles.modalActions}>
+              <Button type="button" variant="secondary" onClick={() => setSelectedReport(null)}>
+                닫기
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  const report = selectedReport;
+                  setSelectedReport(null);
+                  openProcessModal(report, report.status === 'WAITING' ? 'PROCESSING' : report.status);
+                }}
+                disabled={selectedReport.status === 'DONE' || selectedReport.status === 'REJECTED'}
+              >
+                처리
+              </Button>
+            </div>
+          </section>
+        </div>
+      ) : null}
 
       {processReport ? (
         <div className={styles.modalBackdrop} role="presentation" onMouseDown={closeProcessModal}>

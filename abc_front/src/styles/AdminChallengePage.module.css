@@ -100,16 +100,16 @@
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
 }
 
-.primary {
+.progressPrimary {
   background: linear-gradient(90deg, #2563eb, #4f46e5);
 }
 
-.danger {
+.progressDanger {
   background: linear-gradient(90deg, #f97316, #e11d48);
 }
 
-.success {
-  background: linear-gradient(90deg, #10b981, #22c55e);
+.progressSuccess {
+  background: linear-gradient(90deg, #16a34a, #22c55e);
 }
 
 .filterPanel {

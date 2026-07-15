@@ -194,6 +194,7 @@
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: var(--space-2);
+  border: 1px solid #cbd5e1;
   border-radius: var(--radius-md);
   padding: var(--space-2);
   background: #eaf2ff;

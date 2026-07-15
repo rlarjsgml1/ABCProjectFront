@@ -49,6 +49,7 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-3);
   align-items: center;
+  border: 1px solid #cbd5e1;
   border-radius: var(--radius-lg);
   padding: 8px;
   background: #eaf2ff;
@@ -168,8 +169,7 @@
   align-items: start;
 }
 
-.tablePanel,
-.detailPanel {
+.tablePanel {
   display: grid;
   gap: var(--space-4);
   border: 1px solid var(--color-border);
@@ -444,16 +444,6 @@
   font-weight: 800;
 }
 
-.detailPanel {
-  position: static;
-}
-
-.detailPanel > p {
-  margin: 0;
-  color: var(--color-muted);
-  font-weight: 800;
-}
-
 .detailHeader {
   display: flex;
   justify-content: space-between;
@@ -468,7 +458,7 @@
   font-size: 0.9rem;
 }
 
-.detailHeader h2 {
+.detailHeader h3 {
   margin-top: var(--space-1);
   color: var(--color-text);
   font-size: 1.2rem;
@@ -527,6 +517,10 @@
   padding: var(--space-6);
   background: var(--color-surface);
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+}
+
+.detailModal {
+  width: min(640px, 100%);
 }
 
 .modalHeader {
