@@ -4,11 +4,12 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AUTH_CHANGED_EVENT } from '../../../api/authApi';
 import { getBookDetail, getRelatedBooks } from '../../../api/bookApi';
 import { createMyFavorite, deleteMyFavorite } from '../../../api/favoritesApi';
+import { getMyRentals } from '../../../api/myRentalsApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { createReview, deleteReview, getBookReviews, updateReview } from '../../../api/reviewApi';
 import { Modal } from '../../../components/common/Modal';
 import type { BookDetail } from '../../../types/book';
-import type { BookCard, ReviewItem, ReviewSummary } from '../../../types/api';
+import type { BookCard, MyRentalItem, RentalStatus, ReviewItem, ReviewSummary } from '../../../types/api';
 import styles from '../../../styles/BookDetailPage.module.css';
 
 type DetailTab = 'description' | 'recommendations' | 'reviews';
@@ -64,6 +65,19 @@ function formatKeywords(keywords: string[] | undefined) {
   return keywords && keywords.length > 0 ? keywords.join(', ') : '-';
 }
 
+function isRentedState(state: string | null | undefined) {
+  return state === 'READY' || state === 'READING' || state === 'RENTED';
+}
+
+function isOwnedState(state: string | null | undefined) {
+  return state === 'OWNED' || state === 'PURCHASED';
+}
+
+function getReadPath(rental: MyRentalItem) {
+  const targetPage = rental.currentPage > 0 ? rental.currentPage : 1;
+  return `/rentals/${rental.rentalId}/read?page=${targetPage}`;
+}
+
 function StarPicker({ value, onChange, disabled = false }: { value: number; onChange: (rating: number) => void; disabled?: boolean }) {
   return (
     <div className={styles.starPicker} aria-label="별점 선택">
@@ -109,8 +123,12 @@ export function BookDetailPage() {
   const [openReviewMenuId, setOpenReviewMenuId] = useState<number | null>(null);
   const [sameAuthorBooks, setSameAuthorBooks] = useState<BookCard[]>([]);
   const [sameCategoryBooks, setSameCategoryBooks] = useState<BookCard[]>([]);
+  const [bookActionMessage, setBookActionMessage] = useState('');
+  const [isOpeningViewer, setIsOpeningViewer] = useState(false);
 
   const myReview = reviewItems.find((review) => review.memberId === currentMemberId) ?? null;
+  const isRentedBook = isRentedState(book?.myRentalState);
+  const isOwnedBook = isOwnedState(book?.myRentalState);
 
   useEffect(() => {
     function syncAuthState() {
@@ -226,6 +244,36 @@ export function BookDetailPage() {
     }
 
     navigate(`/books/${bookId}/rent`);
+  }
+
+  async function handleReadClick() {
+    if (!bookId) return;
+
+    if (!isSignedIn) {
+      setActiveModal('login');
+      return;
+    }
+
+    const rentalStatus = book?.myRentalState as RentalStatus | undefined;
+
+    setIsOpeningViewer(true);
+    setBookActionMessage('');
+
+    try {
+      const rentalsPage = await getMyRentals({ status: rentalStatus, page: 0, size: 100 });
+      const currentRental = rentalsPage.content.find((rental) => rental.bookId === Number(bookId));
+
+      if (!currentRental) {
+        setBookActionMessage('내 서재에서 대여/소장 상태를 확인해 주세요.');
+        return;
+      }
+
+      navigate(getReadPath(currentRental));
+    } catch (error) {
+      setBookActionMessage(getApiErrorMessage(error));
+    } finally {
+      setIsOpeningViewer(false);
+    }
   }
 
   function openMemberModal(modalType: Exclude<ModalType, null>) {
@@ -393,12 +441,25 @@ export function BookDetailPage() {
         </div>
 
         <aside className={styles.actionPanel} aria-label="도서 활동">
-          <button className="button button-primary" type="button" onClick={handleRentClick}>
-            대여하기
-          </button>
-          <button className="button button-secondary" type="button" onClick={handleRentClick}>
-            소장하기
-          </button>
+          {isRentedBook ? (
+            <button className="button button-primary" type="button" onClick={handleReadClick} disabled={isOpeningViewer}>
+              {isOpeningViewer ? '이동 중' : '읽기'}
+            </button>
+          ) : (
+            <button className="button button-primary" type="button" onClick={handleRentClick} disabled={isOwnedBook}>
+              대여하기
+            </button>
+          )}
+          {isOwnedBook ? (
+            <button className="button button-secondary" type="button" onClick={handleReadClick} disabled={isOpeningViewer}>
+              {isOpeningViewer ? '이동 중' : '읽기'}
+            </button>
+          ) : (
+            <button className="button button-secondary" type="button" onClick={handleRentClick}>
+              소장하기
+            </button>
+          )}
+          {bookActionMessage && <p className={styles.bookActionMessage}>{bookActionMessage}</p>}
 
           <div className={styles.sideLinks}>
             <button type="button" onClick={() => openMemberModal('bookReport')}>
