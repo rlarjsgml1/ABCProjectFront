@@ -7,6 +7,12 @@ import type {
   FindIdResponse,
   LoginRequest,
   LoginResponse,
+  PasswordResetConfirmPayload,
+  PasswordResetConfirmResponse,
+  PasswordResetRequestPayload,
+  PasswordResetRequestResponse,
+  PasswordResetVerifyPayload,
+  PasswordResetVerifyResponse,
   SignupRequest,
   SignupResponse,
 } from '../types/api';
@@ -33,5 +39,30 @@ export async function login(payload: LoginRequest) {
 
 export async function findId(payload: FindIdRequest) {
   const response = await apiClient.post<ApiResponse<FindIdResponse>>('/auth/find-id', payload);
+  return response.data.data;
+}
+
+// 아래 세 함수는 전부 백엔드 미구현 API. ERD 문서 "13.12 비밀번호 재설정 정책" 스펙으로 요청해둔 상태 — 구현되면 바로 연동됨.
+export async function requestPasswordReset(payload: PasswordResetRequestPayload) {
+  const response = await apiClient.post<ApiResponse<PasswordResetRequestResponse>>(
+    '/auth/password-reset/request',
+    payload,
+  );
+  return response.data.data;
+}
+
+export async function verifyPasswordResetCode(payload: PasswordResetVerifyPayload) {
+  const response = await apiClient.post<ApiResponse<PasswordResetVerifyResponse>>(
+    '/auth/password-reset/verify',
+    payload,
+  );
+  return response.data.data;
+}
+
+export async function confirmPasswordReset(payload: PasswordResetConfirmPayload) {
+  const response = await apiClient.post<ApiResponse<PasswordResetConfirmResponse>>(
+    '/auth/password-reset/confirm',
+    payload,
+  );
   return response.data.data;
 }

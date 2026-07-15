@@ -61,6 +61,37 @@ export type FindIdResponse = {
   joinedAt: string | null;
 };
 
+// 백엔드 미구현. ERD 문서 "13.12 비밀번호 재설정 정책" 기준으로 요청해둔 상태 (password_reset_code 테이블은 schema.sql에 이미 존재).
+export type PasswordResetRequestPayload = {
+  loginId: string;
+  name: string;
+  email: string;
+};
+
+// 회원 존재 여부를 노출하지 않기 위해 항상 200 OK로 동일한 message를 반환하는 정책.
+export type PasswordResetRequestResponse = {
+  message: string;
+};
+
+export type PasswordResetVerifyPayload = {
+  loginId: string;
+  code: string;
+};
+
+export type PasswordResetVerifyResponse = {
+  resetToken: string;
+};
+
+export type PasswordResetConfirmPayload = {
+  resetToken: string;
+  newPassword: string;
+  newPasswordConfirm: string;
+};
+
+export type PasswordResetConfirmResponse = {
+  changedAt: string;
+};
+
 export type LoginRequest = {
   loginId: string;
   password: string;
