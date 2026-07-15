@@ -17,7 +17,6 @@ type RentBookDetail = BookDetail & {
   pageCount?: number;
   categoryName?: string;
   publishedAt?: string;
-  fileFormat?: string;
 };
 
 function formatWon(value: number | undefined) {
@@ -307,10 +306,6 @@ export function RentPaymentPage() {
               {book?.author ?? '-'} | {book?.publisher ?? '-'} | -
             </p>
             <dl className={styles.infoList}>
-              <div>
-                <dt>파일 형식</dt>
-                <dd>{book?.fileFormat ?? '-'}</dd>
-              </div>
               <div>
                 <dt>페이지 수</dt>
                 <dd>{typeof book?.pageCount === 'number' ? `${book.pageCount}쪽` : '-'}</dd>
