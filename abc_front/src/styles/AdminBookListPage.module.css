@@ -1,17 +1,18 @@
 .page {
   display: grid;
-  gap: var(--space-8);
+  gap: 44px;
   border: 0;
   box-shadow: none;
+  background: transparent;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   gap: var(--space-4);
-  align-items: flex-start;
-  border-bottom: 1px solid var(--color-border);
-  padding-bottom: var(--space-6);
+  align-items: center;
+  border-bottom: 0;
+  padding: 14px 0 4px;
 }
 
 .header h1,
@@ -23,10 +24,20 @@
   margin: 0;
 }
 
+.eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  color: #111827;
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
 .header h1 {
   color: var(--color-text);
-  font-size: 2rem;
+  font-size: 2.35rem;
   line-height: 1.2;
+  letter-spacing: 0;
 }
 
 .header p {
@@ -37,15 +48,15 @@
 
 .filterPanel {
   display: grid;
-  grid-template-columns: 1.4fr repeat(3, minmax(150px, 0.8fr)) auto;
-  column-gap: var(--space-4);
-  row-gap: var(--space-5);
+  grid-template-columns: 1.05fr 1.05fr 1.05fr 1.05fr auto;
+  column-gap: 28px;
+  row-gap: 24px;
   align-items: end;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-6);
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  padding: 34px 40px;
   background: var(--color-surface);
-  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1);
+  box-shadow: 0 14px 24px rgba(15, 23, 42, 0.18);
 }
 
 .filterPanel label,
@@ -57,8 +68,8 @@
 }
 
 .filterPanel label {
-  grid-template-rows: 20px 42px;
-  gap: 8px;
+  grid-template-rows: 22px 46px;
+  gap: 14px;
 }
 
 .modal label {
@@ -77,15 +88,15 @@
 .modal textarea {
   box-sizing: border-box;
   width: 100%;
-  height: 42px;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  padding: 0 12px;
+  height: 46px;
+  border: 1px solid #9ca3af;
+  border-radius: 4px;
+  padding: 0 14px;
   color: var(--color-text);
   background: var(--color-surface);
   font: inherit;
   font-weight: 700;
-  line-height: 40px;
+  line-height: 44px;
 }
 
 .modal textarea {
@@ -105,12 +116,13 @@
 
 .filterActions {
   display: flex;
-  gap: var(--space-3);
+  gap: 18px;
   align-items: end;
 }
 
 .filterActions :global(.button) {
-  min-width: 86px;
+  min-width: 104px;
+  height: 46px;
   justify-content: center;
 }
 
@@ -135,12 +147,13 @@
 
 .tablePanel {
   display: grid;
-  gap: var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-6);
+  gap: 30px;
+  min-height: 730px;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  padding: 40px;
   background: var(--color-surface);
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 22px rgba(15, 23, 42, 0.18);
 }
 
 .tableHeader {
@@ -152,7 +165,8 @@
 
 .tableHeader h2 {
   color: var(--color-text);
-  font-size: 1.45rem;
+  font-size: 2rem;
+  line-height: 1.2;
 }
 
 .tableHeader p,
@@ -164,21 +178,22 @@
 
 .tableWrap {
   overflow-x: auto;
+  min-height: 590px;
   border: 1px solid #cbd5e1;
-  border-radius: var(--radius-md);
+  border-radius: 18px;
 }
 
 .table {
   width: 100%;
-  min-width: 1280px;
+  min-width: 1180px;
   border-collapse: collapse;
 }
 
 .table th,
 .table td {
   border-bottom: 1px solid var(--color-border);
-  padding: var(--space-3) var(--space-4);
-  text-align: left;
+  padding: 16px 22px;
+  text-align: center;
   vertical-align: middle;
   white-space: nowrap;
 }
@@ -186,14 +201,22 @@
 .table th {
   color: var(--color-text);
   background: #eaf2ff;
-  font-size: 0.86rem;
+  font-size: 1rem;
   font-weight: 900;
 }
 
 .table td {
   color: var(--color-text);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 700;
+}
+
+.table th:first-child {
+  border-top-left-radius: 18px;
+}
+
+.table th:last-child {
+  border-top-right-radius: 18px;
 }
 
 .table tbody tr:hover {
@@ -210,38 +233,18 @@
   text-align: center;
 }
 
-.bookLink {
-  display: grid;
-  grid-template-columns: 42px minmax(160px, 1fr);
-  align-items: center;
-  gap: var(--space-3);
+.bookTitleLink {
+  display: inline-block;
+  overflow: hidden;
+  max-width: 220px;
   color: var(--color-text);
   text-decoration: none;
-}
-
-.bookLink:hover strong {
-  color: #2563eb;
-}
-
-.bookLink img,
-.bookLink span {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  aspect-ratio: 3 / 4;
-  border-radius: 4px;
-  background: #969191;
-  object-fit: cover;
-  color: #fff;
-  font-size: 0.74rem;
-  font-weight: 900;
-}
-
-.bookLink strong {
-  overflow: hidden;
-  max-width: 260px;
-  white-space: nowrap;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bookTitleLink:hover {
+  color: #2563eb;
 }
 
 .rentalBadge,

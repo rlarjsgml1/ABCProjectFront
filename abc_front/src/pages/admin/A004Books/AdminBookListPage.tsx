@@ -127,19 +127,6 @@ function formatPrice(book: AdminBookSummary) {
   return `${book.rentalPrice.toLocaleString('ko-KR')}원`;
 }
 
-function formatDate(value: string | undefined) {
-  if (!value) return '-';
-
-  const time = new Date(value).getTime();
-  if (Number.isNaN(time)) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat('ko-KR', {
-    dateStyle: 'medium',
-  }).format(time);
-}
-
 function flattenCategories(categories: Category[]): Category[] {
   return categories.flatMap((category) => [category, ...(category.children ? flattenCategories(category.children) : [])]);
 }
@@ -348,12 +335,12 @@ export function AdminBookListPage() {
     <section className={`page-section ${styles.page}`}>
       <div className={styles.header}>
         <div>
+          <span className={styles.eyebrow}>Member</span>
           <h1>도서 목록 관리</h1>
-          <p>등록된 전자책을 검색하고 대여 유형, 카테고리, 노출 상태를 관리합니다.</p>
         </div>
 
         <Link className="button button-primary" to="/admin/books/new">
-          신규 도서 등록
+          신규도서등록
         </Link>
       </div>
 
@@ -413,11 +400,10 @@ export function AdminBookListPage() {
       <div className={styles.tablePanel}>
         <div className={styles.tableHeader}>
           <div>
-            <h2>전체 {booksPage?.totalElements.toLocaleString('ko-KR') ?? 0}건</h2>
-            <p>관리자 도서 목록은 숨김/비활성 도서까지 포함합니다.</p>
+            <h2>도서테이블</h2>
           </div>
           <span>
-            {shownPage} / {totalPages} 페이지
+            전체 {booksPage?.totalElements.toLocaleString('ko-KR') ?? 0}건 · {shownPage} / {totalPages} 페이지
           </span>
         </div>
 
@@ -426,14 +412,14 @@ export function AdminBookListPage() {
             <thead>
               <tr>
                 <th>도서번호</th>
-                <th>도서</th>
+                <th>제목</th>
                 <th>저자</th>
                 <th>출판사</th>
                 <th>ISBN</th>
                 <th>카테고리</th>
-                <th>대여</th>
+                <th>유형</th>
+                <th>가격</th>
                 <th>상태</th>
-                <th>등록일</th>
                 <th className={styles.actionColumnHeader}>관리</th>
               </tr>
             </thead>
@@ -450,10 +436,7 @@ export function AdminBookListPage() {
                     <tr key={book.bookId}>
                       <td>B-{book.bookId}</td>
                       <td>
-                        <Link className={styles.bookLink} to={`/admin/books/${book.bookId}/edit`}>
-                          {book.coverImageUrl ? <img src={book.coverImageUrl} alt="" /> : <span aria-hidden="true">책</span>}
-                          <strong>{book.title}</strong>
-                        </Link>
+                        <Link className={styles.bookTitleLink} to={`/admin/books/${book.bookId}/edit`}>{book.title}</Link>
                       </td>
                       <td>{getAuthorText(book)}</td>
                       <td>{getPublisherText(book)}</td>
@@ -463,14 +446,13 @@ export function AdminBookListPage() {
                         <span className={`${styles.rentalBadge} ${styles[`rental${book.rentalType}`]}`}>
                           {getOptionLabel(rentalTypeOptions, book.rentalType)}
                         </span>
-                        <small>{formatPrice(book)}</small>
                       </td>
+                      <td>{formatPrice(book)}</td>
                       <td>
                         <span className={`${styles.statusBadge} ${styles[`status${book.status}`]}`}>
                           {getOptionLabel(statusOptions, book.status)}
                         </span>
                       </td>
-                      <td>{formatDate(book.createdAt)}</td>
                       <td className={styles.actionColumnCell}>
                         <div className={styles.rowActions}>
                           <button
