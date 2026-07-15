@@ -353,8 +353,8 @@ export function SignupPage() {
             <option value="" disabled>
               성별을 선택하세요
             </option>
-            <option value="M">남성</option>
-            <option value="F">여성</option>
+            <option value="MALE">남성</option>
+            <option value="FEMALE">여성</option>
             <option value="NONE">선택 안 함</option>
           </select>
           <small className="field-hint">선택하지 않아도 가입할 수 있어요.</small>

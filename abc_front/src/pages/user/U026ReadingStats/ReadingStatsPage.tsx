@@ -39,14 +39,14 @@ function ReadingStatisticsTooltip({ active, label, payload }: TooltipContentProp
     return null;
   }
 
-  const readPageCount = Number(payload[0]?.value ?? 0);
+  const readBookCount = Number(payload[0]?.value ?? 0);
 
   return (
     <div className="reading-statistics-chart-tooltip">
       <p className="reading-statistics-chart-tooltip-label">{label}</p>
       <p className="reading-statistics-chart-tooltip-value">
-        <span>읽은 페이지</span>
-        <strong>{formatNumber(readPageCount)}페이지</strong>
+        <span>완독 수</span>
+        <strong>{formatNumber(readBookCount)}권</strong>
       </p>
     </div>
   );
@@ -158,12 +158,12 @@ export function ReadingStatsPage() {
             <div className="section-heading-row">
               <div>
                 <p className="reading-statistics-kicker">READING VOLUME</p>
-                <h3 id="reading-trend-title">독서량 추이</h3>
+                <h3 id="reading-trend-title">완독 수 추이</h3>
               </div>
               <span>{periodTabs.find((tab) => tab.value === statistics.periodType)?.label}</span>
             </div>
 
-            <div className="reading-statistics-chart" role="img" aria-label="기간별 읽은 페이지 막대그래프">
+            <div className="reading-statistics-chart" role="img" aria-label="기간별 완독 수 막대그래프">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={statistics.trendPoints} margin={{ top: 12, right: 8, bottom: 0, left: 8 }}>
                   <CartesianGrid stroke="var(--reading-statistics-chart-grid)" strokeDasharray="4 8" vertical={false} />
@@ -181,16 +181,16 @@ export function ReadingStatsPage() {
                     tick={{ fill: 'var(--reading-statistics-chart-muted)' }}
                     tickMargin={12}
                     width={64}
-                    tickFormatter={(value) => `${formatNumber(value)}p`}
+                    tickFormatter={(value) => `${formatNumber(value)}권`}
                   />
                   <Tooltip
                     content={(tooltipProps: TooltipContentProps) => <ReadingStatisticsTooltip {...tooltipProps} />}
                     cursor={{ fill: 'var(--reading-statistics-chart-cursor)' }}
                   />
                   <Bar
-                    dataKey="readPageCount"
+                    dataKey="readBookCount"
                     fill="var(--reading-statistics-chart-bar)"
-                    name="읽은 페이지"
+                    name="완독 수"
                     radius={[8, 8, 8, 8]}
                     maxBarSize={32}
                   />

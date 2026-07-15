@@ -804,7 +804,7 @@ a.admin-dashboard-kpi-card:focus-visible {
   width: 100%;
   margin: 0 0 var(--space-6);
   padding: var(--space-1);
-  background-color: #f1f1f1;
+  background-color: var(--color-surface-muted);
   border-radius: var(--radius-md);
 }
 
@@ -813,22 +813,23 @@ a.admin-dashboard-kpi-card:focus-visible {
   padding: 10px 0;
   border: none;
   border-radius: 6px;
-  color: #555;
+  color: var(--color-muted);
   background: transparent;
   cursor: pointer;
   text-align: center;
   font-size: 0.875rem;
   font-weight: 400;
+  transition: all 0.2s ease;
 }
 
 .find-tab.active {
-  color: #222;
-  background-color: #d0d0d0;
+  color: #ffffff;
+  background-color: var(--color-primary);
   font-weight: 600;
 }
 
 .find-tab:not(.active):hover {
-  color: #333;
+  color: var(--color-text);
 }
 
 .empty-state {
