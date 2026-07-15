@@ -49,6 +49,18 @@ export type CheckLoginIdResponse = {
   available: boolean;
 };
 
+// API-AUTH-003 (U-004 아이디 찾기). 필드명은 FindIdRequest/FindIdResponse.java 기준.
+export type FindIdRequest = {
+  name: string;
+  email: string;
+};
+
+export type FindIdResponse = {
+  found: boolean;
+  loginId: string | null;
+  joinedAt: string | null;
+};
+
 export type LoginRequest = {
   loginId: string;
   password: string;

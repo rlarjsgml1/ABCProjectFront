@@ -3,6 +3,8 @@ import { apiClient } from './apiClient';
 import type {
   ApiResponse,
   CheckLoginIdResponse,
+  FindIdRequest,
+  FindIdResponse,
   LoginRequest,
   LoginResponse,
   SignupRequest,
@@ -26,5 +28,10 @@ export async function checkLoginId(loginId: string) {
 
 export async function login(payload: LoginRequest) {
   const response = await apiClient.post<ApiResponse<LoginResponse>>('/auth/login', payload);
+  return response.data.data;
+}
+
+export async function findId(payload: FindIdRequest) {
+  const response = await apiClient.post<ApiResponse<FindIdResponse>>('/auth/find-id', payload);
   return response.data.data;
 }
