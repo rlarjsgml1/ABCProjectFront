@@ -209,7 +209,7 @@ export function ProfileEditPage() {
                 <option value="">선택</option>
                 <option value="MALE">남성</option>
                 <option value="FEMALE">여성</option>
-                <option value="OTHER">기타</option>
+                <option value="NONE">선택 안 함</option>
               </select>
             </label>
           </div>
