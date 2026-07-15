@@ -1,6 +1,7 @@
 // 도서 목록/추천/최신/베스트/카테고리/검색/상세 조회 API 클라이언트
+import axios, { isAxiosError } from 'axios';
 import { apiClient } from './apiClient';
-import type { ApiResponse, BookCard, BookRecommendationResponse, BookRecommendationType, Category, PageResponse } from '../types/api';
+import type { ApiResponse, BookCard, BookRecommendationResponse, BookRecommendationType, Category, ErrorResponse, PageResponse } from '../types/api';
 import type { BookDetail } from '../types/book';
 
 export type BookListQuery = {
@@ -124,10 +125,34 @@ export async function searchBooks(page = 0, size = 20, query: BookSearchQuery) {
   return data;
 }
 
-export async function getBookDetail(bookId: number) {
-  const response = await apiClient.get<ApiResponse<BookDetail>>(`/books/${bookId}`);
+function isTokenMemberLookupError(error: unknown) {
+  if (!isAxiosError<ErrorResponse>(error)) {
+    return false;
+  }
 
-  const data = response.data.data;
+  const message = error.response?.data.message ?? '';
+  return message.includes('회원') || error.response?.status === 401 || error.response?.status === 403;
+}
+
+async function requestBookDetail(bookId: number, useAuth = true) {
+  const client = useAuth ? apiClient : axios.create({ baseURL: import.meta.env.VITE_API_BASE_URL });
+  const response = await client.get<ApiResponse<BookDetail>>(`/books/${bookId}`);
+  return response.data.data;
+}
+
+export async function getBookDetail(bookId: number) {
+  let data: BookDetail | undefined;
+
+  try {
+    data = await requestBookDetail(bookId);
+  } catch (error) {
+    if (!isTokenMemberLookupError(error)) {
+      throw error;
+    }
+
+    data = await requestBookDetail(bookId, false);
+  }
+
   if (!data) {
     throw new Error('Invalid book detail response');
   }

@@ -123,16 +123,30 @@ export function RentPaymentPage() {
       setErrorMessage('');
 
       try {
-        const [bookDetail, points, coupons] = await Promise.all([
-          getBookDetail(Number(bookId)),
+        const bookDetail = await getBookDetail(Number(bookId));
+
+        if (!ignore) {
+          setBook(bookDetail);
+        }
+
+        const [pointsResult, couponsResult] = await Promise.allSettled([
           getMyPoints({ page: 0, size: 1 }),
           getMyCoupons({ status: 'ISSUED', page: 0, size: 20 }),
         ]);
 
-        if (!ignore) {
-          setBook(bookDetail);
-          setPointsPage(points);
-          setCouponsPage(coupons);
+        if (ignore) {
+          return;
+        }
+
+        setPointsPage(pointsResult.status === 'fulfilled' ? pointsResult.value : null);
+        setCouponsPage(
+          couponsResult.status === 'fulfilled'
+            ? couponsResult.value
+            : { content: [], page: 0, size: 20, totalElements: 0, totalPages: 0, last: true },
+        );
+
+        if (pointsResult.status === 'rejected' || couponsResult.status === 'rejected') {
+          setErrorMessage('쿠폰/포인트 정보를 불러오지 못했습니다. 로그인 정보를 확인한 뒤 다시 시도해 주세요.');
         }
       } catch (error) {
         if (!ignore) {
