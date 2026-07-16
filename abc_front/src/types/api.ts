@@ -686,6 +686,26 @@ export type Category = {
   children?: Category[];
 };
 
+export type AdminCategoryStatus = 'ACTIVE' | 'HIDDEN' | 'INACTIVE';
+
+export type AdminCategoryItem = Category & {
+  bookCount?: number;
+  status?: AdminCategoryStatus;
+  children?: AdminCategoryItem[];
+};
+
+export type AdminCategorySaveRequest = {
+  parentCategoryId?: number | null;
+  name: string;
+  displayOrder: number;
+  status: AdminCategoryStatus;
+};
+
+export type AdminCategorySaveResponse = {
+  categoryId: number;
+  updatedAt?: string;
+};
+
 // 백엔드가 정렬 파라미터를 받지 않고 항상 등록 최신순으로 고정 정렬한다 (FavoriteBookRepository.findMyFavorites 참고).
 export type FavoriteSort = 'recent';
 
