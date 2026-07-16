@@ -46,6 +46,12 @@ const bannerItems = [
   },
 ];
 
+const quickMenuItems = [
+  { to: '/me/attendance', icon: 'D-1', label: '출석체크', description: '매일 읽고 혜택 받기' },
+  { to: '/events', icon: '🎁', label: '이벤트', description: '진행 중인 혜택 보기' },
+  { to: '/me/challenges', icon: '🏆', label: '챌린지', description: '독서 미션 확인하기' },
+];
+
 const fallbackCategories: HomeCategory[] = [
   { name: '소설' },
   { name: '경제 / 경영' },
@@ -193,28 +199,38 @@ export function HomePage() {
     [bestBooks, memberName, newBooks, recommendedBooks],
   );
 
+  function moveBanner(direction: 1 | -1) {
+    setActiveBannerIndex((currentIndex) => (currentIndex + direction + bannerItems.length) % bannerItems.length);
+  }
+
   return (
     <div className="home-page">
       <section className="home-hero" aria-label="광고 이벤트 배너">
         <Link className="home-hero-link" to="/events">
-        <div className="home-hero-track" style={{ transform: `translateX(-${activeBannerIndex * 100}%)` }}>
-          {bannerItems.map((banner) => (
-            <article className="home-hero-slide" key={banner.title}>
-              <div className="home-hero-copy">
-                <span>{banner.badge}</span>
-                <h1>{banner.title}</h1>
-                <p>{banner.description}</p>
-              </div>
-              <div className="home-hero-book" aria-hidden="true">
-                <div className="home-hero-face">
-                  <strong>{banner.coverTitle}</strong>
-                  <small>ABC Book</small>
+          <div className="home-hero-track" style={{ transform: `translateX(-${activeBannerIndex * 100}%)` }}>
+            {bannerItems.map((banner) => (
+              <article className="home-hero-slide" key={banner.title}>
+                <div className="home-hero-copy">
+                  <span>{banner.badge}</span>
+                  <h1>{banner.title}</h1>
+                  <p>{banner.description}</p>
                 </div>
-              </div>
-            </article>
-          ))}
-        </div>
+                <div className="home-hero-book" aria-hidden="true">
+                  <div className="home-hero-face">
+                    <strong>{banner.coverTitle}</strong>
+                    <small>ABC Book</small>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
         </Link>
+        <button type="button" className="home-hero-arrow home-hero-arrow-prev" aria-label="이전 배너 보기" onClick={() => moveBanner(-1)}>
+          ‹
+        </button>
+        <button type="button" className="home-hero-arrow home-hero-arrow-next" aria-label="다음 배너 보기" onClick={() => moveBanner(1)}>
+          ›
+        </button>
 
         <div className="home-hero-dots" role="tablist" aria-label="배너 슬라이드 이동">
           {bannerItems.map((banner, index) => (
@@ -232,13 +248,18 @@ export function HomePage() {
       </section>
 
       <div className="home-quick-menu" aria-label="빠른 메뉴">
-        <Link to="/me/attendance">출석체크</Link>
-        <Link to="/events">이벤트</Link>
-        <Link to="/me/challenges">챌린지</Link>
+        {quickMenuItems.map((item) => (
+          <Link to={item.to} key={item.to}>
+            <span aria-hidden="true">{item.icon}</span>
+            <strong>{item.label}</strong>
+            <small>{item.description}</small>
+          </Link>
+        ))}
       </div>
 
       <Link className="home-notice-ticker" to="/notices">
-        <span aria-hidden="true">NOTICE</span>
+        <span className="home-notice-icon" aria-hidden="true">📢</span>
+        <strong>NOTICE</strong>
         <p>공지사항과 이벤트 소식을 ABC 메인에서 확인하세요.</p>
       </Link>
 

@@ -9,6 +9,10 @@ import type { MyRentalItem } from '../../../types/api';
 
 const PREVIEW_SIZE = 3;
 
+function formatProgressRate(progressRate: number) {
+  return progressRate.toFixed(1);
+}
+
 export function MyPage() {
   const [readingBooks, setReadingBooks] = useState<MyRentalItem[]>([]);
   const [ownedBooks, setOwnedBooks] = useState<MyRentalItem[]>([]);
@@ -80,7 +84,7 @@ export function MyPage() {
                         </Link>
 
                         <p className="recent-book-progress-text">
-                          {book.currentPage} / {book.totalPages} 페이지 ({book.progressRate}%)
+                          {book.currentPage} / {book.totalPages} 페이지 ({formatProgressRate(book.progressRate)}%)
                         </p>
 
                         <div className="recent-book-progress-track">
@@ -119,7 +123,7 @@ export function MyPage() {
                         </Link>
 
                         <p className="recent-book-progress-text">
-                          {book.currentPage} / {book.totalPages} 페이지 ({book.progressRate}%)
+                          {book.currentPage} / {book.totalPages} 페이지 ({formatProgressRate(book.progressRate)}%)
                         </p>
 
                         <div className="recent-book-progress-track">

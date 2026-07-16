@@ -1146,7 +1146,7 @@ a.admin-dashboard-kpi-card:focus-visible {
 }
 
 .recent-book-progress-text {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-3);
   color: var(--color-muted);
   font-size: 0.88rem;
   font-weight: 700;
@@ -1159,6 +1159,7 @@ a.admin-dashboard-kpi-card:focus-visible {
   border-radius: 999px;
   background-color: var(--color-surface-muted);
   overflow: hidden;
+  margin-top: var(--space-1);
   margin-bottom: var(--space-2);
 }
 
@@ -3374,4 +3375,3 @@ a.count-card:focus-visible {
     padding: var(--space-4);
   }
 }
-

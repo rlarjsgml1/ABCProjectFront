@@ -314,7 +314,7 @@
 .reviewRow {
   position: relative;
   display: grid;
-  grid-template-columns: 48px 1fr auto min-content;
+  grid-template-columns: 48px minmax(0, 1fr) max-content max-content 32px;
   align-items: center;
   gap: var(--space-4);
   border-bottom: 1px solid var(--color-border);
@@ -333,8 +333,10 @@
 }
 
 .reviewBody {
-  display: grid;
-  gap: var(--space-2);
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 .reviewBody strong,
@@ -343,9 +345,22 @@
   color: var(--color-text);
 }
 
+.reviewBody strong {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.reviewBody p {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .stars {
   color: var(--color-primary);
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .starPicker {
@@ -373,6 +388,7 @@
 .reviewDate {
   color: var(--color-muted);
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .reviewMenu {
