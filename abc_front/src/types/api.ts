@@ -43,7 +43,6 @@ export type SignupResponse = {
   role: string;
 };
 
-// 백엔드 미구현. GET /api/v1/auth/check-login-id?loginId=... 스펙으로 요청해둔 상태.
 export type CheckLoginIdResponse = {
   loginId: string;
   available: boolean;
@@ -340,6 +339,54 @@ export type AdminChallengeUpdateRequest = {
 
 export type AdminChallengeUpdateResponse = {
   challengeId: number;
+};
+
+// A-015 도서관 위치 관리. 백엔드 미구현 (AdminLibraryController 없음, API-ADMIN-LIBRARY-001~003 스펙으로 요청해둔 상태).
+export type AdminLibraryStatus = 'ACTIVE' | 'INACTIVE';
+
+export type AdminLibraryHoldingStatus = 'AVAILABLE' | 'UNAVAILABLE';
+
+export type AdminLibraryListQuery = {
+  q?: string;
+  status?: AdminLibraryStatus;
+  page?: number;
+  size?: number;
+};
+
+export type AdminLibrarySummary = {
+  libraryId: number;
+  libraryName: string;
+  address: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  status: AdminLibraryStatus;
+  bookCount: number;
+};
+
+export type AdminLibraryUpdateRequest = {
+  libraryName: string;
+  address: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  status: AdminLibraryStatus;
+};
+
+export type AdminLibraryUpdateResponse = {
+  libraryId: number;
+};
+
+export type AdminLibraryBookMapping = {
+  bookId: number;
+  holdingStatus: AdminLibraryHoldingStatus;
+};
+
+export type AdminLibraryBooksUpdateRequest = {
+  books: AdminLibraryBookMapping[];
+};
+
+export type AdminLibraryBooksUpdateResponse = {
+  libraryId: number;
+  mappedCount: number;
 };
 
 
