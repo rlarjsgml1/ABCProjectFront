@@ -866,6 +866,7 @@
 | A-013 | 포인트 회원 검색 | `API-ADMIN-MEMBER-001` 재사용 여부 |
 | A-014 | 보상 쿠폰 선택 | `API-ADMIN-COUPON-001` 병행 호출 여부 |
 | A-015 | 보유 도서 검색 | `API-ADMIN-BOOK-001` 재사용 여부 |
+| A-015 | 도서관 신규 등록 | `PUT /admin/libraries/{libraryId}`가 등록/수정 겸용인데 신규 항목은 libraryId가 없음. 별도 POST 필요 여부 확인 필요(A-007과 동일 패턴). 확정 전까지 프론트는 등록 폼을 로컬 상태에만 반영 |
 | A-018 | 컬렉션 도서 검색 | `API-ADMIN-BOOK-001` 재사용 여부 |
 | 공통 | 페이징 | final spec `page=1`과 backend common `page=0` 중 실제 구현 기준 확인 |
 
