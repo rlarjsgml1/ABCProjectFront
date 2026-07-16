@@ -43,7 +43,6 @@ export type SignupResponse = {
   role: string;
 };
 
-// 백엔드 미구현. GET /api/v1/auth/check-login-id?loginId=... 스펙으로 요청해둔 상태.
 export type CheckLoginIdResponse = {
   loginId: string;
   available: boolean;
