@@ -590,6 +590,16 @@ export type AdminBookSummary = {
   updatedAt?: string;
 };
 
+export type AdminBookDetail = AdminBookSummary & {
+  categoryIds?: number[];
+  keywords?: string[];
+  defaultRentalDays?: number;
+  description?: string;
+  tableOfContents?: string;
+  publisherReview?: string;
+  pages?: AdminBookPageRequest[];
+};
+
 export type AdminBookStatusChangeRequest = {
   status: AdminBookStatus;
   reason: string;
@@ -625,6 +635,13 @@ export type AdminBookCreateRequest = {
 
 export type AdminBookCreateResponse = {
   bookId: number;
+};
+
+export type AdminBookUpdateRequest = AdminBookCreateRequest;
+
+export type AdminBookUpdateResponse = {
+  bookId: number;
+  updatedAt?: string;
 };
 
 // GET /api/v1/books/search 실제 응답 봉투. BookSearchResponse.java 기준 (content는 page 안에 들어있다).
