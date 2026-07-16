@@ -37,7 +37,6 @@ const AdminLibraryPage = lazyNamed(() => import('../pages/admin/A015Libraries/Ad
 const AdminStatisticsPage = lazyNamed(() => import('../pages/admin/A016Statistics/AdminStatisticsPage'), 'AdminStatisticsPage');
 const AdminAuditLogPage = lazyNamed(() => import('../pages/admin/A017AuditLogs/AdminAuditLogPage'), 'AdminAuditLogPage');
 const AdminCollectionPage = lazyNamed(() => import('../pages/admin/A018Collections/AdminCollectionPage'), 'AdminCollectionPage');
-const AdminSettingsPage = lazyNamed(() => import('../pages/admin/AdminSettings/AdminSettingsPage'), 'AdminSettingsPage');
 const BookDetailPage = lazyNamed(() => import('../pages/user/U008BookDetail/BookDetailPage'), 'BookDetailPage');
 const BooksPage = lazyNamed(() => import('../pages/user/U006Books/BooksPage'), 'BooksPage');
 const HomePage = lazyNamed(() => import('../pages/user/U001Home/HomePage'), 'HomePage');
@@ -156,7 +155,6 @@ export const router = createBrowserRouter([
       { path: 'statistics', element: page(<AdminStatisticsPage />) },
       { path: 'audit-logs', element: page(<AdminAuditLogPage />) },
       { path: 'collections', element: page(<AdminCollectionPage />) },
-      { path: 'settings', element: page(<AdminSettingsPage />) },
     ],
   },
 ]);

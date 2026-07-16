@@ -28,7 +28,6 @@ const adminPages: AdminPage[] = [
   { path: '/admin/statistics', label: '통계 관리' },
   { path: '/admin/audit-logs', label: '감사 로그' },
   { path: '/admin/collections', label: '컬렉션 관리' },
-  { path: '/admin/settings', label: '설정' },
 ];
 
 function findCurrentPage(pathname: string) {

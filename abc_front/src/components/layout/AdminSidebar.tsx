@@ -56,10 +56,7 @@ const adminNavGroups: AdminNavGroup[] = [
   },
   {
     label: '시스템',
-    items: [
-      { to: '/admin/audit-logs', label: '감사 로그', tag: 'Audit' },
-      { to: '/admin/settings', label: '설정', tag: 'Config' },
-    ],
+    items: [{ to: '/admin/audit-logs', label: '감사 로그', tag: 'Audit' }],
   },
 ];
 
