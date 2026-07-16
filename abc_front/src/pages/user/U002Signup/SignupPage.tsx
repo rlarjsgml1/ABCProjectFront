@@ -208,14 +208,16 @@ export function SignupPage() {
     closeAgreementModal();
   };
 
-  const handleTermsCheckboxClick = (event: MouseEvent<HTMLInputElement>) => {
+  // 체크 안 된 상태에서는 체크박스를 disabled로 막아서 브라우저 네이티브 토글이 절대 못 일어나게 한다.
+  // (checkbox의 onClick에서 preventDefault()만으로 막으면, 모달을 취소해도 나중에 체크된 것처럼 보이는 케이스가 있었다.)
+  const handleTermsLabelClick = (event: MouseEvent<HTMLLabelElement>) => {
     if (!agreeTerms) {
       event.preventDefault();
       openAgreementModal('terms');
     }
   };
 
-  const handlePrivacyCheckboxClick = (event: MouseEvent<HTMLInputElement>) => {
+  const handlePrivacyLabelClick = (event: MouseEvent<HTMLLabelElement>) => {
     if (!agreePrivacy) {
       event.preventDefault();
       openAgreementModal('privacy');
@@ -395,13 +397,19 @@ export function SignupPage() {
 
         <div className="form-checkbox-row agreement-checkbox-row">
           <div className="agreement-checkbox-item">
-            <label className="keep-login">
+            <label className="keep-login" onClick={handleTermsLabelClick}>
               <input
                 type="checkbox"
                 name="agreeTerms"
                 checked={agreeTerms}
-                onClick={handleTermsCheckboxClick}
+                style={agreeTerms ? undefined : { pointerEvents: 'none' }}
                 onChange={(event) => setAgreeTerms(event.target.checked)}
+                onKeyDown={(event) => {
+                  if (!agreeTerms && (event.key === ' ' || event.key === 'Enter')) {
+                    event.preventDefault();
+                    openAgreementModal('terms');
+                  }
+                }}
                 required
               />
               <span>이용약관 동의 (필수)</span>
@@ -411,13 +419,19 @@ export function SignupPage() {
             </button>
           </div>
           <div className="agreement-checkbox-item">
-            <label className="keep-login">
+            <label className="keep-login" onClick={handlePrivacyLabelClick}>
               <input
                 type="checkbox"
                 name="agreePrivacy"
                 checked={agreePrivacy}
-                onClick={handlePrivacyCheckboxClick}
+                style={agreePrivacy ? undefined : { pointerEvents: 'none' }}
                 onChange={(event) => setAgreePrivacy(event.target.checked)}
+                onKeyDown={(event) => {
+                  if (!agreePrivacy && (event.key === ' ' || event.key === 'Enter')) {
+                    event.preventDefault();
+                    openAgreementModal('privacy');
+                  }
+                }}
                 required
               />
               <span>개인정보 수집 및 이용 동의 (필수)</span>
