@@ -211,19 +211,19 @@ export function AdminBookCreatePage() {
               </label>
               <label>
                 ISBN
-                <input name="isbn" type="text" placeholder="979-11-0001" />
+                <input name="isbn" type="text" placeholder="ISBN" />
               </label>
               <label>
                 출판사명
-                <input name="publisherName" type="text" placeholder="ABC Press" />
+                <input name="publisherName" type="text" placeholder="출판사명" />
               </label>
               <label className={styles.wide}>
                 저자
-                <input name="authors" type="text" placeholder="김하늘, 이서윤" />
+                <input name="authors" type="text" placeholder="저자명 / 표시 순서" />
               </label>
               <label className={styles.wide}>
                 키워드
-                <input name="keywords" type="text" placeholder="경제, 자기계발, 소설" />
+                <input name="keywords" type="text" placeholder="키워드" />
               </label>
             </div>
           </section>
@@ -281,16 +281,16 @@ export function AdminBookCreatePage() {
 
             <label>
               책 소개
-              <textarea name="description" placeholder="관리자 페이지에서 사용할 도서 소개를 입력합니다." />
+              <textarea name="description" placeholder="이 책의 핵심 내용과 특징을 간단히 입력합니다." />
             </label>
             <div className={styles.fieldGrid}>
               <label>
                 목차
-                <textarea name="tableOfContents" placeholder="1장 시작의 문장&#10;2장 기록의 기술" />
+                <textarea name="tableOfContents" placeholder="1장 데이터 모델&#10;2장 SQL 기초" />
               </label>
               <label>
                 출판사 리뷰/상세 내용
-                <textarea name="publisherReview" placeholder="학습자 중심 구성과 독서 포인트를 입력합니다." />
+                <textarea name="publisherReview" placeholder="학습자를 위한 구성과 실무 예제를 작성합니다." />
               </label>
             </div>
           </section>
@@ -303,7 +303,7 @@ export function AdminBookCreatePage() {
 
             <label>
               커버 URL
-              <input name="coverImageUrl" type="url" placeholder="https://abc.example.com/book-cover.jpg" />
+              <input name="coverImageUrl" type="url" placeholder="https://cdn.example.com/book-1001.epub" />
             </label>
 
             <div className={styles.pageList}>
