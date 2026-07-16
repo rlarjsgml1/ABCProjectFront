@@ -1,6 +1,7 @@
 // 도서 목록/추천/최신/베스트/카테고리/검색/상세 조회 API 클라이언트
+import axios, { isAxiosError } from 'axios';
 import { apiClient } from './apiClient';
-import type { ApiResponse, BookCard, BookRecommendationResponse, BookRecommendationType, BookSearchResponse, Category, PageResponse } from '../types/api';
+import type { ApiResponse, BookCard, BookRecommendationResponse, BookRecommendationType, BookSearchResponse, Category, ErrorResponse, PageResponse } from '../types/api';
 import type { BookDetail } from '../types/book';
 
 export type BookListQuery = {
@@ -125,15 +126,43 @@ export async function searchBooks(page = 0, size = 20, query: BookSearchQuery, s
   return data.page;
 }
 
-export async function getBookDetail(bookId: number) {
-  const response = await apiClient.get<ApiResponse<BookDetail>>(`/books/${bookId}`);
+function isTokenMemberLookupError(error: unknown) {
+  if (!isAxiosError<ErrorResponse>(error)) {
+    return false;
+  }
 
-  const data = response.data.data;
+  const message = error.response?.data.message ?? '';
+  return message.includes('회원') || error.response?.status === 401 || error.response?.status === 403;
+}
+
+async function requestBookDetail(bookId: number, useAuth = true) {
+  const client = useAuth ? apiClient : axios.create({ baseURL: import.meta.env.VITE_API_BASE_URL });
+  const response = await client.get<ApiResponse<BookDetail>>(`/books/${bookId}`);
+  return response.data.data;
+}
+
+export async function getBookDetail(bookId: number) {
+  let data: BookDetail | undefined;
+
+  try {
+    data = await requestBookDetail(bookId);
+  } catch (error) {
+    if (!isTokenMemberLookupError(error)) {
+      throw error;
+    }
+
+    data = await requestBookDetail(bookId, false);
+  }
+
   if (!data) {
     throw new Error('Invalid book detail response');
   }
 
   const categoryName = data.categoryName ?? data.categories?.[0]?.categoryName ?? data.categories?.[0]?.name;
+  const rentalType = data.rentalType ?? data.rentalInfo?.rentalType;
+  const rentalPrice = data.rentalPrice ?? data.rentalInfo?.rentalPrice;
+  const defaultRentalDays = data.defaultRentalDays ?? data.rentalInfo?.defaultRentalDays;
+  const pageCount = data.pageCount ?? data.totalPages;
 
   return {
     ...data,
@@ -141,11 +170,14 @@ export async function getBookDetail(bookId: number) {
     publisher: data.publisher ?? data.publisherName,
     publishedAt: data.publishedAt ?? data.pubDate,
     categoryName,
-    rentalType: data.rentalType ?? data.rentalInfo?.rentalType,
-    rentalPrice: data.rentalPrice ?? data.rentalInfo?.rentalPrice,
-    defaultRentalDays: data.defaultRentalDays ?? data.rentalInfo?.defaultRentalDays,
-    rentalPeriodDays: data.rentalPeriodDays ?? data.rentalInfo?.defaultRentalDays,
-    pageCount: data.pageCount ?? data.totalPages,
+    rentalType,
+    rentalPrice,
+    defaultRentalDays,
+    rentalPeriodDays: data.rentalPeriodDays ?? defaultRentalDays,
+    pageCount,
+    fileFormat: data.fileFormat ?? (typeof pageCount === 'number' ? '전자책' : undefined),
+    supportedDevice: data.supportedDevice ?? '웹 뷰어 지원 기기',
+    language: data.language ?? '한국어',
     status: data.status ?? 'AVAILABLE',
   };
 }

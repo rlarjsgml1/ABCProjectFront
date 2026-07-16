@@ -481,7 +481,7 @@ export function AdminChallengePage() {
                     <td>
                       <div className={styles.rowActions}>
                         <button type="button" onClick={() => openEditModal(challenge)}>
-                          수정/보상
+                          수정
                         </button>
                       </div>
                     </td>
@@ -603,12 +603,18 @@ export function AdminChallengePage() {
   );
 }
 
-function ProgressRow({ label, value, tone }: { label: string; value: number; tone: 'primary' | 'danger' | 'success' }) {
+const progressToneClass = {
+  primary: styles.progressPrimary,
+  danger: styles.progressDanger,
+  success: styles.progressSuccess,
+};
+
+function ProgressRow({ label, value, tone }: { label: string; value: number; tone: keyof typeof progressToneClass }) {
   return (
     <div className={styles.progressRow}>
       <span>{label}</span>
       <div className={styles.progressTrack} aria-hidden="true">
-        <div className={`${styles.progressFill} ${styles[tone]}`} style={{ width: `${value}%` }} />
+        <div className={`${styles.progressFill} ${progressToneClass[tone]}`} style={{ width: `${value}%` }} />
       </div>
       <strong>{value}%</strong>
     </div>

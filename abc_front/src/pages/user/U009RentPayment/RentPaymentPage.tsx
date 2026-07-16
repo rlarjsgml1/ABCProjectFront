@@ -27,6 +27,19 @@ function formatWon(value: number | undefined) {
   return `${value.toLocaleString('ko-KR')}원`;
 }
 
+function formatDate(value: string | undefined) {
+  if (!value) {
+    return '-';
+  }
+
+  const time = new Date(value).getTime();
+  if (Number.isNaN(time)) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).format(time);
+}
+
 function isUsableCoupon(coupon: CouponHistoryItem) {
   if (coupon.couponStatus !== 'ISSUED') {
     return false;
@@ -109,16 +122,30 @@ export function RentPaymentPage() {
       setErrorMessage('');
 
       try {
-        const [bookDetail, points, coupons] = await Promise.all([
-          getBookDetail(Number(bookId)),
+        const bookDetail = await getBookDetail(Number(bookId));
+
+        if (!ignore) {
+          setBook(bookDetail);
+        }
+
+        const [pointsResult, couponsResult] = await Promise.allSettled([
           getMyPoints({ page: 0, size: 1 }),
           getMyCoupons({ status: 'ISSUED', page: 0, size: 20 }),
         ]);
 
-        if (!ignore) {
-          setBook(bookDetail);
-          setPointsPage(points);
-          setCouponsPage(coupons);
+        if (ignore) {
+          return;
+        }
+
+        setPointsPage(pointsResult.status === 'fulfilled' ? pointsResult.value : null);
+        setCouponsPage(
+          couponsResult.status === 'fulfilled'
+            ? couponsResult.value
+            : { content: [], page: 0, size: 20, totalElements: 0, totalPages: 0, last: true },
+        );
+
+        if (pointsResult.status === 'rejected' || couponsResult.status === 'rejected') {
+          setErrorMessage('쿠폰/포인트 정보를 불러오지 못했습니다. 로그인 정보를 확인한 뒤 다시 시도해 주세요.');
         }
       } catch (error) {
         if (!ignore) {
@@ -138,9 +165,10 @@ export function RentPaymentPage() {
     };
   }, [bookId]);
 
-  const rentalPrice = book?.rentalPrice ?? book?.price;
-  const rentalDays = book?.rentalPeriodDays ?? book?.defaultRentalDays;
-  const isFreeBook = book?.rentalType === 'FREE';
+  const rentalPrice = book?.rentalPrice ?? book?.rentalInfo?.rentalPrice ?? book?.price;
+  const rentalDays = book?.rentalPeriodDays ?? book?.defaultRentalDays ?? book?.rentalInfo?.defaultRentalDays;
+  const rentalType = book?.rentalType ?? book?.rentalInfo?.rentalType;
+  const isFreeBook = rentalType === 'FREE';
   const hasPaymentAmount = isFreeBook || typeof rentalPrice === 'number';
   const canRentBook = Boolean(book && isRentableStatus(book.status) && hasPaymentAmount);
   const pointBalance = pointsPage?.pointBalance;
@@ -303,7 +331,7 @@ export function RentPaymentPage() {
           <div className={styles.bookInfo}>
             <h2 id="rent-book-title">{book?.title ?? (isLoading ? '도서 정보를 불러오는 중입니다.' : '도서 정보가 없습니다.')}</h2>
             <p className={styles.bookMeta}>
-              {book?.author ?? '-'} | {book?.publisher ?? '-'} | -
+              {book?.author ?? '-'} | {book?.publisher ?? '-'} | {book?.categoryName ?? '-'}
             </p>
             <dl className={styles.infoList}>
               <div>
@@ -312,7 +340,7 @@ export function RentPaymentPage() {
               </div>
               <div>
                 <dt>출간일</dt>
-                <dd>{book?.publishedAt ?? '-'}</dd>
+                <dd>{formatDate(book?.publishedAt)}</dd>
               </div>
               <div>
                 <dt>카테고리</dt>

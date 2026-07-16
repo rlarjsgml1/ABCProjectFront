@@ -22,6 +22,9 @@ export type BookDetail = {
   keywords?: string[];
   tableOfContents?: string;
   publisherReview?: string;
+  fileFormat?: string;
+  supportedDevice?: string;
+  language?: string;
   rentalInfo?: {
     rentalType: 'FREE' | 'PAID';
     rentalPrice: number;

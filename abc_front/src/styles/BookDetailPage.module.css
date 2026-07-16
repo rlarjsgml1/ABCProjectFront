@@ -153,6 +153,19 @@
   text-align: center;
 }
 
+.actionPanel :global(.button:disabled) {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.bookActionMessage {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: center;
+}
+
 .sideLinks {
   border-top: 1px solid var(--color-border);
   margin-top: var(--space-6);
@@ -234,8 +247,8 @@
 
 .bookGrid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: var(--space-6);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--space-4);
 }
 
 .bookCard {
@@ -250,13 +263,18 @@
   text-decoration: none;
 }
 
+.bookCard strong {
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
 .bookCard strong,
 .bookCard span {
   color: var(--color-text);
 }
 
 .bookThumb {
-  width: 100%;
+  width: min(100%, 104px);
   aspect-ratio: 3 / 4;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -264,6 +282,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  justify-self: center;
   color: var(--color-muted);
   font-weight: 700;
   object-fit: cover;

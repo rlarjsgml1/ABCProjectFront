@@ -4,11 +4,12 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AUTH_CHANGED_EVENT } from '../../../api/authApi';
 import { getBookDetail, getRelatedBooks } from '../../../api/bookApi';
 import { createMyFavorite, deleteMyFavorite } from '../../../api/favoritesApi';
+import { getMyRentals } from '../../../api/myRentalsApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { createReview, deleteReview, getBookReviews, updateReview } from '../../../api/reviewApi';
 import { Modal } from '../../../components/common/Modal';
 import type { BookDetail } from '../../../types/book';
-import type { BookCard, ReviewItem, ReviewSummary } from '../../../types/api';
+import type { BookCard, MyRentalItem, ReviewItem, ReviewSummary } from '../../../types/api';
 import styles from '../../../styles/BookDetailPage.module.css';
 
 type DetailTab = 'description' | 'recommendations' | 'reviews';
@@ -29,6 +30,52 @@ function formatReviewDate(value: string) {
 function formatStars(score: number) {
   const clamped = Math.min(5, Math.max(0, score));
   return '★'.repeat(clamped) + '☆'.repeat(5 - clamped);
+}
+
+function formatWon(value: number | undefined) {
+  if (typeof value !== 'number') {
+    return '-';
+  }
+
+  return `${value.toLocaleString('ko-KR')}원`;
+}
+
+function formatPageCount(value: number | undefined) {
+  if (typeof value !== 'number') {
+    return '-';
+  }
+
+  return `${value.toLocaleString('ko-KR')}쪽`;
+}
+
+function formatBookDate(value: string | undefined) {
+  if (!value) {
+    return '-';
+  }
+
+  const time = new Date(value).getTime();
+  if (Number.isNaN(time)) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).format(time);
+}
+
+function formatKeywords(keywords: string[] | undefined) {
+  return keywords && keywords.length > 0 ? keywords.join(', ') : '-';
+}
+
+function isRentedState(state: string | null | undefined) {
+  return state === 'READY' || state === 'READING' || state === 'RENTED';
+}
+
+function isOwnedState(state: string | null | undefined) {
+  return state === 'OWNED' || state === 'PURCHASED';
+}
+
+function getReadPath(rental: MyRentalItem) {
+  const targetPage = rental.currentPage > 0 ? rental.currentPage : 1;
+  return `/rentals/${rental.rentalId}/read?page=${targetPage}`;
 }
 
 function StarPicker({ value, onChange, disabled = false }: { value: number; onChange: (rating: number) => void; disabled?: boolean }) {
@@ -76,8 +123,14 @@ export function BookDetailPage() {
   const [openReviewMenuId, setOpenReviewMenuId] = useState<number | null>(null);
   const [sameAuthorBooks, setSameAuthorBooks] = useState<BookCard[]>([]);
   const [sameCategoryBooks, setSameCategoryBooks] = useState<BookCard[]>([]);
+  const [bookActionMessage, setBookActionMessage] = useState('');
+  const [isOpeningViewer, setIsOpeningViewer] = useState(false);
+  const [myBookRental, setMyBookRental] = useState<MyRentalItem | null>(null);
 
   const myReview = reviewItems.find((review) => review.memberId === currentMemberId) ?? null;
+  const myBookRentalState = myBookRental?.rentalStatus ?? book?.myRentalState;
+  const isRentedBook = isRentedState(myBookRentalState);
+  const isOwnedBook = isOwnedState(myBookRentalState);
 
   useEffect(() => {
     function syncAuthState() {
@@ -134,6 +187,36 @@ export function BookDetailPage() {
     void loadReviews();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookId]);
+
+  useEffect(() => {
+    if (!bookId || !isSignedIn) {
+      setMyBookRental(null);
+      return;
+    }
+
+    let ignore = false;
+
+    async function loadMyBookRental() {
+      try {
+        const rentalsPage = await getMyRentals({ page: 0, size: 100 });
+        const currentRental = rentalsPage.content.find((rental) => rental.bookId === Number(bookId)) ?? null;
+
+        if (!ignore) {
+          setMyBookRental(currentRental);
+        }
+      } catch {
+        if (!ignore) {
+          setMyBookRental(null);
+        }
+      }
+    }
+
+    void loadMyBookRental();
+
+    return () => {
+      ignore = true;
+    };
+  }, [bookId, isSignedIn, currentMemberId]);
 
   useEffect(() => {
     if (!bookId) return;
@@ -193,6 +276,35 @@ export function BookDetailPage() {
     }
 
     navigate(`/books/${bookId}/rent`);
+  }
+
+  async function handleReadClick() {
+    if (!bookId) return;
+
+    if (!isSignedIn) {
+      setActiveModal('login');
+      return;
+    }
+
+    setIsOpeningViewer(true);
+    setBookActionMessage('');
+
+    try {
+      const currentRental =
+        myBookRental ??
+        (await getMyRentals({ page: 0, size: 100 })).content.find((rental) => rental.bookId === Number(bookId));
+
+      if (!currentRental) {
+        setBookActionMessage('내 서재에서 대여/소장 상태를 확인해 주세요.');
+        return;
+      }
+
+      navigate(getReadPath(currentRental));
+    } catch (error) {
+      setBookActionMessage(getApiErrorMessage(error));
+    } finally {
+      setIsOpeningViewer(false);
+    }
   }
 
   function openMemberModal(modalType: Exclude<ModalType, null>) {
@@ -319,15 +431,15 @@ export function BookDetailPage() {
             </div>
             <div>
               <dt>ISBN</dt>
-              <dd>-</dd>
+              <dd>{book?.isbn ?? '-'}</dd>
             </div>
             <div>
               <dt>장르</dt>
-              <dd>-</dd>
+              <dd>{book?.categoryName ?? '-'}</dd>
             </div>
             <div>
               <dt>페이지 수</dt>
-              <dd>-</dd>
+              <dd>{formatPageCount(book?.pageCount)}</dd>
             </div>
             <div>
               <dt>유료 / 무료</dt>
@@ -336,12 +448,16 @@ export function BookDetailPage() {
               </dd>
             </div>
             <div>
+              <dt>대여 금액</dt>
+              <dd>{book?.rentalType === 'FREE' ? '0원' : formatWon(book?.rentalPrice)}</dd>
+            </div>
+            <div>
               <dt>대여 가능일</dt>
-              <dd>-</dd>
+              <dd>{book ? '결제 완료 즉시' : '-'}</dd>
             </div>
             <div>
               <dt>반납 예정일</dt>
-              <dd>-</dd>
+              <dd>{typeof book?.rentalPeriodDays === 'number' ? `대여 시작일로부터 ${book.rentalPeriodDays}일 후` : '-'}</dd>
             </div>
           </dl>
 
@@ -351,17 +467,30 @@ export function BookDetailPage() {
           </div>
 
           <div className={styles.tags} aria-label="키워드">
-            <span>키워드 없음</span>
+            {book?.keywords && book.keywords.length > 0 ? book.keywords.map((keyword) => <span key={keyword}>{keyword}</span>) : <span>키워드 없음</span>}
           </div>
         </div>
 
         <aside className={styles.actionPanel} aria-label="도서 활동">
-          <button className="button button-primary" type="button" onClick={handleRentClick}>
-            대여하기
-          </button>
-          <button className="button button-secondary" type="button" onClick={handleRentClick}>
-            소장하기
-          </button>
+          {isRentedBook ? (
+            <button className="button button-primary" type="button" onClick={handleReadClick} disabled={isOpeningViewer}>
+              {isOpeningViewer ? '이동 중' : '읽기'}
+            </button>
+          ) : (
+            <button className="button button-primary" type="button" onClick={handleRentClick} disabled={isOwnedBook}>
+              대여하기
+            </button>
+          )}
+          {isOwnedBook ? (
+            <button className="button button-secondary" type="button" onClick={handleReadClick} disabled={isOpeningViewer}>
+              {isOpeningViewer ? '이동 중' : '읽기'}
+            </button>
+          ) : (
+            <button className="button button-secondary" type="button" onClick={handleRentClick}>
+              소장하기
+            </button>
+          )}
+          {bookActionMessage && <p className={styles.bookActionMessage}>{bookActionMessage}</p>}
 
           <div className={styles.sideLinks}>
             <button type="button" onClick={() => openMemberModal('bookReport')}>
@@ -402,7 +531,7 @@ export function BookDetailPage() {
         <dl className={styles.spec}>
           <div>
             <dt>ISBN</dt>
-            <dd>-</dd>
+            <dd>{book?.isbn ?? '-'}</dd>
           </div>
           <div>
             <dt>출판사</dt>
@@ -410,27 +539,27 @@ export function BookDetailPage() {
           </div>
           <div>
             <dt>발행일</dt>
-            <dd>-</dd>
+            <dd>{formatBookDate(book?.publishedAt)}</dd>
           </div>
           <div>
             <dt>파일 형식</dt>
-            <dd>-</dd>
+            <dd>{book?.fileFormat ?? '-'}</dd>
           </div>
           <div>
             <dt>지원 기기</dt>
-            <dd>-</dd>
+            <dd>{book?.supportedDevice ?? '-'}</dd>
           </div>
           <div>
             <dt>언어</dt>
-            <dd>-</dd>
+            <dd>{book?.language ?? '-'}</dd>
           </div>
           <div>
             <dt>카테고리</dt>
-            <dd>-</dd>
+            <dd>{book?.categoryName ?? '-'}</dd>
           </div>
           <div>
             <dt>키워드</dt>
-            <dd>-</dd>
+            <dd>{formatKeywords(book?.keywords)}</dd>
           </div>
         </dl>
       </section>
