@@ -1,0 +1,84 @@
+/* A-015 도서관 위치 관리 전용 — 공통 목록/모달 레이아웃은 AdminOpsListPage.module.css를 함께 쓴다 */
+
+.bookSection {
+  display: grid;
+  gap: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-4);
+}
+
+.bookSectionTitle {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.bookSearchRow {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.bookSearchRow input {
+  flex: 1;
+  box-sizing: border-box;
+  height: 42px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0 12px;
+  font: inherit;
+}
+
+.bookSearchResults {
+  display: grid;
+  gap: var(--space-2);
+  max-height: 160px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+}
+
+.bookSearchResultRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.bookChangeList {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.bookChangeRow {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: var(--space-2);
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.bookChangeRow select {
+  height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0 8px;
+  font: inherit;
+}
+
+.bookChangeRemove {
+  border: 0;
+  background: transparent;
+  color: var(--color-danger);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 800;
+}

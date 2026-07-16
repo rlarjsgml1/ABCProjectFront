@@ -24,7 +24,6 @@ export async function signup(payload: SignupRequest) {
   return response.data.data;
 }
 
-// 백엔드 미구현 API. GET /api/v1/auth/check-login-id?loginId=... 스펙으로 요청해둔 상태 — 구현되면 바로 연동됨.
 export async function checkLoginId(loginId: string) {
   const response = await apiClient.get<ApiResponse<CheckLoginIdResponse>>('/auth/check-login-id', {
     params: { loginId },
