@@ -247,16 +247,6 @@ export function HomePage() {
         </div>
       </section>
 
-      <div className="home-quick-menu" aria-label="빠른 메뉴">
-        {quickMenuItems.map((item) => (
-          <Link to={item.to} key={item.to}>
-            <span aria-hidden="true">{item.icon}</span>
-            <strong>{item.label}</strong>
-            <small>{item.description}</small>
-          </Link>
-        ))}
-      </div>
-
       <Link className="home-notice-ticker" to="/notices">
         <span className="home-notice-icon" aria-hidden="true">📢</span>
         <strong>NOTICE</strong>
@@ -277,6 +267,16 @@ export function HomePage() {
           ))}
         </div>
       </section>
+
+      <div className="home-quick-menu" aria-label="빠른 메뉴">
+        {quickMenuItems.map((item) => (
+          <Link to={item.to} key={item.to}>
+            <span aria-hidden="true">{item.icon}</span>
+            <strong>{item.label}</strong>
+            <small>{item.description}</small>
+          </Link>
+        ))}
+      </div>
 
       {bookSections.map((section) => (
         <section className={`home-book-section ${section.ranked ? 'home-book-section-best' : ''}`} key={section.title}>
