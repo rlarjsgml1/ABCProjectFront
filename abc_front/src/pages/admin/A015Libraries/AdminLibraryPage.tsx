@@ -1,5 +1,8 @@
 // 도서관 위치 관리(A-015) 화면 — api-spec(final).md API-ADMIN-LIBRARY-001~003 스펙 기준.
 // 백엔드 미구현(AdminLibraryController 없음) — 프론트만 스펙대로 미리 준비해둔 상태.
+// 신규 등록: 스펙(API-ADMIN-LIBRARY-002)은 PUT /admin/libraries/{libraryId} 하나로 등록/수정을 겸하지만,
+// 신규 항목은 libraryId가 없어 어떤 URL로 호출해야 하는지 확정되지 않았다(API gap/confirm 대상, 임의 endpoint 호출 금지).
+// 그래서 등록 폼 제출 시에는 실제 API를 호출하지 않고 화면 확인용으로 로컬 목록에만 반영해둔다.
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getAdminBooks } from '../../../api/adminBookApi';
@@ -128,6 +131,10 @@ function getInitialForm(library: AdminLibrarySummary): LibraryForm {
   };
 }
 
+function getEmptyForm(): LibraryForm {
+  return { libraryName: '', address: '', latitude: '', longitude: '', status: 'ACTIVE' };
+}
+
 export function AdminLibraryPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [librariesPage, setLibrariesPage] = useState<PageResponse<AdminLibrarySummary> | null>(null);
@@ -136,6 +143,7 @@ export function AdminLibraryPage() {
   const [statusMessage, setStatusMessage] = useState('');
 
   const [editLibrary, setEditLibrary] = useState<AdminLibrarySummary | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
   const [form, setForm] = useState<LibraryForm | null>(null);
   const [bookChanges, setBookChanges] = useState<BookChange[]>([]);
   const [bookSearchKeyword, setBookSearchKeyword] = useState('');
@@ -217,6 +225,7 @@ export function AdminLibraryPage() {
   }
 
   function openEditModal(library: AdminLibrarySummary) {
+    setIsCreating(false);
     setEditLibrary(library);
     setForm(getInitialForm(library));
     setBookChanges([]);
@@ -225,8 +234,19 @@ export function AdminLibraryPage() {
     setModalError('');
   }
 
+  function openCreateModal() {
+    setIsCreating(true);
+    setEditLibrary(null);
+    setForm(getEmptyForm());
+    setBookChanges([]);
+    setBookSearchKeyword('');
+    setBookSearchResults([]);
+    setModalError('');
+  }
+
   function closeEditModal() {
     if (isSaving) return;
+    setIsCreating(false);
     setEditLibrary(null);
     setForm(null);
     setModalError('');
@@ -277,9 +297,19 @@ export function AdminLibraryPage() {
     );
   }
 
+  function addLocalLibrary(payload: AdminLibraryUpdateRequest) {
+    const draft: AdminLibrarySummary = { libraryId: -Date.now(), bookCount: 0, ...payload };
+
+    setLibrariesPage((current) =>
+      current
+        ? { ...current, content: [draft, ...current.content], totalElements: current.totalElements + 1 }
+        : current,
+    );
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!editLibrary || !form) return;
+    if (!form || (!isCreating && !editLibrary)) return;
 
     if (!form.libraryName.trim()) {
       setModalError('도서관명을 입력해 주세요.');
@@ -311,6 +341,17 @@ export function AdminLibraryPage() {
       longitude,
       status: form.status,
     };
+
+    if (isCreating) {
+      // 등록용 API 확정 전이라 로컬 목록에만 추가한다. 백엔드 gap은 파일 상단 주석 참고.
+      addLocalLibrary(payload);
+      setStatusMessage('새 도서관을 화면에 임시로 등록했습니다. 등록 API가 확정되면 실제 저장으로 연동됩니다.');
+      setIsCreating(false);
+      setForm(null);
+      return;
+    }
+
+    if (!editLibrary) return;
 
     setIsSaving(true);
     setModalError('');
@@ -372,6 +413,9 @@ export function AdminLibraryPage() {
           <Button type="submit">검색</Button>
           <Button type="button" variant="secondary" onClick={handleReset}>
             초기화
+          </Button>
+          <Button type="button" onClick={openCreateModal}>
+            + 도서관 등록
           </Button>
         </div>
       </form>
@@ -449,7 +493,7 @@ export function AdminLibraryPage() {
         </div>
       </div>
 
-      {editLibrary && form ? (
+      {(isCreating || editLibrary) && form ? (
         <div className={listStyles.modalBackdrop} role="presentation" onMouseDown={closeEditModal}>
           <form
             className={listStyles.modal}
@@ -461,8 +505,8 @@ export function AdminLibraryPage() {
           >
             <div className={listStyles.modalHeader}>
               <div>
-                <h2 id="library-edit-title">도서관 정보 수정</h2>
-                <p>L-{editLibrary.libraryId}</p>
+                <h2 id="library-edit-title">{isCreating ? '도서관 등록' : '도서관 정보 수정'}</h2>
+                {editLibrary ? <p>L-{editLibrary.libraryId}</p> : null}
               </div>
               <button type="button" aria-label="닫기" onClick={closeEditModal}>
                 ×
@@ -524,72 +568,76 @@ export function AdminLibraryPage() {
               </label>
             </div>
 
-            <div className={styles.bookSection}>
-              <h3 className={styles.bookSectionTitle}>보유 도서 변경</h3>
+            {editLibrary ? (
+              <div className={styles.bookSection}>
+                <h3 className={styles.bookSectionTitle}>보유 도서 변경</h3>
 
-              <div className={styles.bookSearchRow}>
-                <input
-                  type="search"
-                  placeholder="도서 제목으로 검색"
-                  value={bookSearchKeyword}
-                  onChange={(event) => setBookSearchKeyword(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      event.preventDefault();
-                      void handleBookSearch();
-                    }
-                  }}
-                />
-                <Button type="button" variant="secondary" onClick={() => void handleBookSearch()} disabled={isSearchingBooks}>
-                  {isSearchingBooks ? '검색 중' : '검색'}
-                </Button>
+                <div className={styles.bookSearchRow}>
+                  <input
+                    type="search"
+                    placeholder="도서 제목으로 검색"
+                    value={bookSearchKeyword}
+                    onChange={(event) => setBookSearchKeyword(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        void handleBookSearch();
+                      }
+                    }}
+                  />
+                  <Button type="button" variant="secondary" onClick={() => void handleBookSearch()} disabled={isSearchingBooks}>
+                    {isSearchingBooks ? '검색 중' : '검색'}
+                  </Button>
+                </div>
+
+                {bookSearchResults.length > 0 ? (
+                  <div className={styles.bookSearchResults}>
+                    {bookSearchResults.map((book) => (
+                      <div className={styles.bookSearchResultRow} key={book.bookId}>
+                        <span>{book.title}</span>
+                        <Button type="button" variant="secondary" onClick={() => addBookChange(book)}>
+                          추가
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+
+                {bookChanges.length > 0 ? (
+                  <div className={styles.bookChangeList}>
+                    {bookChanges.map((change) => (
+                      <div className={styles.bookChangeRow} key={change.bookId}>
+                        <span>{change.title}</span>
+                        <select
+                          value={change.holdingStatus}
+                          onChange={(event) => updateBookChangeStatus(change.bookId, event.target.value as AdminLibraryHoldingStatus)}
+                        >
+                          {holdingStatusOptions.map((option) => (
+                            <option value={option.value} key={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        <button type="button" className={styles.bookChangeRemove} onClick={() => removeBookChange(change.bookId)}>
+                          제거
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="field-hint">도서를 검색해서 보유 상태 변경분을 추가해 주세요.</p>
+                )}
               </div>
-
-              {bookSearchResults.length > 0 ? (
-                <div className={styles.bookSearchResults}>
-                  {bookSearchResults.map((book) => (
-                    <div className={styles.bookSearchResultRow} key={book.bookId}>
-                      <span>{book.title}</span>
-                      <Button type="button" variant="secondary" onClick={() => addBookChange(book)}>
-                        추가
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-
-              {bookChanges.length > 0 ? (
-                <div className={styles.bookChangeList}>
-                  {bookChanges.map((change) => (
-                    <div className={styles.bookChangeRow} key={change.bookId}>
-                      <span>{change.title}</span>
-                      <select
-                        value={change.holdingStatus}
-                        onChange={(event) => updateBookChangeStatus(change.bookId, event.target.value as AdminLibraryHoldingStatus)}
-                      >
-                        {holdingStatusOptions.map((option) => (
-                          <option value={option.value} key={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                      <button type="button" className={styles.bookChangeRemove} onClick={() => removeBookChange(change.bookId)}>
-                        제거
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="field-hint">도서를 검색해서 보유 상태 변경분을 추가해 주세요.</p>
-              )}
-            </div>
+            ) : (
+              <p className="field-hint">도서관을 먼저 등록한 후 보유 도서를 추가할 수 있습니다.</p>
+            )}
 
             <div className={listStyles.formActions}>
               <Button type="button" variant="secondary" onClick={closeEditModal} disabled={isSaving}>
                 취소
               </Button>
               <Button type="submit" disabled={isSaving}>
-                {isSaving ? '저장 중' : '저장'}
+                {isSaving ? '저장 중' : isCreating ? '등록' : '저장'}
               </Button>
             </div>
           </form>
