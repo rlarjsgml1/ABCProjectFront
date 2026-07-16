@@ -330,12 +330,17 @@ export function SignupPage() {
             type="password"
             placeholder="비밀번호를 다시 입력하세요"
             value={passwordConfirm}
-            onChange={(event) => setPasswordConfirm(event.target.value)}
+            onChange={(event) => {
+              setPasswordConfirm(event.target.value);
+              checkPasswordMatch(password, event.target.value);
+            }}
             onBlur={() => checkPasswordMatch(password, passwordConfirm)}
             required
           />
           {passwordMismatchMessage ? (
             <small className="field-error">{passwordMismatchMessage}</small>
+          ) : passwordConfirm && password === passwordConfirm ? (
+            <small className="field-success">비밀번호가 동일합니다.</small>
           ) : (
             <small className="field-hint">위와 동일한 비밀번호를 입력해주세요.</small>
           )}
