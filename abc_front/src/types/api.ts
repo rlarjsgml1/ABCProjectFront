@@ -706,6 +706,70 @@ export type AdminCategorySaveResponse = {
   updatedAt?: string;
 };
 
+export type AdminCollectionType = 'SERIES' | 'EVENT';
+
+export type AdminCollectionStatus = 'ACTIVE' | 'HIDDEN' | 'ENDED';
+
+export type AdminCollectionBookItem = {
+  bookId: number;
+  title: string;
+  author?: string;
+  authors?: string[];
+  publisherName?: string;
+  displayOrder: number;
+};
+
+export type AdminCollectionItem = {
+  collectionId: number;
+  collectionName: string;
+  collectionType: AdminCollectionType;
+  discountRate?: number;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  status: AdminCollectionStatus;
+  displayOrder: number;
+  bookCount: number;
+  books?: AdminCollectionBookItem[];
+};
+
+export type AdminCollectionListQuery = {
+  q?: string;
+  collectionType?: AdminCollectionType;
+  status?: AdminCollectionStatus;
+  page?: number;
+  size?: number;
+};
+
+export type AdminCollectionSaveRequest = {
+  collectionName: string;
+  collectionType: AdminCollectionType;
+  discountRate?: number;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  status: AdminCollectionStatus;
+  displayOrder: number;
+};
+
+export type AdminCollectionSaveResponse = {
+  collectionId: number;
+  updatedAt?: string;
+};
+
+export type AdminCollectionBooksSaveRequest = {
+  books: Array<{
+    bookId: number;
+    displayOrder: number;
+  }>;
+};
+
+export type AdminCollectionPatchRequest = {
+  status?: AdminCollectionStatus;
+  removeBookId?: number;
+  reason?: string;
+};
+
 // 백엔드가 정렬 파라미터를 받지 않고 항상 등록 최신순으로 고정 정렬한다 (FavoriteBookRepository.findMyFavorites 참고).
 export type FavoriteSort = 'recent';
 
