@@ -634,6 +634,14 @@ export type AdminBookUpdateResponse = {
   updatedAt?: string;
 };
 
+export type AdminBookEpubUploadResponse = {
+  bookId: number;
+  fileName: string;
+  fileSize: number;
+  sha256: string;
+  epubVersion: number;
+};
+
 // GET /api/v1/books/search 실제 응답 봉투. BookSearchResponse.java 기준 (content는 page 안에 들어있다).
 export type BookSearchResponse = {
   keyword: string;

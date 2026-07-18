@@ -1,6 +1,11 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, KeyboardEvent as ReactKeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { changeAdminBookStatus, getAdminBook, updateAdminBook } from '../../../api/adminBookApi';
+import {
+  changeAdminBookStatus,
+  getAdminBook,
+  updateAdminBook,
+  uploadAdminBookEpub,
+} from '../../../api/adminBookApi';
 import { getCategories } from '../../../api/bookApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
@@ -11,6 +16,8 @@ import type {
   Category,
 } from '../../../types/api';
 import styles from '../../../styles/AdminBookFormPage.module.css';
+
+const MAX_EPUB_FILE_SIZE = 50 * 1024 * 1024;
 
 const fallbackCategories: Category[] = [
   { categoryId: 1, name: '소설' },
@@ -89,8 +96,38 @@ export function AdminBookEditPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isChangingStatus, setIsChangingStatus] = useState(false);
+  const [epubFile, setEpubFile] = useState<File | null>(null);
+  const [epubErrorMessage, setEpubErrorMessage] = useState('');
+  const [epubSuccessMessage, setEpubSuccessMessage] = useState('');
+  const [isUploadingEpub, setIsUploadingEpub] = useState(false);
+  const [isEpubConfirmOpen, setIsEpubConfirmOpen] = useState(false);
+  const epubDialogRef = useRef<HTMLDivElement>(null);
+  const epubFileInputRef = useRef<HTMLInputElement>(null);
+  const wasEpubConfirmOpenRef = useRef(false);
 
   const selectedCategoryIds = useMemo(() => new Set(book?.categoryIds ?? []), [book]);
+
+  useEffect(() => {
+    let frameId: number | undefined;
+
+    if (isEpubConfirmOpen) {
+      wasEpubConfirmOpenRef.current = true;
+      frameId = window.requestAnimationFrame(() => {
+        epubDialogRef.current?.querySelector<HTMLButtonElement>('button:not([disabled])')?.focus();
+      });
+    } else if (wasEpubConfirmOpenRef.current) {
+      wasEpubConfirmOpenRef.current = false;
+      frameId = window.requestAnimationFrame(() => {
+        epubFileInputRef.current?.focus();
+      });
+    }
+
+    return () => {
+      if (frameId !== undefined) {
+        window.cancelAnimationFrame(frameId);
+      }
+    };
+  }, [isEpubConfirmOpen]);
 
   useEffect(() => {
     let ignore = false;
@@ -266,6 +303,90 @@ export function AdminBookEditPage() {
     }
   }
 
+  function prepareEpubUpload() {
+    setEpubErrorMessage('');
+    setEpubSuccessMessage('');
+
+    if (!numericBookId) {
+      setEpubErrorMessage('EPUB을 등록할 도서 번호를 확인할 수 없습니다.');
+      return;
+    }
+
+    if (!epubFile) {
+      setEpubErrorMessage('업로드할 EPUB 파일을 선택해 주세요.');
+      return;
+    }
+
+    if (!epubFile.name.toLowerCase().endsWith('.epub')) {
+      setEpubErrorMessage('.epub 확장자 파일만 업로드할 수 있습니다.');
+      return;
+    }
+
+    if (epubFile.size > MAX_EPUB_FILE_SIZE) {
+      setEpubErrorMessage('EPUB 파일은 50MB 이하만 업로드할 수 있습니다.');
+      return;
+    }
+
+    setIsEpubConfirmOpen(true);
+  }
+
+  async function handleEpubUpload() {
+    if (!numericBookId || !epubFile) {
+      setIsEpubConfirmOpen(false);
+      setEpubErrorMessage('업로드할 도서와 EPUB 파일을 다시 확인해 주세요.');
+      return;
+    }
+
+    setIsUploadingEpub(true);
+
+    try {
+      const response = await uploadAdminBookEpub(numericBookId, epubFile);
+      setEpubSuccessMessage(`${response.fileName} 업로드 완료 (EPUB version ${response.epubVersion})`);
+      setEpubFile(null);
+    } catch (error) {
+      setEpubErrorMessage(getApiErrorMessage(error));
+    } finally {
+      setIsUploadingEpub(false);
+      setIsEpubConfirmOpen(false);
+    }
+  }
+
+  function handleEpubDialogKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      if (!isUploadingEpub) {
+        setIsEpubConfirmOpen(false);
+      }
+      return;
+    }
+
+    if (event.key !== 'Tab') {
+      return;
+    }
+
+    const dialog = epubDialogRef.current;
+    const focusableElements = dialog
+      ? Array.from(dialog.querySelectorAll<HTMLElement>('button:not([disabled])'))
+      : [];
+
+    if (focusableElements.length === 0) {
+      event.preventDefault();
+      return;
+    }
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+    const activeElement = document.activeElement;
+
+    if (event.shiftKey && (activeElement === firstElement || !dialog?.contains(activeElement))) {
+      event.preventDefault();
+      lastElement.focus();
+    } else if (!event.shiftKey && activeElement === lastElement) {
+      event.preventDefault();
+      firstElement.focus();
+    }
+  }
+
   if (isLoading || !book) {
     return (
       <section className={`page-section ${styles.page}`}>
@@ -423,7 +544,7 @@ export function AdminBookEditPage() {
           <section className={styles.panel}>
             <div className={styles.panelHeader}>
               <h2>전자책 콘텐츠</h2>
-              <p>EPUB 파일은 도서 정보 저장과 별도로 Swagger 또는 Postman에서 수동 업로드합니다.</p>
+              <p>도서 정보 저장과 별도로 EPUB 본문을 등록합니다. 새 파일을 올리면 EPUB version이 증가합니다.</p>
             </div>
 
             <label>
@@ -436,10 +557,33 @@ export function AdminBookEditPage() {
               />
             </label>
 
-            <div className={styles.ruleGrid}>
-              <span>{'PUT /api/v1/admin/books/{bookId}/epub'}</span>
-              <span>multipart field: file</span>
-              <span>등록 결과와 EPUB version은 업로드 API 응답에서 확인</span>
+            <div className={styles.epubUpload}>
+              <strong>대상 도서 ID: {numericBookId}</strong>
+              <p className={styles.epubWarning}>
+                기존 EPUB을 교체하면 이 도서를 이용 중인 사용자의 읽기 진행률이 초기화되고 기존 북마크가 삭제됩니다.
+              </p>
+              <label>
+                EPUB 파일
+                <input
+                  ref={epubFileInputRef}
+                  key={epubFile?.name ?? 'empty-epub-file'}
+                  type="file"
+                  accept=".epub,application/epub+zip"
+                  onChange={(event) => {
+                    setEpubFile(event.target.files?.[0] ?? null);
+                    setEpubErrorMessage('');
+                    setEpubSuccessMessage('');
+                  }}
+                />
+              </label>
+              <div className={styles.epubUploadActions}>
+                <span>{epubFile ? `${epubFile.name} (${(epubFile.size / 1024 / 1024).toFixed(1)}MB)` : '50MB 이하 .epub 파일'}</span>
+                <Button type="button" onClick={prepareEpubUpload} disabled={isUploadingEpub || !epubFile}>
+                  {isUploadingEpub ? 'EPUB 업로드 중' : 'EPUB 업로드'}
+                </Button>
+              </div>
+              {epubErrorMessage ? <p className={styles.uploadError} role="alert">{epubErrorMessage}</p> : null}
+              {epubSuccessMessage ? <p className={styles.uploadSuccess} role="status" aria-live="polite">{epubSuccessMessage}</p> : null}
             </div>
           </section>
         </div>
@@ -460,6 +604,50 @@ export function AdminBookEditPage() {
           </div>
         </section>
       </form>
+
+      {isEpubConfirmOpen ? (
+        <div
+          className={styles.modalBackdrop}
+          role="presentation"
+          onMouseDown={() => {
+            if (!isUploadingEpub) {
+              setIsEpubConfirmOpen(false);
+            }
+          }}
+        >
+          <div
+            ref={epubDialogRef}
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-busy={isUploadingEpub}
+            aria-labelledby="epub-upload-modal-title"
+            aria-describedby="epub-upload-modal-description"
+            onKeyDown={handleEpubDialogKeyDown}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className={styles.modalHeader}>
+              <h2 id="epub-upload-modal-title">EPUB 파일 업로드 확인</h2>
+              <p id="epub-upload-modal-description">
+                도서 ID {numericBookId}에 {epubFile?.name} 파일을 등록합니다.
+              </p>
+            </div>
+
+            <p className={styles.epubWarning}>
+              기존 콘텐츠가 있다면 사용자 읽기 진행률이 초기화되고 기존 북마크가 삭제됩니다. 이 작업을 계속하시겠습니까?
+            </p>
+
+            <div className={styles.modalActions}>
+              <Button type="button" variant="secondary" onClick={() => setIsEpubConfirmOpen(false)} disabled={isUploadingEpub}>
+                취소
+              </Button>
+              <Button type="button" variant="danger" onClick={handleEpubUpload} disabled={isUploadingEpub}>
+                {isUploadingEpub ? '업로드 중' : '영향을 확인하고 업로드'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {isStatusModalOpen ? (
         <div className={styles.modalBackdrop} role="presentation" onMouseDown={() => setIsStatusModalOpen(false)}>
