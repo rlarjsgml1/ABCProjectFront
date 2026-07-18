@@ -23,7 +23,7 @@ function formatDateInputValue(date: Date) {
 }
 
 function formatNumber(value: number) {
-  return value.toLocaleString('ko-KR');
+  return (Number.isFinite(value) ? value : 0).toLocaleString('ko-KR');
 }
 
 function formatCarbon(value: number) {
@@ -93,10 +93,13 @@ export function ReadingStatsPage() {
     };
   }, [activePeriod, baseDate]);
 
+  const completionRate = statistics.summary.rentalCount > 0
+    ? Math.round((statistics.summary.readBookCount / statistics.summary.rentalCount) * 100)
+    : 0;
   const summaryCards = [
     { label: '대여 수', value: `${formatNumber(statistics.summary.rentalCount)}권` },
     { label: '완독 수', value: `${formatNumber(statistics.summary.readBookCount)}권` },
-    { label: '읽은 페이지', value: `${formatNumber(statistics.summary.readPageCount)}p` },
+    { label: '대여 대비 완독률', value: `${formatNumber(completionRate)}%` },
   ];
   const secondaryMetrics = [
     { label: '리뷰 수', value: `${formatNumber(statistics.summary.reviewCount)}건` },

@@ -6,7 +6,6 @@ import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
 import type {
   AdminBookDetail,
-  AdminBookPageRequest,
   AdminBookRentalType,
   AdminBookStatus,
   Category,
@@ -39,7 +38,6 @@ const fallbackBook: AdminBookDetail = {
   description: '데이터베이스의 기본 개념과 실무 활용을 함께 익힐 수 있는 도서입니다.',
   tableOfContents: '1장 데이터 모델\n2장 SQL 기초',
   publisherReview: '학습자를 위한 구성과 실무 예제를 담았습니다.',
-  pages: [{ pageNo: 1, pageContent: '샘플 본문입니다.' }],
 };
 
 function flattenCategories(categories: Category[]): Category[] {
@@ -71,7 +69,6 @@ function normalizeBook(book: AdminBookDetail): AdminBookDetail {
     categoryIds,
     publisherName: book.publisherName || book.publisher || fallbackBook.publisherName,
     keywords: book.keywords?.length ? book.keywords : fallbackBook.keywords,
-    pages: book.pages?.length ? book.pages : fallbackBook.pages,
     defaultRentalDays: book.defaultRentalDays || fallbackBook.defaultRentalDays,
     description: book.description || fallbackBook.description,
   };
@@ -82,7 +79,6 @@ export function AdminBookEditPage() {
   const numericBookId = Number(bookId);
   const [categories, setCategories] = useState<Category[]>(fallbackCategories);
   const [book, setBook] = useState<AdminBookDetail | null>(null);
-  const [pages, setPages] = useState<AdminBookPageRequest[]>(fallbackBook.pages ?? []);
   const [rentalType, setRentalType] = useState<AdminBookRentalType>('PAID');
   const [statusValue, setStatusValue] = useState<AdminBookStatus>('AVAILABLE');
   const [statusReason, setStatusReason] = useState('');
@@ -131,7 +127,6 @@ export function AdminBookEditPage() {
         if (!ignore) {
           const normalizedBook = normalizeBook(data);
           setBook(normalizedBook);
-          setPages(normalizedBook.pages ?? fallbackBook.pages ?? []);
           setRentalType(normalizedBook.rentalType);
           setStatusValue(normalizedBook.status);
         }
@@ -139,7 +134,6 @@ export function AdminBookEditPage() {
         if (!ignore) {
           const normalizedBook = normalizeBook({ ...fallbackBook, bookId: numericBookId || fallbackBook.bookId });
           setBook(normalizedBook);
-          setPages(normalizedBook.pages ?? fallbackBook.pages ?? []);
           setRentalType(normalizedBook.rentalType);
           setStatusValue(normalizedBook.status);
           setErrorMessage('서버 데이터 연결 전까지 임시 도서 정보가 표시됩니다.');
@@ -163,33 +157,6 @@ export function AdminBookEditPage() {
     };
   }, [numericBookId]);
 
-  function addPage() {
-    setPages((current) => [...current, { pageNo: current.length + 1, pageContent: '' }]);
-  }
-
-  function updatePage(index: number, field: keyof AdminBookPageRequest, value: string) {
-    setPages((current) =>
-      current.map((page, pageIndex) =>
-        pageIndex === index
-          ? {
-              ...page,
-              [field]: field === 'pageNo' ? Number(value) || 1 : value,
-            }
-          : page,
-      ),
-    );
-  }
-
-  function removePage(index: number) {
-    setPages((current) => {
-      if (current.length === 1) {
-        return current;
-      }
-
-      return current.filter((_, pageIndex) => pageIndex !== index);
-    });
-  }
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage('');
@@ -208,12 +175,6 @@ export function AdminBookEditPage() {
       .getAll('categoryIds')
       .map((value) => Number(value))
       .filter(Boolean);
-    const validPages = pages
-      .map((page) => ({
-        pageNo: Number(page.pageNo) || 1,
-        pageContent: page.pageContent.trim(),
-      }))
-      .filter((page) => page.pageContent);
 
     if (!title) {
       setErrorMessage('도서 제목을 입력해 주세요.');
@@ -232,11 +193,6 @@ export function AdminBookEditPage() {
 
     if (categoryIds.length === 0) {
       setErrorMessage('카테고리를 1개 이상 선택해 주세요.');
-      return;
-    }
-
-    if (validPages.length === 0) {
-      setErrorMessage('전자책 본문 페이지를 1개 이상 입력해 주세요.');
       return;
     }
 
@@ -262,7 +218,6 @@ export function AdminBookEditPage() {
       description: String(formData.get('description') ?? '').trim(),
       tableOfContents: String(formData.get('tableOfContents') ?? '').trim() || undefined,
       publisherReview: String(formData.get('publisherReview') ?? '').trim() || undefined,
-      pages: validPages,
     };
 
     setIsSubmitting(true);
@@ -271,7 +226,6 @@ export function AdminBookEditPage() {
       await updateAdminBook(numericBookId, payload);
       const updatedBook = normalizeBook({ ...(book ?? fallbackBook), ...payload, bookId: numericBookId });
       setBook(updatedBook);
-      setPages(updatedBook.pages ?? []);
       setStatusValue(updatedBook.status);
       setSuccessMessage('도서 정보가 수정되었습니다.');
     } catch (error) {
@@ -468,8 +422,8 @@ export function AdminBookEditPage() {
 
           <section className={styles.panel}>
             <div className={styles.panelHeader}>
-              <h2>전자책 파일/페이지</h2>
-              <p>파일 URL, 본문, 페이지 데이터를 수정합니다.</p>
+              <h2>전자책 콘텐츠</h2>
+              <p>EPUB 파일은 도서 정보 저장과 별도로 Swagger 또는 Postman에서 수동 업로드합니다.</p>
             </div>
 
             <label>
@@ -477,32 +431,16 @@ export function AdminBookEditPage() {
               <input
                 name="coverImageUrl"
                 type="url"
-                placeholder="https://cdn.example.com/book-1001.epub"
+                placeholder="https://cdn.example.com/book-1001.jpg"
                 defaultValue={book.coverImageUrl ?? ''}
               />
             </label>
 
-            <div className={styles.pageList}>
-              {pages.map((page, index) => (
-                <div className={styles.pageRow} key={index}>
-                  <label>
-                    페이지 번호
-                    <input value={page.pageNo} type="number" min="1" onChange={(event) => updatePage(index, 'pageNo', event.target.value)} />
-                  </label>
-                  <label>
-                    페이지 본문
-                    <textarea value={page.pageContent} onChange={(event) => updatePage(index, 'pageContent', event.target.value)} placeholder="본문 텍스트를 입력합니다." />
-                  </label>
-                  <Button type="button" variant="secondary" onClick={() => removePage(index)} disabled={pages.length === 1}>
-                    페이지 삭제
-                  </Button>
-                </div>
-              ))}
+            <div className={styles.ruleGrid}>
+              <span>{'PUT /api/v1/admin/books/{bookId}/epub'}</span>
+              <span>multipart field: file</span>
+              <span>등록 결과와 EPUB version은 업로드 API 응답에서 확인</span>
             </div>
-
-            <Button type="button" variant="secondary" onClick={addPage}>
-              페이지 추가
-            </Button>
           </section>
         </div>
 
@@ -516,7 +454,7 @@ export function AdminBookEditPage() {
             <span>ISBN 중복 없음</span>
             <span>유료 도서 가격 0원 초과</span>
             <span>무료 도서 가격 0원</span>
-            <span>전자책 본문 최소 1페이지</span>
+            <span>EPUB 등록 후 열람 가능</span>
             <span>카테고리 1개 이상 선택</span>
             <span>수정 활동 로그 기록</span>
           </div>

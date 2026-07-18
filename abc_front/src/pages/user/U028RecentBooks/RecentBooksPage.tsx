@@ -6,12 +6,8 @@ import { getApiErrorMessage } from '../../../api/profileApi';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
 import type { RecentBookItem } from '../../../types/api';
 
-function formatProgress(current: number, total: number) {
-  if (total <= 0) {
-    return '0%';
-  }
-
-  return `${Math.min(100, Math.round((current / total) * 100))}%`;
+function formatProgress(progressRate: number) {
+  return `${Math.min(100, Math.max(0, Math.round(progressRate)))}%`;
 }
 
 function formatLastReadAt(value: string) {
@@ -100,13 +96,13 @@ export function RecentBooksPage() {
                   </Link>
 
                   <p className="recent-book-progress-text">
-                    {book.currentPage} / {book.totalPages} 페이지 ({formatProgress(book.currentPage, book.totalPages)})
+                    진행률 {formatProgress(book.progressRate)}
                   </p>
 
                   <div className="recent-book-progress-track">
                     <span
                       className="recent-book-progress-fill"
-                      style={{ width: formatProgress(book.currentPage, book.totalPages) }}
+                      style={{ width: formatProgress(book.progressRate) }}
                     />
                   </div>
 
@@ -114,7 +110,7 @@ export function RecentBooksPage() {
                 </div>
 
                 <Link
-                  to={`/rentals/${book.rentalId}/read?page=${book.currentPage > 0 ? book.currentPage : 1}`}
+                  to={`/rentals/${book.rentalId}/read`}
                   className="button button-primary recent-book-continue-button"
                 >
                   이어보기
