@@ -1,5 +1,5 @@
 // 회원가입 화면(U002) — 아이디/비밀번호/개인정보를 입력받아 회원가입을 처리한다.
-import { FormEvent, MouseEvent, UIEvent, useState } from 'react';
+import { FormEvent, MouseEvent, UIEvent, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { checkLoginId, signup } from '../../../api/authApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
@@ -113,6 +113,12 @@ function maskPhoneNumber(value: string) {
   return `${parts[0]}-${'x'.repeat(parts[1].length)}-${parts[2]}`;
 }
 
+function focusField(input: HTMLInputElement | null) {
+  if (!input) return;
+  input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  input.focus();
+}
+
 function getTodayDateString() {
   const now = new Date();
   const year = now.getFullYear();
@@ -125,6 +131,8 @@ type LoginIdCheckStatus = 'idle' | 'checking' | 'available' | 'unavailable' | 'e
 
 export function SignupPage() {
   const navigate = useNavigate();
+  const loginIdInputRef = useRef<HTMLInputElement>(null);
+  const passwordConfirmInputRef = useRef<HTMLInputElement>(null);
   const [loginId, setLoginId] = useState('');
   const [loginIdCheckStatus, setLoginIdCheckStatus] = useState<LoginIdCheckStatus>('idle');
   const [loginIdCheckMessage, setLoginIdCheckMessage] = useState('');
@@ -234,11 +242,13 @@ export function SignupPage() {
     if (loginIdCheckStatus !== 'available' || checkedLoginId !== trimmedLoginId) {
       setLoginIdCheckStatus('error');
       setLoginIdCheckMessage('아이디 중복 확인을 먼저 해주세요.');
+      focusField(loginIdInputRef.current);
       return;
     }
 
     if (password !== passwordConfirm) {
       setIsPasswordMismatchOpen(true);
+      focusField(passwordConfirmInputRef.current);
       return;
     }
 
@@ -281,6 +291,7 @@ export function SignupPage() {
           <span>아이디<span className="required-mark">*</span></span>
           <div className="field-inline-row">
             <input
+              ref={loginIdInputRef}
               name="loginId"
               type="text"
               placeholder="아이디를 입력하세요"
@@ -328,6 +339,7 @@ export function SignupPage() {
         <label>
           <span>비밀번호 확인<span className="required-mark">*</span></span>
           <input
+            ref={passwordConfirmInputRef}
             name="passwordConfirm"
             type="password"
             placeholder="비밀번호를 다시 입력하세요"
