@@ -16,6 +16,9 @@ type DetailTab = 'description' | 'recommendations' | 'reviews';
 type ModalType = 'login' | 'bookReport' | 'reviewReport' | null;
 
 const REVIEW_PAGE_SIZE = 50;
+const DESCRIPTION_PREVIEW_LENGTH = 240;
+const REVIEW_MIN_LENGTH = 10;
+const REVIEW_PREVIEW_LENGTH = 80;
 
 function formatReviewDate(value: string) {
   const time = new Date(value).getTime();
@@ -61,10 +64,6 @@ function formatBookDate(value: string | undefined) {
   return new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).format(time);
 }
 
-function formatKeywords(keywords: string[] | undefined) {
-  return keywords && keywords.length > 0 ? keywords.join(', ') : '-';
-}
-
 function isRentedState(state: string | null | undefined) {
   return state === 'READY' || state === 'READING' || state === 'RENTED';
 }
@@ -76,6 +75,22 @@ function isOwnedState(state: string | null | undefined) {
 function getReadPath(rental: MyRentalItem) {
   const targetPage = rental.currentPage > 0 ? rental.currentPage : 1;
   return `/rentals/${rental.rentalId}/read?page=${targetPage}`;
+}
+
+function getReviewPreview(content: string, isExpanded: boolean) {
+  if (isExpanded || content.length <= REVIEW_PREVIEW_LENGTH) {
+    return content;
+  }
+
+  return `${content.slice(0, REVIEW_PREVIEW_LENGTH).trimEnd()}…`;
+}
+
+function getDescriptionPreview(content: string, isExpanded: boolean) {
+  if (isExpanded || content.length <= DESCRIPTION_PREVIEW_LENGTH) {
+    return content;
+  }
+
+  return `${content.slice(0, DESCRIPTION_PREVIEW_LENGTH).trimEnd()}…`;
 }
 
 function StarPicker({ value, onChange, disabled = false }: { value: number; onChange: (rating: number) => void; disabled?: boolean }) {
@@ -109,6 +124,7 @@ export function BookDetailPage() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteMessage, setFavoriteMessage] = useState('');
   const [activeTab, setActiveTab] = useState<DetailTab>('description');
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewContent, setReviewContent] = useState('');
@@ -121,6 +137,7 @@ export function BookDetailPage() {
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([]);
   const [reviewListError, setReviewListError] = useState('');
   const [openReviewMenuId, setOpenReviewMenuId] = useState<number | null>(null);
+  const [expandedReviewIds, setExpandedReviewIds] = useState<Set<number>>(() => new Set());
   const [sameAuthorBooks, setSameAuthorBooks] = useState<BookCard[]>([]);
   const [sameCategoryBooks, setSameCategoryBooks] = useState<BookCard[]>([]);
   const [bookActionMessage, setBookActionMessage] = useState('');
@@ -131,6 +148,9 @@ export function BookDetailPage() {
   const myBookRentalState = myBookRental?.rentalStatus ?? book?.myRentalState;
   const isRentedBook = isRentedState(myBookRentalState);
   const isOwnedBook = isOwnedState(myBookRentalState);
+  const hasRelatedBooks = sameAuthorBooks.length > 0 || sameCategoryBooks.length > 0;
+  const description = book?.description ?? '도서 상세 정보를 불러오면 책 소개가 표시됩니다.';
+  const shouldCollapseDescription = description.length > DESCRIPTION_PREVIEW_LENGTH;
 
   useEffect(() => {
     function syncAuthState() {
@@ -173,6 +193,7 @@ export function BookDetailPage() {
         const bookDetail = await getBookDetail(Number(bookId));
         setBook(bookDetail);
         setIsFavorite(false);
+        setIsDescriptionExpanded(false);
       } catch {
         setErrorMessage('도서 정보를 불러오지 못했습니다.');
       } finally {
@@ -332,9 +353,30 @@ export function BookDetailPage() {
     setIsReviewModalOpen(true);
   }
 
+  function toggleReviewExpanded(reviewId: number) {
+    setExpandedReviewIds((current) => {
+      const next = new Set(current);
+
+      if (next.has(reviewId)) {
+        next.delete(reviewId);
+      } else {
+        next.add(reviewId);
+      }
+
+      return next;
+    });
+  }
+
   async function handleSubmitReview() {
-    if (!reviewRating || !reviewContent.trim()) {
+    const trimmedReviewContent = reviewContent.trim();
+
+    if (!reviewRating || !trimmedReviewContent) {
       setReviewNotice('별점과 리뷰 내용을 입력해 주세요.');
+      return;
+    }
+
+    if (trimmedReviewContent.length < REVIEW_MIN_LENGTH) {
+      setReviewNotice(`리뷰는 ${REVIEW_MIN_LENGTH}자 이상 입력해 주세요.`);
       return;
     }
 
@@ -345,9 +387,9 @@ export function BookDetailPage() {
 
     try {
       if (myReview) {
-        await updateReview(myReview.reviewId, { content: reviewContent.trim() });
+        await updateReview(myReview.reviewId, { content: trimmedReviewContent });
       } else {
-        await createReview({ bookId: Number(bookId), ratingScore: reviewRating, content: reviewContent.trim() });
+        await createReview({ bookId: Number(bookId), ratingScore: reviewRating, content: trimmedReviewContent });
       }
 
       setIsReviewModalOpen(false);
@@ -460,15 +502,6 @@ export function BookDetailPage() {
               <dd>{typeof book?.rentalPeriodDays === 'number' ? `대여 시작일로부터 ${book.rentalPeriodDays}일 후` : '-'}</dd>
             </div>
           </dl>
-
-          <div className={styles.intro}>
-            <strong>책 소개</strong>
-            <p>{book?.description ?? '도서 상세 정보를 불러오면 책 소개가 표시됩니다.'}</p>
-          </div>
-
-          <div className={styles.tags} aria-label="키워드">
-            {book?.keywords && book.keywords.length > 0 ? book.keywords.map((keyword) => <span key={keyword}>{keyword}</span>) : <span>키워드 없음</span>}
-          </div>
         </div>
 
         <aside className={styles.actionPanel} aria-label="도서 활동">
@@ -514,20 +547,30 @@ export function BookDetailPage() {
         >
           책 소개
         </a>
-        <a
-          className={activeTab === 'recommendations' ? styles.tabActive : ''}
-          href="#book-recommendations"
-          onClick={() => setActiveTab('recommendations')}
-        >
-          책 추천
-        </a>
+        {hasRelatedBooks ? (
+          <a
+            className={activeTab === 'recommendations' ? styles.tabActive : ''}
+            href="#book-recommendations"
+            onClick={() => setActiveTab('recommendations')}
+          >
+            책 추천
+          </a>
+        ) : null}
         <a className={activeTab === 'reviews' ? styles.tabActive : ''} href="#book-reviews" onClick={() => setActiveTab('reviews')}>
           리뷰
         </a>
       </nav>
 
       <section className={styles.section} id="book-description">
-        <h2>상세 정보</h2>
+        <h2>책 소개</h2>
+        <p className={styles.descriptionText}>{getDescriptionPreview(description, isDescriptionExpanded)}</p>
+        {shouldCollapseDescription ? (
+          <button className={styles.descriptionMoreButton} type="button" onClick={() => setIsDescriptionExpanded((current) => !current)}>
+            {isDescriptionExpanded ? '접기' : '더보기'}
+          </button>
+        ) : null}
+
+        <h3>상세 정보</h3>
         <dl className={styles.spec}>
           <div>
             <dt>ISBN</dt>
@@ -542,10 +585,6 @@ export function BookDetailPage() {
             <dd>{formatBookDate(book?.publishedAt)}</dd>
           </div>
           <div>
-            <dt>파일 형식</dt>
-            <dd>{book?.fileFormat ?? '-'}</dd>
-          </div>
-          <div>
             <dt>지원 기기</dt>
             <dd>{book?.supportedDevice ?? '-'}</dd>
           </div>
@@ -557,50 +596,46 @@ export function BookDetailPage() {
             <dt>카테고리</dt>
             <dd>{book?.categoryName ?? '-'}</dd>
           </div>
-          <div>
-            <dt>키워드</dt>
-            <dd>{formatKeywords(book?.keywords)}</dd>
-          </div>
         </dl>
       </section>
 
-      <section className={styles.section} id="book-recommendations">
-        <div className={styles.rowTitle}>
-          <h2>같은 작가의 다른 책</h2>
-          <Link to={`/books/${bookId}/recommendations?type=AUTHOR`}>더보기</Link>
-        </div>
-        {sameAuthorBooks.length > 0 ? (
-          <div className={styles.bookGrid} aria-label="같은 작가의 다른 책 목록">
-            {sameAuthorBooks.map((related) => (
-              <Link className={styles.bookCard} to={`/books/${related.bookId}`} key={related.bookId}>
-                {related.coverImageUrl ? <img className={styles.bookThumb} src={related.coverImageUrl} alt="" /> : <span className={styles.bookThumb}>표지</span>}
-                <strong>{related.title}</strong>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <p className={styles.emptyState}>같은 작가의 다른 책이 없습니다.</p>
-        )}
-      </section>
+      {hasRelatedBooks ? (
+        <section className={styles.section} id="book-recommendations">
+          {sameAuthorBooks.length > 0 ? (
+            <div className={styles.recommendationGroup}>
+              <div className={styles.rowTitle}>
+                <h2>같은 작가의 다른 책</h2>
+                <Link to={`/books/${bookId}/recommendations?type=AUTHOR`}>더보기</Link>
+              </div>
+              <div className={styles.bookGrid} aria-label="같은 작가의 다른 책 목록">
+                {sameAuthorBooks.map((related) => (
+                  <Link className={styles.bookCard} to={`/books/${related.bookId}`} key={related.bookId}>
+                    {related.coverImageUrl ? <img className={styles.bookThumb} src={related.coverImageUrl} alt="" /> : <span className={styles.bookThumb}>표지</span>}
+                    <strong>{related.title}</strong>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
-      <section className={styles.section}>
-        <div className={styles.rowTitle}>
-          <h2>같은 장르의 다른 책</h2>
-          <Link to={`/books/${bookId}/recommendations?type=CATEGORY`}>더보기</Link>
-        </div>
-        {sameCategoryBooks.length > 0 ? (
-          <div className={styles.bookGrid} aria-label="같은 장르의 다른 책 목록">
-            {sameCategoryBooks.map((related) => (
-              <Link className={styles.bookCard} to={`/books/${related.bookId}`} key={related.bookId}>
-                {related.coverImageUrl ? <img className={styles.bookThumb} src={related.coverImageUrl} alt="" /> : <span className={styles.bookThumb}>표지</span>}
-                <strong>{related.title}</strong>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <p className={styles.emptyState}>같은 장르의 다른 책이 없습니다.</p>
-        )}
-      </section>
+          {sameCategoryBooks.length > 0 ? (
+            <div className={styles.recommendationGroup}>
+              <div className={styles.rowTitle}>
+                <h2>같은 장르의 다른 책</h2>
+                <Link to={`/books/${bookId}/recommendations?type=CATEGORY`}>더보기</Link>
+              </div>
+              <div className={styles.bookGrid} aria-label="같은 장르의 다른 책 목록">
+                {sameCategoryBooks.map((related) => (
+                  <Link className={styles.bookCard} to={`/books/${related.bookId}`} key={related.bookId}>
+                    {related.coverImageUrl ? <img className={styles.bookThumb} src={related.coverImageUrl} alt="" /> : <span className={styles.bookThumb}>표지</span>}
+                    <strong>{related.title}</strong>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       <section className={styles.section} id="book-reviews">
         <div className={styles.reviewHeader}>
@@ -629,41 +664,53 @@ export function BookDetailPage() {
           ) : null}
           {reviewItems.length > 0 ? (
             <div className={styles.reviewRows}>
-              {reviewItems.map((review) => (
-                <div className={styles.reviewRow} key={review.reviewId}>
-                  <div className={styles.reviewProfile} aria-hidden="true" />
-                  <div className={styles.reviewBody}>
-                    <strong>{review.memberName}</strong>
-                    <p>{review.content}</p>
-                  </div>
-                  <span className={styles.stars} aria-label={`별점 ${review.ratingScore}점`}>
-                    {formatStars(review.ratingScore)}
-                  </span>
-                  <span className={styles.reviewDate}>{formatReviewDate(review.createdAt)}</span>
-                  {review.memberId === currentMemberId ? (
-                    <div className={styles.reviewMenu}>
-                      <button
-                        type="button"
-                        aria-haspopup="menu"
-                        aria-expanded={openReviewMenuId === review.reviewId}
-                        onClick={() => setOpenReviewMenuId((current) => (current === review.reviewId ? null : review.reviewId))}
-                      >
-                        ⋯
-                      </button>
-                      {openReviewMenuId === review.reviewId ? (
-                        <div className={styles.reviewMenuPanel} role="menu">
-                          <button type="button" onClick={openReviewEditor}>
-                            수정
+              {reviewItems.map((review) => {
+                const isExpanded = expandedReviewIds.has(review.reviewId);
+                const shouldCollapse = review.content.length > REVIEW_PREVIEW_LENGTH;
+
+                return (
+                  <article className={styles.reviewRow} key={review.reviewId}>
+                    <div className={styles.reviewTopLine}>
+                      <div className={styles.reviewProfile} aria-hidden="true" />
+                      <strong>{review.memberName}</strong>
+                      <span className={styles.stars} aria-label={`별점 ${review.ratingScore}점`}>
+                        {formatStars(review.ratingScore)}
+                      </span>
+                      <span className={styles.reviewDate}>{formatReviewDate(review.createdAt)}</span>
+                      {review.memberId === currentMemberId ? (
+                        <div className={styles.reviewMenu}>
+                          <button
+                            type="button"
+                            aria-haspopup="menu"
+                            aria-expanded={openReviewMenuId === review.reviewId}
+                            onClick={() => setOpenReviewMenuId((current) => (current === review.reviewId ? null : review.reviewId))}
+                          >
+                            ⋯
                           </button>
-                          <button type="button" onClick={handleDeleteReview}>
-                            삭제
-                          </button>
+                          {openReviewMenuId === review.reviewId ? (
+                            <div className={styles.reviewMenuPanel} role="menu">
+                              <button type="button" onClick={openReviewEditor}>
+                                수정
+                              </button>
+                              <button type="button" onClick={handleDeleteReview}>
+                                삭제
+                              </button>
+                            </div>
+                          ) : null}
                         </div>
-                      ) : null}
+                      ) : (
+                        <span aria-hidden="true" />
+                      )}
                     </div>
-                  ) : null}
-                </div>
-              ))}
+                    <p className={styles.reviewContent}>{getReviewPreview(review.content, isExpanded)}</p>
+                    {shouldCollapse ? (
+                      <button className={styles.reviewMoreButton} type="button" onClick={() => toggleReviewExpanded(review.reviewId)}>
+                        {isExpanded ? '접기' : '더보기'}
+                      </button>
+                    ) : null}
+                  </article>
+                );
+              })}
             </div>
           ) : null}
         </div>
@@ -684,7 +731,8 @@ export function BookDetailPage() {
             <textarea
               value={reviewContent}
               onChange={(event) => setReviewContent(event.target.value)}
-              placeholder="이 책에 대한 감상을 남겨주세요. 다른 독자들에게 큰 도움이 됩니다."
+              minLength={REVIEW_MIN_LENGTH}
+              placeholder={`이 책에 대한 감상을 ${REVIEW_MIN_LENGTH}자 이상 남겨주세요. 다른 독자들에게 큰 도움이 됩니다.`}
             />
           </label>
         </div>
