@@ -100,8 +100,7 @@
   align-items: center;
 }
 
-.chip,
-.tags span {
+.chip {
   display: inline-flex;
   align-items: center;
   border: 1px solid var(--color-border);
@@ -110,29 +109,6 @@
   color: var(--color-primary);
   font-size: 0.85rem;
   font-weight: 700;
-}
-
-.intro {
-  margin-top: var(--space-6);
-}
-
-.intro strong {
-  display: block;
-  margin-bottom: var(--space-3);
-  color: var(--color-text);
-}
-
-.intro p {
-  margin: 0;
-  color: var(--color-text);
-  line-height: 1.6;
-}
-
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-top: var(--space-4);
 }
 
 .actionPanel {
@@ -201,7 +177,7 @@
   top: 0;
   z-index: 40;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
   border-bottom: 1px solid var(--color-border);
   background: var(--color-surface);
   margin: var(--space-8) 0 0;
@@ -232,6 +208,33 @@
   color: var(--color-text);
 }
 
+.descriptionText {
+  margin: 0;
+  color: var(--color-text);
+  line-height: 1.75;
+  white-space: pre-line;
+  word-break: keep-all;
+}
+
+.descriptionMoreButton {
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  margin: var(--space-3) 0 var(--space-8);
+  padding: 0;
+}
+
+.descriptionText + h3 {
+  margin-top: var(--space-8);
+}
+
+.descriptionMoreButton + h3 {
+  margin-top: 0;
+}
+
 .rowTitle {
   display: flex;
   justify-content: space-between;
@@ -247,7 +250,7 @@
 
 .bookGrid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
   gap: var(--space-4);
 }
 
@@ -266,6 +269,9 @@
 .bookCard strong {
   font-size: 0.9rem;
   line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .bookCard strong,
@@ -274,7 +280,7 @@
 }
 
 .bookThumb {
-  width: min(100%, 104px);
+  width: min(100%, 92px);
   aspect-ratio: 3 / 4;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -286,6 +292,10 @@
   color: var(--color-muted);
   font-weight: 700;
   object-fit: cover;
+}
+
+.recommendationGroup + .recommendationGroup {
+  margin-top: var(--space-8);
 }
 
 .reviewSummary {
@@ -308,20 +318,32 @@
 
 .reviewRows {
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-2);
 }
 
 .reviewRow {
   position: relative;
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) max-content max-content 32px;
-  align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-3);
   border-bottom: 1px solid var(--color-border);
   padding: var(--space-4) 0;
 }
 
 .reviewRow :global(.button) {
+  white-space: nowrap;
+}
+
+.reviewTopLine {
+  display: grid;
+  grid-template-columns: 48px minmax(120px, 1fr) max-content max-content 32px;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.reviewTopLine strong {
+  overflow: hidden;
+  color: var(--color-text);
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -332,29 +354,23 @@
   background: var(--color-border);
 }
 
-.reviewBody {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.reviewBody strong,
-.reviewBody p {
+.reviewContent {
   margin: 0;
   color: var(--color-text);
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
 }
 
-.reviewBody strong {
-  flex: 0 0 auto;
-  white-space: nowrap;
-}
-
-.reviewBody p {
-  overflow: hidden;
-  min-width: 0;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.reviewMoreButton {
+  justify-self: flex-start;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  padding: 0;
 }
 
 .stars {
@@ -507,9 +523,17 @@
     width: 180px;
   }
 
-  .bookGrid,
-  .reviewRow {
+  .bookGrid {
     grid-template-columns: 1fr;
+  }
+
+  .reviewTopLine {
+    grid-template-columns: 48px minmax(0, 1fr) 32px;
+  }
+
+  .reviewTopLine .stars,
+  .reviewTopLine .reviewDate {
+    grid-column: 2 / 4;
   }
 
   .reviewHeader {
