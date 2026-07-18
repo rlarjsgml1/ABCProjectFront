@@ -199,7 +199,7 @@ export function ViewerPage() {
       const send = () =>
         saveReadingProgress(rentalId, {
           ...toRequestLocator(pending.locator),
-          atEnd: pending.atEnd,
+          atEnd: pending.atEnd === true,
           expectedRevision: revisionRef.current,
         });
 

@@ -121,7 +121,7 @@ export const EpubRenderer = forwardRef<EpubRendererHandle, EpubRendererProps>(fu
         progression: clampProgression(location.atEnd ? 1 : progression),
       };
       locatorRef.current = locator;
-      onLocationChange(locator, location.atStart, location.atEnd);
+      onLocationChange(locator, location.atStart === true, location.atEnd === true);
     };
 
     async function initialize() {
