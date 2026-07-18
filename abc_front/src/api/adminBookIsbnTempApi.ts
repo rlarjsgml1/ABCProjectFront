@@ -116,6 +116,15 @@ export type BookIsbnBulkApproveResponse = {
   failures: Array<{ isbn13: string; reason: string }>;
 };
 
+export type BookIsbnTempBulkDeleteRequest = {
+  tempIds: number[];
+};
+
+export type BookIsbnTempBulkDeleteResponse = {
+  deletedCount: number;
+  deletedTempIds: number[];
+};
+
 export async function lookupExternalBook(isbn13: string) {
   const response = await apiClient.get<ApiResponse<ExternalBookLookupResponse>>('/admin/books/external/lookup', {
     params: { isbn13 },
@@ -160,6 +169,15 @@ export async function approveBookIsbnTemp(tempId: number, payload: BookIsbnTempA
 export async function bulkApproveBookIsbnTemps(payload: BookIsbnBulkApproveRequest) {
   const response = await apiClient.post<ApiResponse<BookIsbnBulkApproveResponse>>(
     '/admin/book-isbn-temps/bulk-approve',
+    payload,
+  );
+  return response.data.data;
+}
+
+export async function bulkDeleteBookIsbnTemps(tempIds: number[]) {
+  const payload: BookIsbnTempBulkDeleteRequest = { tempIds };
+  const response = await apiClient.post<ApiResponse<BookIsbnTempBulkDeleteResponse>>(
+    '/admin/book-isbn-temps/bulk-delete',
     payload,
   );
   return response.data.data;

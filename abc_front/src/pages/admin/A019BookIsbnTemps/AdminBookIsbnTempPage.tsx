@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   approveBookIsbnTemp,
   bulkApproveBookIsbnTemps,
+  bulkDeleteBookIsbnTemps,
   enrichBookIsbnTemps,
   fetchBookIsbnTemp,
   getBookIsbnTemps,
@@ -14,6 +15,7 @@ import type {
   BookIsbnEnrichResponse,
   BookIsbnSeedResponse,
   BookIsbnTempApproveResponse,
+  BookIsbnTempBulkDeleteResponse,
   BookIsbnTempStatus,
   BookIsbnTempSummary,
   ExternalBookLookupResponse,
@@ -154,6 +156,11 @@ export function AdminBookIsbnTempPage() {
   const [isBulkApproving, setIsBulkApproving] = useState(false);
   const [bulkError, setBulkError] = useState('');
   const [bulkResult, setBulkResult] = useState<BookIsbnBulkApproveResponse | null>(null);
+  const [deleteTempIds, setDeleteTempIds] = useState<number[]>([]);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const [deleteResult, setDeleteResult] = useState<BookIsbnTempBulkDeleteResponse | null>(null);
   const [epubBookId, setEpubBookId] = useState('');
   const [epubFile, setEpubFile] = useState<File | null>(null);
   const [isEpubConfirmOpen, setIsEpubConfirmOpen] = useState(false);
@@ -164,6 +171,7 @@ export function AdminBookIsbnTempPage() {
 
   const approveDialog = useDialogFocus({ open: approveCandidate !== null, onClose: () => setApproveCandidate(null), locked: isApproving, fallbackFocusRef: listStatusRef });
   const bulkDialog = useDialogFocus({ open: isBulkConfirmOpen, onClose: closeBulkDialog, locked: isBulkApproving, fallbackFocusRef: listStatusRef });
+  const deleteDialog = useDialogFocus({ open: isDeleteConfirmOpen, onClose: closeDeleteDialog, locked: isDeleting, fallbackFocusRef: listStatusRef });
   const epubDialog = useDialogFocus({ open: isEpubConfirmOpen, onClose: () => setIsEpubConfirmOpen(false), locked: isUploadingEpub, fallbackFocusRef: epubFileInputRef });
 
   useEffect(() => {
@@ -197,6 +205,8 @@ export function AdminBookIsbnTempPage() {
     setSelectedTempIds(new Set());
     setBulkTempIds([]);
     setIsBulkConfirmOpen(false);
+    setDeleteTempIds([]);
+    setIsDeleteConfirmOpen(false);
   }, [listVersion, page, size, tempStatus]);
 
   function refreshTemps() {
@@ -206,6 +216,11 @@ export function AdminBookIsbnTempPage() {
   function closeBulkDialog() {
     setIsBulkConfirmOpen(false);
     setBulkTempIds([]);
+  }
+
+  function closeDeleteDialog() {
+    setIsDeleteConfirmOpen(false);
+    setDeleteTempIds([]);
   }
 
   async function handleLookup() {
@@ -295,7 +310,7 @@ export function AdminBookIsbnTempPage() {
 
   function toggleTemp(tempId: number) {
     if (!selectedTempIds.has(tempId) && selectedTempIds.size >= 30) {
-      setListError('일괄 승인은 한 번에 최대 30건까지 선택할 수 있습니다.');
+      setListError('일괄 작업은 한 번에 최대 30건까지 선택할 수 있습니다.');
       return;
     }
     setSelectedTempIds((current) => {
@@ -306,13 +321,16 @@ export function AdminBookIsbnTempPage() {
     });
   }
 
-  function toggleAllReady() {
-    const readyIds = (tempPage?.content ?? []).filter((item) => item.statusCd === 1).map((item) => item.tempId);
-    const selectableIds = readyIds.slice(0, 30);
+  function toggleAllSelectable() {
+    const selectableIds = (tempPage?.content ?? [])
+      .filter((item) => (tempStatus === 'PENDING' && item.statusCd === 0)
+        || (tempStatus === 'READY' && item.statusCd === 1))
+      .map((item) => item.tempId)
+      .slice(0, 30);
     const allSelected = selectableIds.length > 0 && selectableIds.every((tempId) => selectedTempIds.has(tempId));
     setSelectedTempIds(allSelected ? new Set() : new Set(selectableIds));
-    if (!allSelected && readyIds.length > 30) {
-      setListError('현재 페이지의 READY 항목 중 최대 30건만 선택했습니다.');
+    if (!allSelected && (tempPage?.content ?? []).filter((item) => item.statusCd === (tempStatus === 'PENDING' ? 0 : 1)).length > 30) {
+      setListError('현재 페이지에서 최대 30건만 선택했습니다.');
     }
   }
 
@@ -408,6 +426,44 @@ export function AdminBookIsbnTempPage() {
     }
   }
 
+  function prepareBulkDelete() {
+    setDeleteError('');
+    setDeleteResult(null);
+    const snapshot = Array.from(selectedTempIds).slice(0, 30);
+    if (tempStatus !== 'PENDING' || snapshot.length === 0) {
+      setListError('삭제할 PENDING 항목을 선택해 주세요.');
+      return;
+    }
+    setDeleteTempIds(snapshot);
+    setIsDeleteConfirmOpen(true);
+  }
+
+  async function handleBulkDelete() {
+    setDeleteError('');
+    if (deleteTempIds.length === 0) {
+      setDeleteError('삭제 대상이 없습니다. dialog를 닫고 PENDING 항목을 다시 선택해 주세요.');
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const response = await bulkDeleteBookIsbnTemps(deleteTempIds);
+      setDeleteResult(response);
+      setIsDeleteConfirmOpen(false);
+      setSelectedTempIds(new Set());
+      setDeleteTempIds([]);
+      refreshTemps();
+    } catch (error) {
+      setDeleteError(getApiErrorMessage(error));
+      setIsDeleteConfirmOpen(false);
+      setSelectedTempIds(new Set());
+      setDeleteTempIds([]);
+      refreshTemps();
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
   function prepareEpubUpload() {
     setEpubError('');
     setEpubMessage('');
@@ -448,10 +504,12 @@ export function AdminBookIsbnTempPage() {
 
   const temps = tempPage?.content ?? [];
   const totalPages = Math.max(tempPage?.totalPages ?? 1, 1);
-  const readyItems = temps.filter((item) => item.statusCd === 1);
-  const selectableReadyItems = readyItems.slice(0, 30);
-  const allReadySelected = selectableReadyItems.length > 0
-    && selectableReadyItems.every((item) => selectedTempIds.has(item.tempId));
+  const selectableItems = temps
+    .filter((item) => (tempStatus === 'PENDING' && item.statusCd === 0)
+      || (tempStatus === 'READY' && item.statusCd === 1))
+    .slice(0, 30);
+  const allSelectableSelected = selectableItems.length > 0
+    && selectableItems.every((item) => selectedTempIds.has(item.tempId));
 
   return (
     <section className={`page-section ${styles.page}`} aria-labelledby="isbn-temp-title">
@@ -499,7 +557,7 @@ export function AdminBookIsbnTempPage() {
         </section>
         <section className={styles.panel} aria-labelledby="enrich-title">
           <div className={styles.panelHeader}><div><h2 id="enrich-title">외부 정보 보강</h2><p>PENDING 후보를 조회해 READY로 전환합니다.</p></div></div>
-          <form className={styles.inlineForm} onSubmit={handleEnrich}><label>처리 건수<input name="limit" type="number" min="1" defaultValue="10" required /></label><Button type="submit" disabled={isEnriching}>{isEnriching ? '보강 중' : '정보 보강'}</Button></form>
+          <form className={styles.inlineForm} onSubmit={handleEnrich}><label>처리 건수<input name="limit" type="number" min="1" defaultValue="10" required /></label><Button type="submit" disabled={isEnriching || isDeleting}>{isEnriching ? '보강 중' : '정보 보강'}</Button></form>
           {enrichResult ? <div className={styles.resultBox} role="status" aria-live="polite"><strong>{enrichResult.attemptedCount}건 시도 / {enrichResult.readyCount}건 READY</strong>{enrichResult.failedIsbns.length ? <span>실패: {enrichResult.failedIsbns.join(', ')}</span> : <span>실패 없음</span>}</div> : null}
         </section>
       </div>
@@ -512,16 +570,19 @@ export function AdminBookIsbnTempPage() {
             <label>상태<select ref={listStatusRef} value={tempStatus} onChange={(event) => { setTempStatus(event.target.value as BookIsbnTempStatus); setPage(0); }}>{statusOptions.map((option) => <option value={option.value} key={option.value}>{option.label}</option>)}</select></label>
             <label>페이지 크기<select value={size} onChange={(event) => { setSize(Number(event.target.value)); setPage(0); }}><option value="10">10</option><option value="20">20</option><option value="50">50</option></select></label>
             <Button type="button" variant="secondary" onClick={refreshTemps} disabled={isListLoading}>새로고침</Button>
-            <Button type="button" onClick={prepareBulkApprove} disabled={selectedTempIds.size === 0 || isListLoading}>선택 {selectedTempIds.size}건 승인</Button>
+            {tempStatus === 'READY' ? <Button type="button" onClick={prepareBulkApprove} disabled={selectedTempIds.size === 0 || isListLoading}>선택 {selectedTempIds.size}건 승인</Button> : null}
+            {tempStatus === 'PENDING' ? <Button type="button" variant="danger" onClick={prepareBulkDelete} disabled={selectedTempIds.size === 0 || isListLoading || isDeleting || isEnriching}>선택 {selectedTempIds.size}건 삭제</Button> : null}
           </div>
         </div>
         {listError ? <p className={styles.error} role="alert">{listError}</p> : null}
         {approveResult ? <p className={styles.success} role="status">B-{approveResult.bookId} 생성 완료. <Link to={`/admin/books/${approveResult.bookId}/edit`}>도서 수정/EPUB 등록</Link></p> : null}
+        {deleteError ? <p className={styles.error} role="alert">{deleteError}</p> : null}
+        {deleteResult ? <div className={styles.resultBox} role="status" aria-live="polite"><strong>{deleteResult.deletedCount}건 삭제 완료</strong><span>삭제 ID: {deleteResult.deletedTempIds.join(', ')}</span><span>현재 temp 후보만 삭제되며 같은 ISBN은 seed/fetch/enrich로 다시 수집될 수 있습니다.</span></div> : null}
         {bulkResult ? <div className={styles.resultBox} role="status" aria-live="polite"><strong>{bulkResult.approvedCount}건 승인 완료</strong><div className={styles.linkList}>{bulkResult.approvedBookIds.map((bookId) => <Link to={`/admin/books/${bookId}/edit`} key={bookId}>B-{bookId}</Link>)}</div>{bulkResult.failures.length ? <ul>{bulkResult.failures.map((failure) => <li key={`${failure.isbn13}-${failure.reason}`}>{failure.isbn13}: {failure.reason}</li>)}</ul> : <span>실패 없음</span>}</div> : null}
         <div className={styles.tableWrap}><table className={styles.table}>
-          <thead><tr><th><input type="checkbox" aria-label="현재 페이지 READY 최대 30건 선택" checked={allReadySelected} onChange={toggleAllReady} disabled={readyItems.length === 0} /></th><th>temp</th><th>표지</th><th>도서</th><th>ISBN13</th><th>외부 분류</th><th>상태</th><th>갱신</th><th>관리</th></tr></thead>
+          <thead><tr><th><input type="checkbox" aria-label={`현재 페이지 ${tempStatus} 최대 30건 선택`} checked={allSelectableSelected} onChange={toggleAllSelectable} disabled={selectableItems.length === 0} /></th><th>temp</th><th>표지</th><th>도서</th><th>ISBN13</th><th>외부 분류</th><th>상태</th><th>갱신</th><th>관리</th></tr></thead>
           <tbody>{isListLoading ? <tr><td colSpan={9}>목록을 불러오는 중입니다.</td></tr> : temps.length === 0 ? <tr><td colSpan={9}>표시할 후보가 없습니다.</td></tr> : temps.map((item) => <tr key={item.tempId}>
-            <td><input type="checkbox" aria-label={`T-${item.tempId} 선택`} checked={selectedTempIds.has(item.tempId)} onChange={() => toggleTemp(item.tempId)} disabled={item.statusCd !== 1} /></td><td>T-{item.tempId}</td><td>{item.coverImageUrl ? <img className={styles.tableCover} src={item.coverImageUrl} alt="" /> : '-'}</td><td><strong>{item.bookTitle || '-'}</strong><small>{item.author || '-'} · {item.publisher || '-'}</small></td><td>{item.isbn13}</td><td>{item.aladinCategoryName || item.aladinCategoryId || '-'}</td><td><span className={`${styles.statusBadge} ${styles[`status${item.statusCd}`]}`}>{statusLabel(item.statusCd)}</span></td><td>{formatDate(item.updatedAt)}</td><td><Button type="button" variant="secondary" onClick={() => openApprove(item)} disabled={item.statusCd !== 1}>단건 승인</Button></td>
+            <td><input type="checkbox" aria-label={`T-${item.tempId} 선택`} checked={selectedTempIds.has(item.tempId)} onChange={() => toggleTemp(item.tempId)} disabled={!((tempStatus === 'PENDING' && item.statusCd === 0) || (tempStatus === 'READY' && item.statusCd === 1))} /></td><td>T-{item.tempId}</td><td>{item.coverImageUrl ? <img className={styles.tableCover} src={item.coverImageUrl} alt="" /> : '-'}</td><td><strong>{item.bookTitle || '-'}</strong><small>{item.author || '-'} · {item.publisher || '-'}</small></td><td>{item.isbn13}</td><td>{item.aladinCategoryName || item.aladinCategoryId || '-'}</td><td><span className={`${styles.statusBadge} ${styles[`status${item.statusCd}`]}`}>{statusLabel(item.statusCd)}</span></td><td>{formatDate(item.updatedAt)}</td><td><Button type="button" variant="secondary" onClick={() => openApprove(item)} disabled={item.statusCd !== 1}>단건 승인</Button></td>
           </tr>)}</tbody>
         </table></div>
         <div className={styles.pagination}><Button type="button" variant="secondary" onClick={() => setPage((current) => current - 1)} disabled={page <= 0 || isListLoading}>이전</Button><span>{page + 1} / {totalPages} 페이지 · 총 {tempPage?.totalElements ?? 0}건</span><Button type="button" variant="secondary" onClick={() => setPage((current) => current + 1)} disabled={page + 1 >= totalPages || isListLoading}>다음</Button></div>
@@ -543,6 +604,14 @@ export function AdminBookIsbnTempPage() {
       {isBulkConfirmOpen ? <div className={styles.modalBackdrop} role="presentation" onMouseDown={() => { if (!isBulkApproving) closeBulkDialog(); }}><div ref={bulkDialog.dialogRef} className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="bulk-title" aria-busy={isBulkApproving} onKeyDown={bulkDialog.handleKeyDown} onMouseDown={(event) => event.stopPropagation()}>
         <div className={styles.panelHeader}><div><h2 id="bulk-title">선택 {bulkTempIds.length}건 일괄 승인</h2><p>dialog를 연 시점에 고정된 선택 {bulkTempIds.length}건을 모두 승인 시도합니다.</p></div></div>
         <form className={styles.formGrid} onSubmit={handleBulkApprove}><label>대여 유형<select name="rentalType" defaultValue="FREE"><option value="FREE">무료</option><option value="PAID">유료</option></select></label><label>대여 가격<input name="rentalPrice" type="number" min="0" defaultValue="0" /></label><label>상태<select name="status" defaultValue="AVAILABLE"><option value="AVAILABLE">AVAILABLE</option><option value="HIDDEN">HIDDEN</option><option value="INACTIVE">INACTIVE</option></select></label><p className={`${styles.dangerNotice} ${styles.wide}`}>승인 후 temp 상태가 MERGED로 바뀌며 실제 도서가 생성됩니다. 선택 ID: {bulkTempIds.join(', ')}</p>{bulkError ? <p className={`${styles.error} ${styles.wide}`} role="alert">{bulkError}</p> : null}<div className={`${styles.modalActions} ${styles.wide}`}><Button type="button" variant="secondary" onClick={closeBulkDialog} disabled={isBulkApproving}>취소</Button><Button type="submit" disabled={isBulkApproving || bulkTempIds.length === 0}>{isBulkApproving ? '승인 중' : `선택 ${bulkTempIds.length}건 모두 승인`}</Button></div></form>
+      </div></div> : null}
+
+      {isDeleteConfirmOpen ? <div className={styles.modalBackdrop} role="presentation" onMouseDown={() => { if (!isDeleting) closeDeleteDialog(); }}><div ref={deleteDialog.dialogRef} className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="delete-title" aria-describedby="delete-description" aria-busy={isDeleting} onKeyDown={deleteDialog.handleKeyDown} onMouseDown={(event) => event.stopPropagation()}>
+        <div className={styles.panelHeader}><div><h2 id="delete-title">선택 {deleteTempIds.length}건 삭제</h2><p id="delete-description">dialog를 연 시점에 선택한 PENDING 후보를 모두 삭제합니다.</p></div></div>
+        <p className={styles.dangerNotice}>삭제한 현재 temp 후보는 복구할 수 없습니다. 다만 같은 ISBN은 이후 seed/fetch/enrich 실행으로 다시 수집될 수 있습니다.</p>
+        <p>삭제 ID: {deleteTempIds.join(', ')}</p>
+        {deleteError ? <p className={styles.error} role="alert">{deleteError}</p> : null}
+        <div className={styles.modalActions}><Button type="button" variant="secondary" onClick={closeDeleteDialog} disabled={isDeleting}>취소</Button><Button type="button" variant="danger" onClick={handleBulkDelete} disabled={isDeleting || deleteTempIds.length === 0}>{isDeleting ? '삭제 중' : `선택 ${deleteTempIds.length}건 삭제`}</Button></div>
       </div></div> : null}
 
       {isEpubConfirmOpen ? <div className={styles.modalBackdrop} role="presentation" onMouseDown={() => { if (!isUploadingEpub) setIsEpubConfirmOpen(false); }}><div ref={epubDialog.dialogRef} className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="epub-title" aria-describedby="epub-description" aria-busy={isUploadingEpub} onKeyDown={epubDialog.handleKeyDown} onMouseDown={(event) => event.stopPropagation()}>
