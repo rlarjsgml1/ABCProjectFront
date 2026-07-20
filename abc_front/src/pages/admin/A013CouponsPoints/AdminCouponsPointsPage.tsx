@@ -89,45 +89,46 @@ const fallbackCoupons: AdminCouponSummary[] = [
   },
 ];
 
-const fallbackMembers: AdminMemberSummary[] = [
+// 관리자 회원 목록 API(AdminMemberSummaryResponse)에는 pointBalance가 없다 — 이 화면의 포인트 조정
+// 흐름은 실데이터 연동 전부터 로컬 상태로만 잔액을 추적해 왔으므로, 그 로컬 전용 필드를 별도 타입으로
+// 분리해 공통 회원 타입을 실제 API 계약과 다시 맞춘다(2026-07-20 API 연결 작업 부수 수정).
+type MemberWithPointBalance = AdminMemberSummary & { pointBalance: number };
+
+const fallbackMembers: MemberWithPointBalance[] = [
   {
     memberId: 1024,
     loginId: 'park_reader',
     name: '박서연',
-    email: 'seoyeon.park@example.com',
+    maskedEmail: 'se***@example.com',
+    maskedPhone: '010-****-5678',
     role: 'USER',
-    gradeId: 3,
     gradeName: 'GOLD',
     pointBalance: 12300,
     status: 'JOINED',
-    currentSanction: null,
+    activeSanctions: [],
   },
   {
     memberId: 991,
     loginId: 'read_admin',
     name: '김도윤',
-    email: 'admin@example.com',
+    maskedEmail: 'ad***@example.com',
+    maskedPhone: '010-****-0000',
     role: 'ADMIN',
     pointBalance: 0,
     status: 'JOINED',
-    currentSanction: null,
+    activeSanctions: [],
   },
   {
     memberId: 873,
     loginId: 'review_stop',
     name: '이민준',
-    email: 'minjun@example.com',
+    maskedEmail: 'mi***@example.com',
+    maskedPhone: '010-****-1234',
     role: 'USER',
-    gradeId: 1,
     gradeName: 'BASIC',
     pointBalance: 1500,
     status: 'SANCTIONED',
-    currentSanction: {
-      sanctionType: 'ACCOUNT_SUSPENSION',
-      startedAt: '2026-07-02T00:00:00',
-      endedAt: '2026-07-16T23:59:00',
-      reason: '리뷰 신고 누적',
-    },
+    activeSanctions: [{ sanctionType: 'ACCOUNT_SUSPENSION', endedAt: '2026-07-16T23:59:00' }],
   },
 ];
 
@@ -218,10 +219,10 @@ function buildFallbackCouponPage(query: AdminCouponListQuery): PageResponse<Admi
   };
 }
 
-function buildFallbackMemberPage(query: AdminMemberListQuery): PageResponse<AdminMemberSummary> {
+function buildFallbackMemberPage(query: AdminMemberListQuery): PageResponse<MemberWithPointBalance> {
   const keyword = query.q?.trim().toLowerCase();
   const filtered = fallbackMembers.filter((member) =>
-    keyword ? [member.loginId, member.name, member.email].join(' ').toLowerCase().includes(keyword) : true,
+    keyword ? [member.loginId, member.name, member.maskedEmail].join(' ').toLowerCase().includes(keyword) : true,
   );
 
   const page = query.page ?? 0;
@@ -242,8 +243,8 @@ export function AdminCouponsPointsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabKey>('coupons');
   const [couponsPage, setCouponsPage] = useState<PageResponse<AdminCouponSummary> | null>(null);
-  const [membersPage, setMembersPage] = useState<PageResponse<AdminMemberSummary> | null>(null);
-  const [selectedMember, setSelectedMember] = useState<AdminMemberSummary | null>(null);
+  const [membersPage, setMembersPage] = useState<PageResponse<MemberWithPointBalance> | null>(null);
+  const [selectedMember, setSelectedMember] = useState<MemberWithPointBalance | null>(null);
   const [pointHistories, setPointHistories] = useState<AdminMemberPointHistory[]>(fallbackPointHistories);
   const [issueCoupon, setIssueCoupon] = useState<AdminCouponSummary | null>(null);
   const [couponForm, setCouponForm] = useState<CouponForm>({
@@ -255,8 +256,8 @@ export function AdminCouponsPointsPage() {
   });
   const [issueForm, setIssueForm] = useState<IssueForm>({ quantity: '1' });
   const [issueMemberQuery, setIssueMemberQuery] = useState('');
-  const [issueMemberResults, setIssueMemberResults] = useState<AdminMemberSummary[]>([]);
-  const [selectedIssueMembers, setSelectedIssueMembers] = useState<AdminMemberSummary[]>([]);
+  const [issueMemberResults, setIssueMemberResults] = useState<MemberWithPointBalance[]>([]);
+  const [selectedIssueMembers, setSelectedIssueMembers] = useState<MemberWithPointBalance[]>([]);
   const [pointForm, setPointForm] = useState<PointForm>({ pointAmount: '', description: '' });
   const [isCouponLoading, setIsCouponLoading] = useState(true);
   const [isMemberLoading, setIsMemberLoading] = useState(false);
@@ -327,7 +328,7 @@ export function AdminCouponsPointsPage() {
       try {
         const data = await getAdminMembers(memberQuery);
         if (!ignore) {
-          setMembersPage(data);
+          setMembersPage({ ...data, content: data.content.map((member) => ({ ...member, pointBalance: 0 })) });
         }
       } catch (error) {
         if (!ignore) {
@@ -480,13 +481,13 @@ export function AdminCouponsPointsPage() {
   async function searchIssueMembers() {
     try {
       const data = await getAdminMembers({ q: issueMemberQuery.trim(), page: 0, size: 10 });
-      setIssueMemberResults(data.content);
+      setIssueMemberResults(data.content.map((member) => ({ ...member, pointBalance: 0 })));
     } catch {
       setIssueMemberResults(buildFallbackMemberPage({ q: issueMemberQuery.trim(), page: 0, size: 10 }).content);
     }
   }
 
-  function toggleIssueMember(member: AdminMemberSummary) {
+  function toggleIssueMember(member: MemberWithPointBalance) {
     setSelectedIssueMembers((current) =>
       current.some((item) => item.memberId === member.memberId) ? current.filter((item) => item.memberId !== member.memberId) : [...current, member],
     );
@@ -579,6 +580,7 @@ export function AdminCouponsPointsPage() {
       await adjustAdminMemberPoint(selectedMember.memberId, {
         pointAmount,
         description: pointForm.description.trim(),
+        requestId: crypto.randomUUID(),
       });
       setStatusMessage('회원 포인트가 조정되었습니다.');
     } catch {
@@ -867,7 +869,7 @@ export function AdminCouponsPointsPage() {
                             <span>{member.name}</span>
                           </Link>
                         </td>
-                        <td>{member.email}</td>
+                        <td>{member.maskedEmail}</td>
                         <td>{member.gradeName ?? '-'}</td>
                         <td>{formatPoint(member.pointBalance)}</td>
                         <td>

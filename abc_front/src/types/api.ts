@@ -114,7 +114,7 @@ export type AdminMemberStatus = 'JOINED' | 'SANCTIONED' | 'WITHDRAWN' | 'DEACTIV
 
 export type AdminMemberRole = 'USER' | 'ADMIN';
 
-export type AdminSanctionType = 'ACCOUNT_SUSPENSION' | 'SERVICE_LIMIT' | 'WARNING';
+export type AdminSanctionType = 'ACCOUNT_SUSPENSION' | 'RENTAL_BAN' | 'REVIEW_BAN';
 
 export type AdminMemberListQuery = {
   q?: string;
@@ -125,24 +125,23 @@ export type AdminMemberListQuery = {
   size?: number;
 };
 
+// 목록·상세 공통 — 만료된 제재나 상세 사유는 포함하지 않는 현재 유효 제재 최소 요약이다.
 export type AdminMemberSanctionSummary = {
   sanctionType?: AdminSanctionType | string;
-  startedAt?: string;
   endedAt?: string;
-  reason?: string;
 };
 
 export type AdminMemberSummary = {
   memberId: number;
   loginId: string;
   name: string;
-  email: string;
+  maskedEmail: string;
+  maskedPhone: string;
   role: AdminMemberRole;
-  gradeId?: number;
-  gradeName?: string;
-  pointBalance: number;
   status: AdminMemberStatus;
-  currentSanction?: AdminMemberSanctionSummary | null;
+  gradeName?: string;
+  activeSanctions: AdminMemberSanctionSummary[];
+  createdAt?: string;
 };
 
 export type AdminMemberStatusChangeRequest = {
@@ -159,48 +158,74 @@ export type AdminMemberStatusChangeResponse = {
   currentSanction?: AdminMemberSanctionSummary | null;
 };
 
+// 상세 DEFAULT 탭 프로필 — 목록과 달리 마스킹 없이 email/phone/birthDate/gender 원문을 포함한다.
+export type AdminMemberProfile = {
+  memberId: number;
+  loginId: string;
+  name: string;
+  email: string;
+  phone?: string;
+  birthDate?: string;
+  gender?: string;
+  role: AdminMemberRole;
+  status: AdminMemberStatus;
+  gradeName?: string;
+  createdAt?: string;
+};
+
 export type AdminMemberUsageSummary = {
+  pointBalance: number;
   rentalCount: number;
-  paymentAmount: number;
+  paymentCount: number;
   reportCount: number;
-  reviewCount: number;
-  completedBookCount: number;
-  readingBookCount: number;
+  activeSanctions: AdminMemberSanctionSummary[];
+};
+
+// GET /admin/members/{id}?tab=DEFAULT(생략 시 기본값) 응답. 이력 배열은 이 응답에 없다 — 각 탭 API로 별도 조회한다.
+export type AdminMemberDetail = {
+  memberId: number;
+  profile: AdminMemberProfile;
+  usageSummary: AdminMemberUsageSummary;
+};
+
+export type AdminMemberDetailTab = 'DEFAULT' | 'RENTALS' | 'PAYMENTS' | 'REPORTS' | 'POINTS' | 'SANCTIONS';
+
+// tab=RENTALS/PAYMENTS/REPORTS/POINTS/SANCTIONS 공통 응답 봉투. profile 필드는 구조 자체에 없다.
+export type AdminMemberTabResponse<T> = {
+  memberId: number;
+  tab: PageResponse<T>;
 };
 
 export type AdminMemberRentalHistory = {
   rentalId: number;
+  bookId: number;
   bookTitle: string;
-  status: string;
-  progressRate?: number;
-  rentedAt: string;
+  rentalStatus: string;
+  rentalStartAt?: string;
+  rentalEndAt?: string;
+  createdAt?: string;
 };
 
 export type AdminMemberPaymentHistory = {
   paymentId: number;
+  rentalId?: number;
+  bookId: number;
   bookTitle: string;
-  originalAmount: number;
-  discountAmount: number;
-  paidAmount: number;
-  status: string;
-  paidAt: string;
+  paymentType: string;
+  amount: number;
+  paymentMethod: string;
+  paymentStatus: string;
+  paidAt?: string;
 };
 
-export type AdminMemberReviewHistory = {
-  reviewId: number;
-  bookTitle: string;
-  rating: number;
-  status: string;
-  createdAt: string;
-  updatedAt?: string;
-};
-
+// reportSourceType: BOOK_REPORT / REVIEW_REPORT — 도서/리뷰 신고를 하나의 탭으로 합쳐 제공한다.
 export type AdminMemberReportHistory = {
   reportId: number;
-  targetType: string;
-  reason: string;
+  reportSourceType: string;
+  reportType: string;
   status: string;
-  createdAt: string;
+  processedAt?: string;
+  createdAt?: string;
 };
 
 export type AdminMemberPointHistory = {
@@ -208,39 +233,31 @@ export type AdminMemberPointHistory = {
   pointType: string;
   pointAmount: number;
   description: string;
-  createdAt: string;
-};
-
-export type AdminMemberSanctionHistory = AdminMemberSanctionSummary & {
-  sanctionHistoryId: number;
-  status?: string;
-};
-
-export type AdminMemberDetail = AdminMemberSummary & {
-  phone?: string;
-  birthDate?: string;
-  gender?: string;
   createdAt?: string;
-  usageSummary: AdminMemberUsageSummary;
-  rentalHistories: AdminMemberRentalHistory[];
-  paymentHistories: AdminMemberPaymentHistory[];
-  reviewHistories: AdminMemberReviewHistory[];
-  reportHistories: AdminMemberReportHistory[];
-  pointHistories: AdminMemberPointHistory[];
-  sanctionHistories: AdminMemberSanctionHistory[];
 };
 
-export type AdminMemberPointAdjustRequest = {
+export type AdminMemberSanctionHistory = {
+  sanctionHistoryId: number;
+  sanctionType: string;
+  reason?: string;
+  startedAt?: string;
+  endedAt?: string;
+  createdAt?: string;
+};
+
+// requestId는 회원별 멱등 키(UUID) — 같은 memberId+requestId 재요청은 최초 성공 응답을 그대로 반환한다.
+export type AdminPointAdjustRequest = {
   pointAmount: number;
   description: string;
+  requestId: string;
 };
 
-export type AdminMemberPointAdjustResponse = {
+export type AdminPointAdjustResponse = {
   pointHistoryId: number;
   pointAmount: number;
   pointType: string;
   pointBalance: number;
-  createdAt: string;
+  createdAt?: string;
 };
 
 export type AdminCouponType = 'PERCENT_DISCOUNT' | 'AMOUNT_DISCOUNT';
@@ -568,37 +585,63 @@ export type AdminBookListQuery = {
   size?: number;
 };
 
+export type AdminBookCategoryItem = {
+  categoryId: number;
+  categoryName: string;
+};
+
 export type AdminBookSummary = {
   bookId: number;
   title: string;
-  coverImageUrl?: string;
-  authors?: string[];
-  author?: string;
-  publisherName?: string;
-  publisher?: string;
   isbn?: string;
-  categoryId?: number;
-  categoryName?: string;
-  categories?: Category[];
+  publisherName?: string;
+  authorNames: string[];
+  categories: AdminBookCategoryItem[];
   rentalType: AdminBookRentalType;
   rentalPrice: number;
+  defaultRentalDays: number;
+  coverImageUrl?: string;
+  status: AdminBookStatus;
+  createdAt?: string;
+};
+
+export type AdminBookDetailAuthor = {
+  authorId: number;
+  authorName: string;
+  status: string;
+};
+
+export type AdminBookDetailCategory = {
+  categoryId: number;
+  categoryName: string;
+  status: string;
+};
+
+export type AdminBookDetail = {
+  bookId: number;
+  title: string;
+  isbn?: string;
+  publisherName?: string;
+  authors: AdminBookDetailAuthor[];
+  categories: AdminBookDetailCategory[];
+  rentalType: AdminBookRentalType;
+  rentalPrice: number;
+  defaultRentalDays: number;
+  coverImageUrl?: string;
+  detail?: {
+    description?: string;
+    tableOfContents?: string;
+    publisherReview?: string;
+  };
   status: AdminBookStatus;
   createdAt?: string;
   updatedAt?: string;
 };
 
-export type AdminBookDetail = AdminBookSummary & {
-  categoryIds?: number[];
-  keywords?: string[];
-  defaultRentalDays?: number;
-  description?: string;
-  tableOfContents?: string;
-  publisherReview?: string;
-};
-
+// no-op(동일 상태 재저장)일 때는 reason 없이도 200 처리된다 — 실제 변경일 때만 Service가 조건부로 필수 검증한다.
 export type AdminBookStatusChangeRequest = {
   status: AdminBookStatus;
-  reason: string;
+  reason?: string;
 };
 
 export type AdminBookStatusChangeResponse = {
@@ -606,33 +649,33 @@ export type AdminBookStatusChangeResponse = {
   status: AdminBookStatus;
 };
 
-export type AdminBookCreateRequest = {
+// 등록(002)·수정(003)이 동일한 요청 계약을 쓴다. status/keywords는 백엔드에 필드 자체가 없다.
+export type AdminBookSaveRequest = {
   title: string;
-  isbn: string;
+  isbn?: string;
   publisherName: string;
   authors: string[];
   categoryIds: number[];
-  keywords: string[];
   rentalType: AdminBookRentalType;
   rentalPrice: number;
   defaultRentalDays: number;
   coverImageUrl?: string;
-  status: AdminBookStatus;
-  description: string;
+  description?: string;
   tableOfContents?: string;
   publisherReview?: string;
 };
 
-export type AdminBookCreateResponse = {
+export type AdminBookSaveResponse = {
   bookId: number;
-};
-
-export type AdminBookUpdateRequest = AdminBookCreateRequest;
-
-export type AdminBookUpdateResponse = {
-  bookId: number;
+  status: AdminBookStatus;
+  createdAt?: string;
   updatedAt?: string;
 };
+
+export type AdminBookCreateRequest = AdminBookSaveRequest;
+export type AdminBookCreateResponse = AdminBookSaveResponse;
+export type AdminBookUpdateRequest = AdminBookSaveRequest;
+export type AdminBookUpdateResponse = AdminBookSaveResponse;
 
 export type AdminBookEpubUploadResponse = {
   bookId: number;
@@ -708,64 +751,127 @@ export type AdminCollectionType = 'SERIES' | 'EVENT';
 
 export type AdminCollectionStatus = 'ACTIVE' | 'HIDDEN' | 'ENDED';
 
-export type AdminCollectionBookItem = {
-  bookId: number;
-  title: string;
-  author?: string;
-  authors?: string[];
-  publisherName?: string;
-  displayOrder: number;
-};
-
+// 목록(001) 항목. 도서 매핑 상세는 이 응답에 없다 — 상세는 getAdminCollectionDetail로 조회한다.
 export type AdminCollectionItem = {
   collectionId: number;
-  collectionName: string;
+  name: string;
+  collectionType: AdminCollectionType;
+  discountRate?: number;
+  startDate?: string;
+  endDate?: string;
+  status: AdminCollectionStatus;
+  mappedCount: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type AdminCollectionBookItem = {
+  collectionBookId: number;
+  bookId: number;
+  title: string;
+  status: string;
+  displayOrder?: number;
+};
+
+// 상세 조회(GET /admin/collections/{id}) 응답. 명세 표에는 번호가 없지만 실제 존재하는 엔드포인트다.
+export type AdminCollectionDetail = {
+  collectionId: number;
+  name: string;
   collectionType: AdminCollectionType;
   discountRate?: number;
   description?: string;
   startDate?: string;
   endDate?: string;
   status: AdminCollectionStatus;
-  displayOrder: number;
-  bookCount: number;
-  books?: AdminCollectionBookItem[];
+  createdByMemberId?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  books: AdminCollectionBookItem[];
 };
 
 export type AdminCollectionListQuery = {
-  q?: string;
   collectionType?: AdminCollectionType;
   status?: AdminCollectionStatus;
   page?: number;
   size?: number;
 };
 
+// 생성(POST)·수정(PUT)이 동일한 요청 계약을 쓴다. displayOrder는 이 요청에 없다(컬렉션 자체가 아니라
+// 도서 매핑 단위 필드).
 export type AdminCollectionSaveRequest = {
-  collectionName: string;
+  name: string;
   collectionType: AdminCollectionType;
   discountRate?: number;
   description?: string;
   startDate?: string;
   endDate?: string;
   status: AdminCollectionStatus;
-  displayOrder: number;
 };
 
 export type AdminCollectionSaveResponse = {
   collectionId: number;
+  status: AdminCollectionStatus;
+  createdAt?: string;
   updatedAt?: string;
 };
 
+// SERIES는 displayOrder가 필수(양수), EVENT는 null이어야 한다 — Service에서 검증한다.
 export type AdminCollectionBooksSaveRequest = {
   books: Array<{
     bookId: number;
-    displayOrder: number;
+    displayOrder?: number;
   }>;
 };
 
+export type AdminCollectionBooksSaveResponse = {
+  collectionId: number;
+  mappedCount: number;
+};
+
+// status와 removeBookIds 중 하나 이상 필수 — 둘 다 optional이라 Service가 검증한다. reason 필드는 없다.
 export type AdminCollectionPatchRequest = {
   status?: AdminCollectionStatus;
-  removeBookId?: number;
-  reason?: string;
+  removeBookIds?: number[];
+};
+
+export type AdminCollectionPatchResponse = {
+  collectionId: number;
+  status: AdminCollectionStatus;
+  mappedCount: number;
+};
+
+export type CollectionType = 'SERIES' | 'EVENT';
+
+export type CollectionStatus = 'ACTIVE' | 'HIDDEN' | 'ENDED';
+
+export type CollectionSummary = {
+  collectionId: number;
+  collectionName: string;
+  collectionType: CollectionType;
+  discountRate?: number;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  previewBooks: BookCard[];
+};
+
+export type CollectionDetail = {
+  collectionId: number;
+  collectionName: string;
+  collectionType: CollectionType;
+  discountRate?: number;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  books: BookCard[];
+};
+
+export type CollectionListQuery = {
+  collectionType?: CollectionType;
+  status?: CollectionStatus;
+  page?: number;
+  size?: number;
+  previewSize?: number;
 };
 
 // 백엔드가 정렬 파라미터를 받지 않고 항상 등록 최신순으로 고정 정렬한다 (FavoriteBookRepository.findMyFavorites 참고).
