@@ -324,7 +324,7 @@ export function AdminReportListPage() {
       updateLocalReport(processReport, payload);
       setStatusMessage('신고 처리가 저장되었습니다.');
       setProcessReport(null);
-    } catch (error) {
+    } catch {
       updateLocalReport(processReport, payload);
       setStatusMessage('임시 데이터에 신고 처리 상태를 반영했습니다.');
       setProcessReport(null);

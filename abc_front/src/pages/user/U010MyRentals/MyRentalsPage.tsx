@@ -19,12 +19,8 @@ const rentalStatusLabels: Record<RentalStatus, string> = {
   OWNED: '소장',
 };
 
-function formatProgress(current: number, total: number) {
-  if (total <= 0) {
-    return '0%';
-  }
-
-  return `${Math.min(100, Math.round((current / total) * 100))}%`;
+function formatProgress(progressRate: number) {
+  return `${Math.min(100, Math.max(0, Math.round(progressRate)))}%`;
 }
 
 function formatDate(value: string) {
@@ -61,12 +57,11 @@ function formatDday(value: string) {
 }
 
 function getContinuePath(item: MyRentalItem) {
-  const targetPage = item.currentPage > 0 ? item.currentPage : 1;
-  return `/rentals/${item.rentalId}/read?page=${targetPage}`;
+  return `/rentals/${item.rentalId}/read`;
 }
 
 function getContinueLabel(item: MyRentalItem) {
-  return item.currentPage > 0 ? '이어보기' : '처음부터 읽기';
+  return item.progressRate > 0 ? '이어보기' : '처음부터 읽기';
 }
 
 export function MyRentalsPage() {
@@ -166,13 +161,13 @@ export function MyRentalsPage() {
                   </p>
 
                   <p className="recent-book-progress-text">
-                    읽기 | 진행률 {formatProgress(item.currentPage, item.totalPages)}
+                    읽기 | 진행률 {formatProgress(item.progressRate)}
                   </p>
 
                   <div className="recent-book-progress-track">
                     <span
                       className="recent-book-progress-fill"
-                      style={{ width: formatProgress(item.currentPage, item.totalPages) }}
+                      style={{ width: formatProgress(item.progressRate) }}
                     />
                   </div>
 

@@ -308,7 +308,7 @@ export function AdminMemberListPage() {
           ),
         };
       });
-    } catch (error) {
+    } catch {
       setStatusMessage('임시 데이터에 회원 상태 변경을 반영했습니다.');
       setSelectedMember(null);
       setMembersPage((current) => {

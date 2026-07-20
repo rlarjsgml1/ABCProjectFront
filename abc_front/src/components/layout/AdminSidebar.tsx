@@ -28,6 +28,7 @@ const adminNavGroups: AdminNavGroup[] = [
     label: '도서',
     items: [
       { to: '/admin/books', label: '도서 목록 관리', tag: 'List' },
+      { to: '/admin/book-isbn-temps', label: '외부 도서 등록', tag: 'ISBN' },
       { to: '/admin/categories', label: '카테고리 관리', tag: 'Tree' },
     ],
   },

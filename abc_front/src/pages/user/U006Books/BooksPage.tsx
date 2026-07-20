@@ -91,6 +91,10 @@ function formatRentalType(book: BookCard) {
   return '유료';
 }
 
+function formatAuthors(book: BookCard) {
+  return book.authors?.length ? book.authors.join(', ') : book.publisherName || '작가 미상';
+}
+
 function getSectionKey(section: string | null): SectionKey | null {
   if (section === 'recommend' || section === 'latest' || section === 'best') {
     return section;
@@ -118,6 +122,7 @@ export function BooksPage() {
   const [bookPage, setBookPage] = useState<PageResponse<BookCard>>(() => getEmptyBookPage(0, PAGE_SIZE));
   const [featuredBooks, setFeaturedBooks] = useState<BookCard[]>(weeklyArrivalBooks);
   const [featuredIndex, setFeaturedIndex] = useState(0);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [categories, setCategories] = useState<Category[]>(fallbackCategories);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -360,7 +365,7 @@ export function BooksPage() {
                 >
                   {book.coverImageUrl ? <img src={book.coverImageUrl} alt="" /> : <span>책 표지</span>}
                   <strong>{book.title}</strong>
-                  <small>{book.authors.join(', ') || formatRentalType(book)}</small>
+                  <small>{formatAuthors(book)}</small>
                 </Link>
                 );
               })}
@@ -441,15 +446,12 @@ export function BooksPage() {
         <div className="books-result">
           <div className="books-result-heading">
             <h1>전체 {bookPage.totalElements.toLocaleString('ko-KR')}건</h1>
-            <div className="books-type-tabs" aria-label="대여 유형 빠른 필터">
-              <button className={!rentalType ? 'is-active' : ''} type="button" onClick={() => updateFilter({ rentalType: undefined })}>
-                전체
+            <div className="books-view-toggle" aria-label="도서 목록 보기 방식">
+              <button className={viewMode === 'grid' ? 'is-active' : ''} type="button" aria-label="카드형 보기" onClick={() => setViewMode('grid')}>
+                <span className="books-view-icon books-view-icon-grid" aria-hidden="true" />
               </button>
-              <button className={rentalType === 'FREE' ? 'is-active' : ''} type="button" onClick={() => updateFilter({ rentalType: 'FREE' })}>
-                무료
-              </button>
-              <button className={rentalType === 'PAID' ? 'is-active' : ''} type="button" onClick={() => updateFilter({ rentalType: 'PAID' })}>
-                유료
+              <button className={viewMode === 'list' ? 'is-active' : ''} type="button" aria-label="목록형 보기" onClick={() => setViewMode('list')}>
+                <span className="books-view-icon books-view-icon-list" aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -459,12 +461,12 @@ export function BooksPage() {
 
           {!isLoading && !bookPage.content.length ? <EmptyState title="표시할 도서가 없습니다." description="필터를 바꾸거나 전체 도서를 확인해보세요." /> : null}
 
-          <div className="books-grid" aria-label="도서 목록">
+          <div className={`books-grid books-grid-${viewMode}`} aria-label="도서 목록">
             {bookPage.content.map((book) => (
               <Link className="books-card" to={`/books/${book.bookId}`} key={book.bookId}>
                 {book.coverImageUrl ? <img src={book.coverImageUrl} alt="" /> : <span />}
                 <strong>{book.title}</strong>
-                <small>{formatRentalType(book)}</small>
+                <small>{formatAuthors(book)}</small>
               </Link>
             ))}
           </div>

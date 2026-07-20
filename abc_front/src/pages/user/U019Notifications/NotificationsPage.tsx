@@ -249,7 +249,6 @@ export function NotificationsPage() {
             {
               key: 'createdAt',
               header: '일시',
-              align: 'right',
               render: (notification) => formatDateTime(notification.createdAt),
             },
           ]}
