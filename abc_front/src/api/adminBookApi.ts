@@ -3,6 +3,7 @@ import type {
   AdminBookCreateRequest,
   AdminBookCreateResponse,
   AdminBookDetail,
+  AdminBookEpubUploadResponse,
   AdminBookListQuery,
   AdminBookStatusChangeRequest,
   AdminBookStatusChangeResponse,
@@ -59,6 +60,18 @@ export async function changeAdminBookStatus(bookId: number, payload: AdminBookSt
   const response = await apiClient.patch<ApiResponse<AdminBookStatusChangeResponse>>(
     `/admin/books/${bookId}/status`,
     payload,
+  );
+
+  return response.data.data;
+}
+
+export async function uploadAdminBookEpub(bookId: number, file: File) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await apiClient.put<ApiResponse<AdminBookEpubUploadResponse>>(
+    `/admin/books/${bookId}/epub`,
+    formData,
   );
 
   return response.data.data;

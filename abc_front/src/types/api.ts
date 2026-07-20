@@ -446,7 +446,6 @@ export type ReadingStatisticsQuery = {
 export type ReadingStatisticsSummary = {
   rentalCount: number;
   readBookCount: number;
-  readPageCount: number;
   reviewCount: number;
   favoriteCount: number;
 };
@@ -463,7 +462,6 @@ export type ReadingTrendPoint = {
   periodEndDate?: string;
   rentalCount: number;
   readBookCount: number;
-  readPageCount: number;
 };
 
 export type ReadingStatisticsData = {
@@ -483,7 +481,6 @@ export type RawReadingStatisticsResponse = {
   periodEndDate?: string;
   rentalCount: number;
   readBookCount: number;
-  readPageCount: number;
   reviewCount: number;
   favoriteCount: number;
   carbonSavedKg: number;
@@ -597,7 +594,6 @@ export type AdminBookDetail = AdminBookSummary & {
   description?: string;
   tableOfContents?: string;
   publisherReview?: string;
-  pages?: AdminBookPageRequest[];
 };
 
 export type AdminBookStatusChangeRequest = {
@@ -608,11 +604,6 @@ export type AdminBookStatusChangeRequest = {
 export type AdminBookStatusChangeResponse = {
   bookId: number;
   status: AdminBookStatus;
-};
-
-export type AdminBookPageRequest = {
-  pageNo: number;
-  pageContent: string;
 };
 
 export type AdminBookCreateRequest = {
@@ -630,7 +621,6 @@ export type AdminBookCreateRequest = {
   description: string;
   tableOfContents?: string;
   publisherReview?: string;
-  pages: AdminBookPageRequest[];
 };
 
 export type AdminBookCreateResponse = {
@@ -642,6 +632,14 @@ export type AdminBookUpdateRequest = AdminBookCreateRequest;
 export type AdminBookUpdateResponse = {
   bookId: number;
   updatedAt?: string;
+};
+
+export type AdminBookEpubUploadResponse = {
+  bookId: number;
+  fileName: string;
+  fileSize: number;
+  sha256: string;
+  epubVersion: number;
 };
 
 // GET /api/v1/books/search 실제 응답 봉투. BookSearchResponse.java 기준 (content는 page 안에 들어있다).
@@ -840,9 +838,9 @@ export type RecentBookItem = {
   bookId: number;
   title: string;
   coverImageUrl: string;
-  currentPage: number;
-  totalPages: number;
   progressRate: number;
+  completedYn?: boolean;
+  contentReady?: boolean;
   lastReadAt: string;
 };
 
@@ -1126,42 +1124,52 @@ export type MyRentalItem = {
   coverImageUrl: string;
   rentalStatus: RentalStatus;
   rentalEndAt: string;
-  currentPage: number;
-  totalPages: number;
   progressRate: number;
+  completedYn?: boolean;
+  contentReady?: boolean;
 };
 
 export type MyRentalsPage = PageResponse<MyRentalItem>;
 
-// API-VIEWER-001~005 (U-011 전자책 뷰어). 필드명은 ViewerPageResponse.java 등 기준.
-export type ViewerPageData = {
-  title: string;
-  pageContent: string;
-  totalPages: number;
-  progressRate: number;
-  bookmarkYn: boolean;
+export type EpubLocator = {
+  epubVersion: number;
+  cfi: string;
+  chapterHref?: string | null;
+  spineIndex?: number | null;
+  progression: number;
 };
 
-export type ProgressUpdateRequest = {
-  currentPage: number;
-  action?: string;
-};
-
-export type ProgressResult = {
-  progressId: number;
-  currentPage: number;
-  progressRate: number;
+export type ViewerProgress = Omit<EpubLocator, 'epubVersion'> & {
+  revision: number;
   completedYn: boolean;
 };
 
-export type BookmarkItem = {
+export type ViewerSessionData = {
+  title: string;
+  epubVersion: number;
+  contentReady: boolean;
+  progress: ViewerProgress | null;
+};
+
+export type ProgressUpdateRequest = EpubLocator & {
+  spineIndex: number;
+  atEnd: boolean;
+  expectedRevision: number;
+};
+
+export type ProgressResult = EpubLocator & {
+  progressId: number;
+  completedYn: boolean;
+  revision: number;
+};
+
+export type BookmarkItem = EpubLocator & {
   bookmarkId: number;
-  pageNo: number;
   createdAt: string;
 };
 
-export type BookmarkCreateRequest = {
-  pageNo: number;
+export type BookmarkCreateRequest = EpubLocator & {
+  spineIndex: number;
 };
 
 export type BookmarkDeleteResult = {

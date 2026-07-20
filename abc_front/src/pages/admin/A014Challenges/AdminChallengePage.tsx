@@ -361,7 +361,7 @@ export function AdminChallengePage() {
     try {
       await updateAdminChallenge(editChallenge.challengeId, payload);
       setStatusMessage('챌린지 설정이 저장되었습니다.');
-    } catch (error) {
+    } catch {
       setStatusMessage('임시 데이터에 챌린지 수정 내용을 반영했습니다.');
     } finally {
       updateLocalChallenge(editChallenge.challengeId, nextChallenge);

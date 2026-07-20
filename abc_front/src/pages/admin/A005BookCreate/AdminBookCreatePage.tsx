@@ -6,7 +6,6 @@ import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
 import type {
   AdminBookCreateRequest,
-  AdminBookPageRequest,
   AdminBookRentalType,
   AdminBookStatus,
   Category,
@@ -35,7 +34,6 @@ function splitList(value: FormDataEntryValue | null) {
 export function AdminBookCreatePage() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>(fallbackCategories);
-  const [pages, setPages] = useState<AdminBookPageRequest[]>([{ pageNo: 1, pageContent: '' }]);
   const [rentalType, setRentalType] = useState<AdminBookRentalType>('PAID');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -64,33 +62,6 @@ export function AdminBookCreatePage() {
     };
   }, []);
 
-  function addPage() {
-    setPages((current) => [...current, { pageNo: current.length + 1, pageContent: '' }]);
-  }
-
-  function updatePage(index: number, field: keyof AdminBookPageRequest, value: string) {
-    setPages((current) =>
-      current.map((page, pageIndex) =>
-        pageIndex === index
-          ? {
-              ...page,
-              [field]: field === 'pageNo' ? Number(value) || 1 : value,
-            }
-          : page,
-      ),
-    );
-  }
-
-  function removePage(index: number) {
-    setPages((current) => {
-      if (current.length === 1) {
-        return current;
-      }
-
-      return current.filter((_, pageIndex) => pageIndex !== index);
-    });
-  }
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage('');
@@ -104,12 +75,6 @@ export function AdminBookCreatePage() {
       .getAll('categoryIds')
       .map((value) => Number(value))
       .filter(Boolean);
-    const validPages = pages
-      .map((page) => ({
-        pageNo: Number(page.pageNo) || 1,
-        pageContent: page.pageContent.trim(),
-      }))
-      .filter((page) => page.pageContent);
 
     if (!title) {
       setErrorMessage('도서 제목을 입력해 주세요.');
@@ -128,11 +93,6 @@ export function AdminBookCreatePage() {
 
     if (categoryIds.length === 0) {
       setErrorMessage('카테고리를 1개 이상 선택해 주세요.');
-      return;
-    }
-
-    if (validPages.length === 0) {
-      setErrorMessage('전자책 본문 페이지를 1개 이상 입력해 주세요.');
       return;
     }
 
@@ -158,7 +118,6 @@ export function AdminBookCreatePage() {
       description: String(formData.get('description') ?? '').trim(),
       tableOfContents: String(formData.get('tableOfContents') ?? '').trim() || undefined,
       publisherReview: String(formData.get('publisherReview') ?? '').trim() || undefined,
-      pages: validPages,
     };
 
     setIsSubmitting(true);
@@ -297,36 +256,18 @@ export function AdminBookCreatePage() {
 
           <section className={styles.panel}>
             <div className={styles.panelHeader}>
-              <h2>전자책 파일/페이지</h2>
-              <p>파일 업로드 대신 URL과 페이지 본문을 입력합니다.</p>
+              <h2>전자책 콘텐츠</h2>
+              <p>도서를 등록한 뒤 Swagger 또는 Postman에서 EPUB 파일을 등록합니다.</p>
             </div>
 
             <label>
               커버 URL
-              <input name="coverImageUrl" type="url" placeholder="https://cdn.example.com/book-1001.epub" />
+              <input name="coverImageUrl" type="url" placeholder="https://cdn.example.com/book-1001.jpg" />
             </label>
-
-            <div className={styles.pageList}>
-              {pages.map((page, index) => (
-                <div className={styles.pageRow} key={index}>
-                  <label>
-                    페이지 번호
-                    <input value={page.pageNo} type="number" min="1" onChange={(event) => updatePage(index, 'pageNo', event.target.value)} />
-                  </label>
-                  <label>
-                    페이지 본문
-                    <textarea value={page.pageContent} onChange={(event) => updatePage(index, 'pageContent', event.target.value)} placeholder="본문 텍스트를 입력합니다." />
-                  </label>
-                  <Button type="button" variant="secondary" onClick={() => removePage(index)} disabled={pages.length === 1}>
-                    페이지 삭제
-                  </Button>
-                </div>
-              ))}
+            <div className={styles.ruleGrid}>
+              <span>콘텐츠 상태: EPUB 미등록</span>
+              <span>EPUB 등록 전에는 사용자가 본문을 열람할 수 없습니다.</span>
             </div>
-
-            <Button type="button" variant="secondary" onClick={addPage}>
-              페이지 추가
-            </Button>
           </section>
         </div>
 
@@ -340,7 +281,7 @@ export function AdminBookCreatePage() {
             <span>ISBN 중복 없음</span>
             <span>유료 도서 가격 0원 초과</span>
             <span>무료 도서 가격 0원</span>
-            <span>전자책 본문 최소 1페이지</span>
+            <span>EPUB 등록 후 열람 가능</span>
             <span>카테고리 1개 이상 선택</span>
             <span>감사 로그는 서버에서 기록</span>
           </div>
