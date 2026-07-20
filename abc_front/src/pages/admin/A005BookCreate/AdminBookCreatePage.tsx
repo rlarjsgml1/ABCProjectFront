@@ -188,7 +188,7 @@ export function AdminBookCreatePage() {
             {isSubmitting ? '등록 중' : '등록'}
           </Button>
           <Link className="button button-secondary" to="/admin/books">
-            취소 → A-004
+            취소
           </Link>
         </div>
       </div>
