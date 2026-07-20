@@ -1,7 +1,8 @@
 // 공지사항 상세(U029) 화면 — 선택한 공지사항의 본문과 이전/다음 글 이동을 제공한다
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getFallbackNoticeDetail, getNoticeDetail } from '../../../api/noticeApi';
+import { getNoticeDetail } from '../../../api/noticeApi';
+import { getApiErrorMessage } from '../../../api/profileApi';
 import type { NoticeDetail } from '../../../types/api';
 import styles from '../../../styles/NoticeDetailPage.module.css';
 
@@ -39,13 +40,10 @@ export function NoticeDetailPage() {
           setNotice(data);
           setErrorMessage('');
         }
-      } catch {
+      } catch (error) {
         if (!ignore) {
-          const fallback = getFallbackNoticeDetail(Number(noticeId));
-          setNotice(fallback);
-          setErrorMessage(
-            fallback ? '서버 데이터 연결 전까지 임시 공지사항이 표시됩니다.' : '공지사항을 찾을 수 없습니다.',
-          );
+          setNotice(null);
+          setErrorMessage(getApiErrorMessage(error));
         }
       } finally {
         if (!ignore) {

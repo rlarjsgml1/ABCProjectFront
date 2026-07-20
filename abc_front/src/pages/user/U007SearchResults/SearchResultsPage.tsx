@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getBooks, getCategories, searchBooks, type BookSearchQuery } from '../../../api/bookApi';
 import { createBookRequest } from '../../../api/bookRequestsApi';
-import { getApiErrorMessage } from '../../../api/profileApi';
+import { getApiErrorCode, getApiErrorMessage } from '../../../api/profileApi';
 import { EmptyState } from '../../../components/common/EmptyState';
 import { Pagination } from '../../../components/common/Pagination';
 import type { BookCard, Category, PageResponse } from '../../../types/api';
@@ -269,12 +269,11 @@ export function SearchResultsPage() {
       localStorage.setItem(getRequestStorageKey(keyword), '1');
       setIsRequested(true);
     } catch (error) {
-      const message = getApiErrorMessage(error);
-      if (message.includes('이미') || message.includes('중복')) {
+      if (getApiErrorCode(error) === 'BOOK_REQUEST_ALREADY_EXISTS') {
         localStorage.setItem(getRequestStorageKey(keyword), '1');
         setIsRequested(true);
       } else {
-        setErrorMessage(message);
+        setErrorMessage(getApiErrorMessage(error));
       }
     } finally {
       setIsSubmitting(false);

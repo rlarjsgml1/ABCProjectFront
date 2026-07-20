@@ -1,7 +1,8 @@
 // 공지사항 목록(U029) 화면 — 공지사항을 페이지네이션으로 조회하고 상세 화면으로 이동시킨다
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { getFallbackNoticePage, getNotices } from '../../../api/noticeApi';
+import { getNotices } from '../../../api/noticeApi';
+import { getApiErrorMessage } from '../../../api/profileApi';
 import { Pagination } from '../../../components/common/Pagination';
 import { Table } from '../../../components/common/Table';
 import type { NoticeItem, NoticePage } from '../../../types/api';
@@ -23,7 +24,14 @@ function formatDate(value: string) {
 
 export function NoticeListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [noticePage, setNoticePage] = useState<NoticePage>(() => getFallbackNoticePage(0, PAGE_SIZE));
+  const [noticePage, setNoticePage] = useState<NoticePage>({
+    content: [],
+    page: 0,
+    size: PAGE_SIZE,
+    totalElements: 0,
+    totalPages: 0,
+    last: true,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -40,10 +48,9 @@ export function NoticeListPage() {
           setNoticePage(data);
           setErrorMessage('');
         }
-      } catch {
+      } catch (error) {
         if (!ignore) {
-          setNoticePage(getFallbackNoticePage(currentPage, PAGE_SIZE));
-          setErrorMessage('서버 데이터 연결 전까지 임시 공지사항이 표시됩니다.');
+          setErrorMessage(getApiErrorMessage(error));
         }
       } finally {
         if (!ignore) {
