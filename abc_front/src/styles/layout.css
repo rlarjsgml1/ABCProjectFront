@@ -2440,6 +2440,32 @@ a.count-card:focus-visible {
   box-shadow: var(--shadow-sm);
 }
 
+.notifications-table th,
+.notifications-table td {
+  text-align: left !important;
+}
+
+.notifications-table th:nth-child(1),
+.notifications-table td:nth-child(1) {
+  width: 58%;
+}
+
+.notifications-table th:nth-child(2),
+.notifications-table td:nth-child(2) {
+  width: 24%;
+}
+
+.notifications-table th:nth-child(3),
+.notifications-table td:nth-child(3) {
+  width: 18%;
+  white-space: nowrap;
+}
+
+.notifications-table td:nth-child(3) {
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
 .notifications-row-button {
   display: flex;
   align-items: center;
