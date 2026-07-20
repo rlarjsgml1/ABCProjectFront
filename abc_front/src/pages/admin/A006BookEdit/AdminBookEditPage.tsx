@@ -343,7 +343,7 @@ export function AdminBookEditPage() {
             상태 변경
           </Button>
           <Link className="button button-secondary" to="/admin/books">
-            취소 → A-004
+            취소
           </Link>
         </div>
       </div>
