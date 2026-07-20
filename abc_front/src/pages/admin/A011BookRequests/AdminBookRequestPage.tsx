@@ -15,48 +15,6 @@ const statusOptions: Array<{ value: BookRequestStatus; label: string }> = [
   { value: 'REJECTED', label: '반려' },
 ];
 
-const fallbackCandidates: AdminBookRequestCandidate[] = [
-  {
-    candidateId: 1101,
-    title: '데이터베이스 첫걸음',
-    author: '박서연',
-    publisher: '아콘출판',
-    status: 'REQUESTED',
-    requestCount: 3,
-    firstRequestedAt: '2026-07-08T09:20:00',
-    latestRequestedAt: '2026-07-12T14:30:00',
-    applicants: [
-      { memberId: 1024, loginId: 'park_reader', name: '박서연', reason: '수업 참고서로 필요합니다.', requestedAt: '2026-07-08T09:20:00' },
-      { memberId: 1091, loginId: 'data_study', name: '김도윤', reason: '데이터베이스 입문 도서를 희망합니다.', requestedAt: '2026-07-10T11:10:00' },
-      { memberId: 1133, loginId: 'book_note', name: '이하린', reason: '스터디 추천 도서입니다.', requestedAt: '2026-07-12T14:30:00' },
-    ],
-  },
-  {
-    candidateId: 1102,
-    title: '리액트 운영 패턴',
-    author: '정민재',
-    publisher: '프론트북스',
-    status: 'IN_REVIEW',
-    requestCount: 1,
-    firstRequestedAt: '2026-07-06T16:05:00',
-    applicants: [{ memberId: 1188, loginId: 'ui_dev', name: '문하늘', reason: '프로젝트 화면 구현에 참고하고 싶습니다.', requestedAt: '2026-07-06T16:05:00' }],
-  },
-  {
-    candidateId: 1103,
-    title: '클린 코드 실전편',
-    author: '로버트 C. 마틴',
-    publisher: '위키북스',
-    status: 'REJECTED',
-    requestCount: 2,
-    firstRequestedAt: '2026-07-01T13:40:00',
-    applicants: [
-      { memberId: 1204, loginId: 'clean_dev', name: '오지후', reason: '개발 역량 강화를 위해 신청합니다.', requestedAt: '2026-07-01T13:40:00' },
-      { memberId: 1217, loginId: 'code_habit', name: '한유진', reason: '소장 희망합니다.', requestedAt: '2026-07-02T10:22:00' },
-    ],
-    rejectReason: '동일 주제 최신 도서가 이미 보유되어 있습니다.',
-  },
-];
-
 type ReviewForm = {
   status: BookRequestStatus;
   approvedBookId: string;
@@ -90,30 +48,18 @@ function getRepresentativeApplicant(candidate: AdminBookRequestCandidate) {
   return candidate.applicants[0];
 }
 
-function buildFallbackPage(query: AdminBookRequestCandidateQuery): AdminBookRequestCandidatePage {
-  const keyword = query.q?.trim().toLowerCase();
-  const filtered = fallbackCandidates.filter((candidate) => {
-    const matchesStatus = query.status ? candidate.status === query.status : true;
-    const matchesKeyword = keyword
-      ? [candidate.title, candidate.author, candidate.publisher, ...candidate.applicants.flatMap((applicant) => [applicant.name, applicant.loginId])].join(' ').toLowerCase().includes(keyword)
-      : true;
-
-    return matchesStatus && matchesKeyword;
-  });
-
-  const page = query.page ?? 0;
-  const size = query.size ?? PAGE_SIZE;
-  const start = page * size;
-
-  return {
-    content: filtered.slice(start, start + size),
-    page,
-    size,
-    totalElements: filtered.length,
-    totalPages: Math.max(Math.ceil(filtered.length / size), 1),
-    last: start + size >= filtered.length,
-  };
+// 후보의 현재 상태에서 관리자가 실제로 선택 가능한 다음 상태만 노출한다.
+function getAvailableNextStatuses(status: BookRequestStatus): BookRequestStatus[] {
+  switch (status) {
+    case 'REQUESTED':
+      return ['IN_REVIEW', 'APPROVED', 'REJECTED'];
+    case 'IN_REVIEW':
+      return ['APPROVED', 'REJECTED'];
+    default:
+      return [];
+  }
 }
+
 export function AdminBookRequestPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [candidatesPage, setCandidatesPage] = useState<AdminBookRequestCandidatePage | null>(null);
@@ -153,8 +99,7 @@ export function AdminBookRequestPage() {
         }
       } catch (error) {
         if (!ignore) {
-          setCandidatesPage(buildFallbackPage(query));
-          setErrorMessage(`${getApiErrorMessage(error)} 화면 확인을 위해 임시 희망도서 목록을 표시합니다.`);
+          setErrorMessage(getApiErrorMessage(error));
         }
       } finally {
         if (!ignore) {
@@ -280,9 +225,7 @@ export function AdminBookRequestPage() {
       setStatusMessage('희망도서 처리 상태가 저장되었습니다.');
       setReviewCandidate(null);
     } catch (error) {
-      updateLocalCandidate(reviewCandidate.candidateId, payload);
-      setStatusMessage('임시 데이터에 처리 상태를 반영했습니다.');
-      setReviewCandidate(null);
+      setModalError(getApiErrorMessage(error));
     } finally {
       setIsSaving(false);
     }
@@ -414,7 +357,12 @@ export function AdminBookRequestPage() {
                                 <button type="button" role="menuitem" onClick={() => openReviewModal(candidate, 'IN_REVIEW')} disabled={isClosed}>
                                   검토 시작
                                 </button>
-                                <Link role="menuitem" to={`/admin/books/new?candidateId=${candidate.candidateId}`} onClick={() => setOpenActionMenuId(null)}>
+                                <Link
+                                  role="menuitem"
+                                  to={`/admin/books/new?candidateId=${candidate.candidateId}`}
+                                  state={{ title: candidate.title, author: candidate.author, publisher: candidate.publisher }}
+                                  onClick={() => setOpenActionMenuId(null)}
+                                >
                                   도서 등록
                                 </Link>
                                 <button type="button" role="menuitem" onClick={() => openReviewModal(candidate, 'APPROVED')} disabled={isClosed}>
@@ -514,11 +462,13 @@ export function AdminBookRequestPage() {
             <label>
               처리 상태
               <select value={reviewForm.status} onChange={(event) => setReviewForm((current) => ({ ...current, status: event.target.value as BookRequestStatus }))}>
-                {statusOptions.map((option) => (
-                  <option value={option.value} key={option.value}>
-                    {option.label}
-                  </option>
-                ))}
+                {statusOptions
+                  .filter((option) => getAvailableNextStatuses(reviewCandidate.status).includes(option.value))
+                  .map((option) => (
+                    <option value={option.value} key={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
               </select>
             </label>
 

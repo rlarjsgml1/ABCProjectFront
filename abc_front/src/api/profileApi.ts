@@ -41,3 +41,13 @@ export function getApiErrorMessage(error: unknown) {
 
   return '요청을 처리하지 못했습니다.';
 }
+
+// 백엔드 ErrorResponse.code(예: BOOK_REQUEST_ALREADY_EXISTS)를 구조적으로 읽기 위한 헬퍼.
+// 메시지 문자열 포함 여부로 에러를 판별하던 기존 방식을 대체한다.
+export function getApiErrorCode(error: unknown): string | undefined {
+  if (isAxiosError<ErrorResponse>(error)) {
+    return error.response?.data.code;
+  }
+
+  return undefined;
+}

@@ -1383,7 +1383,7 @@ export type AdminPaymentItem = {
 
 export type AdminPaymentPage = PageResponse<AdminPaymentItem>;
 
-// API-ADMIN-NOTICE-001~003 (A-012 공지 관리). controller 미구현 — mock/fallback 사용.
+// API-ADMIN-NOTICE-001~003 (A-012 공지 관리).
 export type AdminNoticeStatus = 'ACTIVE' | 'HIDDEN';
 
 export type AdminNoticeListQuery = {
@@ -1408,6 +1408,12 @@ export type AdminNoticeSaveRequest = {
   content: string;
   status: AdminNoticeStatus;
   notifyYn: boolean;
+};
+
+// POST 등록 전용 응답. notifyYn=true인 신규 등록에서 실제 알림을 받은 회원 수(notifyCreatedCount)가 추가된다.
+// PUT(수정) 응답은 알림을 재발송하지 않으므로 이 필드가 없는 AdminNoticeItem을 그대로 사용한다.
+export type AdminNoticeCreateResponse = AdminNoticeItem & {
+  notifyCreatedCount: number;
 };
 
 // API-ADMIN-STAT-001 (A-016 통계 관리). 실제 backend 연동됨(AdminStatisticController). 현재 periodType=TOTAL(+ageBand 미지정/ALL)만 지원, 그 외 조합은 404.

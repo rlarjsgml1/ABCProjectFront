@@ -1,4 +1,4 @@
-// 알림 목록 조회/읽음 처리 API와 알림 유형별 라벨·이동 경로 매핑, fallback 목데이터
+// 알림 목록 조회/읽음 처리 API와 알림 유형별 라벨·이동 경로 매핑
 import { apiClient } from './apiClient';
 import type {
   ApiResponse,
@@ -66,87 +66,4 @@ const notificationTypeLabels: Record<NotificationType, string> = {
 
 export function getNotificationTypeLabel(notificationType: NotificationType) {
   return notificationTypeLabels[notificationType] ?? notificationType;
-}
-
-const fallbackNotifications: NotificationItem[] = [
-  {
-    notificationId: 105,
-    notificationType: 'RENTAL',
-    title: '「달러구트 꿈 백화점」 대여 기간이 3일 남았습니다',
-    targetType: 'BOOK_RENTAL',
-    targetId: 41,
-    readYn: false,
-    createdAt: '2026-07-12T09:12:00',
-    readAt: null,
-  },
-  {
-    notificationId: 104,
-    notificationType: 'COUPON',
-    title: '7일 연속 출석 쿠폰이 발급되었습니다',
-    targetType: 'MEMBER_COUPON',
-    targetId: 12,
-    readYn: false,
-    createdAt: '2026-07-12T08:00:00',
-    readAt: null,
-  },
-  {
-    notificationId: 103,
-    notificationType: 'CHALLENGE',
-    title: '이달의 완독 챌린지 보상을 받을 수 있어요',
-    targetType: 'CHALLENGE',
-    targetId: 4,
-    readYn: true,
-    createdAt: '2026-07-10T11:20:00',
-    readAt: '2026-07-10T12:00:00',
-  },
-  {
-    notificationId: 102,
-    notificationType: 'REPORT',
-    title: '신고하신 리뷰 처리가 완료되었습니다',
-    targetType: 'REVIEW_REPORT',
-    targetId: 9,
-    readYn: true,
-    createdAt: '2026-07-09T10:05:00',
-    readAt: '2026-07-09T10:30:00',
-  },
-  {
-    notificationId: 101,
-    notificationType: 'NOTICE',
-    title: '8월 정기 점검 안내',
-    targetType: 'NOTICE',
-    targetId: 3,
-    readYn: true,
-    createdAt: '2026-07-02T09:00:00',
-    readAt: '2026-07-02T13:15:00',
-  },
-];
-
-export function getFallbackNotificationPage(query: NotificationListQuery = {}): NotificationPage {
-  const page = query.page ?? 0;
-  const size = query.size ?? 10;
-
-  const filtered = fallbackNotifications.filter((notification) => {
-    if (typeof query.readYn === 'boolean' && notification.readYn !== query.readYn) {
-      return false;
-    }
-
-    if (query.notificationType && notification.notificationType !== query.notificationType) {
-      return false;
-    }
-
-    return true;
-  });
-
-  const totalElements = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(totalElements / size));
-  const start = page * size;
-
-  return {
-    content: filtered.slice(start, start + size),
-    page,
-    size,
-    totalElements,
-    totalPages,
-    last: page >= totalPages - 1,
-  };
 }
