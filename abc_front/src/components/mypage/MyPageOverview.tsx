@@ -1,6 +1,6 @@
 // 마이페이지 상단 요약 대시보드 — 프로필, 회원등급, 독서통계, 출석/챌린지 현황을 표시
 import { useState, type CSSProperties } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, type To } from 'react-router-dom';
 import type { UserProfile } from '../../types/api';
 
 type MyPageOverviewProps = {
@@ -30,7 +30,7 @@ type MembershipGradeDetails = {
 type TopStat = {
   label: string;
   value: string | number;
-  to?: string;
+  to?: To;
 };
 
 const emptyProfile: UserProfile = {
@@ -108,8 +108,8 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
   const grade = displayProfile.gradeName ?? displayProfile.membershipGrade ?? '새싹';
   const gradeDetails = getMembershipGradeDetails(displayProfile, grade);
   const topStats: TopStat[] = [
-    { label: '포인트', value: formatPoint(displayProfile.point), to: '/me/points-coupons?tab=points' },
-    { label: '쿠폰', value: valueOrDash(displayProfile.couponCount), to: '/me/points-coupons?tab=coupons' },
+    { label: '포인트', value: formatPoint(displayProfile.point), to: { pathname: '/me/points-coupons', search: '?tab=points' } },
+    { label: '쿠폰', value: valueOrDash(displayProfile.couponCount), to: { pathname: '/me/points-coupons', search: '?tab=coupons' } },
   ];
   const bottomStats: TopStat[] = [
     { label: '대여', value: valueOrDash(displayProfile.rentalCount), to: '/me/rentals' },
