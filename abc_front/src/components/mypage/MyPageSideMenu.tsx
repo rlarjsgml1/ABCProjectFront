@@ -8,6 +8,7 @@ const menuItems = [
   { label: '챌린지', to: '/me/challenges', enabled: true, end: true },
   { label: '즐겨찾기', to: '/me/favorites', enabled: true, end: true },
   { label: '최근 읽은 책', to: '/me/recent-books', enabled: true, end: true },
+  { label: '독서 통계', to: '/me/statistics', enabled: true, end: true },
   { label: '포인트/쿠폰', to: '/me/points-coupons', enabled: true, end: true },
   { label: '프로필 수정', to: '/me/profile', enabled: true, end: true },
   { label: '희망 도서 신청 내역', to: '/me/book-requests/history', enabled: true, end: true },

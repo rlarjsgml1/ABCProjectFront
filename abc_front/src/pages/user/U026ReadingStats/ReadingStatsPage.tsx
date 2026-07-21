@@ -35,7 +35,7 @@ function formatTree(value: number) {
 }
 
 function ReadingStatisticsTooltip({ active, label, payload }: TooltipContentProps) {
-  if (!active || !payload.length) {
+  if (!active || !payload?.length) {
     return null;
   }
 

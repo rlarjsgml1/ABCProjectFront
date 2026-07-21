@@ -244,22 +244,22 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
         </section>
 
         <section className="reading-stats" aria-label="독서 통계">
-          <div className="section-heading-row">
-            <h2>나의 독서통계</h2>
-            <Link to="/me/statistics" aria-label="나의 독서통계 상세 보기">
-              ›
-            </Link>
-          </div>
-          <div className="mini-bar-list" role="img" aria-label={`나의 독서통계 막대그래프: ${readingStatsSummary}`}>
-            {readingBars.map((item) => (
-              <span
-                className="mini-bar-fill"
-                key={item.label}
-                aria-hidden="true"
-                style={getBarStyle(item.percent)}
-              />
-            ))}
-          </div>
+          <Link className="reading-stats-link" to="/me/statistics" aria-label="나의 독서통계 상세 보기">
+            <div className="section-heading-row">
+              <h2>나의 독서통계</h2>
+              <span aria-hidden="true">›</span>
+            </div>
+            <div className="mini-bar-list" role="img" aria-label={`나의 독서통계 막대그래프: ${readingStatsSummary}`}>
+              {readingBars.map((item) => (
+                <span
+                  className="mini-bar-fill"
+                  key={item.label}
+                  aria-hidden="true"
+                  style={getBarStyle(item.percent)}
+                />
+              ))}
+            </div>
+          </Link>
         </section>
       </div>
 
