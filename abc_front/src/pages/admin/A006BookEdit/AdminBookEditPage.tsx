@@ -27,26 +27,6 @@ const fallbackCategories: Category[] = [
   { categoryId: 5, name: '자기계발' },
 ];
 
-const fallbackBook: AdminBookDetail = {
-  bookId: 1001,
-  title: '데이터베이스 개론',
-  isbn: '979-11-0001',
-  publisherName: 'ABC Press',
-  authors: ['김하늘'],
-  categoryId: 4,
-  categoryIds: [4],
-  categoryName: '컴퓨터 / IT',
-  keywords: ['SQL', 'RDBMS', '실무 데이터'],
-  rentalType: 'PAID',
-  rentalPrice: 3500,
-  defaultRentalDays: 14,
-  coverImageUrl: 'https://cdn.example.com/book-1001.epub',
-  status: 'AVAILABLE',
-  description: '데이터베이스의 기본 개념과 실무 활용을 함께 익힐 수 있는 도서입니다.',
-  tableOfContents: '1장 데이터 모델\n2장 SQL 기초',
-  publisherReview: '학습자를 위한 구성과 실무 예제를 담았습니다.',
-};
-
 function flattenCategories(categories: Category[]): Category[] {
   return categories.flatMap((category) => [category, ...(category.children ? flattenCategories(category.children) : [])]);
 }
@@ -56,29 +36,6 @@ function splitList(value: FormDataEntryValue | null) {
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean);
-}
-
-function normalizeBook(book: AdminBookDetail): AdminBookDetail {
-  const authors = book.authors?.length ? book.authors : book.author ? [book.author] : fallbackBook.authors;
-  const categoryIds =
-    book.categoryIds?.length
-      ? book.categoryIds
-      : book.categories?.length
-        ? book.categories.map((category) => category.categoryId)
-        : book.categoryId
-          ? [book.categoryId]
-          : fallbackBook.categoryIds;
-
-  return {
-    ...fallbackBook,
-    ...book,
-    authors,
-    categoryIds,
-    publisherName: book.publisherName || book.publisher || fallbackBook.publisherName,
-    keywords: book.keywords?.length ? book.keywords : fallbackBook.keywords,
-    defaultRentalDays: book.defaultRentalDays || fallbackBook.defaultRentalDays,
-    description: book.description || fallbackBook.description,
-  };
 }
 
 export function AdminBookEditPage() {
@@ -105,7 +62,7 @@ export function AdminBookEditPage() {
   const epubFileInputRef = useRef<HTMLInputElement>(null);
   const wasEpubConfirmOpenRef = useRef(false);
 
-  const selectedCategoryIds = useMemo(() => new Set(book?.categoryIds ?? []), [book]);
+  const selectedCategoryIds = useMemo(() => new Set((book?.categories ?? []).map((category) => category.categoryId)), [book]);
 
   useEffect(() => {
     let frameId: number | undefined;
@@ -162,18 +119,14 @@ export function AdminBookEditPage() {
       try {
         const data = await getAdminBook(numericBookId);
         if (!ignore) {
-          const normalizedBook = normalizeBook(data);
-          setBook(normalizedBook);
-          setRentalType(normalizedBook.rentalType);
-          setStatusValue(normalizedBook.status);
+          setBook(data);
+          setRentalType(data.rentalType);
+          setStatusValue(data.status);
         }
-      } catch {
+      } catch (error) {
         if (!ignore) {
-          const normalizedBook = normalizeBook({ ...fallbackBook, bookId: numericBookId || fallbackBook.bookId });
-          setBook(normalizedBook);
-          setRentalType(normalizedBook.rentalType);
-          setStatusValue(normalizedBook.status);
-          setErrorMessage('서버 데이터 연결 전까지 임시 도서 정보가 표시됩니다.');
+          setBook(null);
+          setErrorMessage(getApiErrorMessage(error));
         }
       } finally {
         if (!ignore) {
@@ -242,17 +195,15 @@ export function AdminBookEditPage() {
 
     const payload = {
       title,
-      isbn: String(formData.get('isbn') ?? '').trim(),
+      isbn: String(formData.get('isbn') ?? '').trim() || undefined,
       publisherName,
       authors,
       categoryIds,
-      keywords: splitList(formData.get('keywords')),
       rentalType,
       rentalPrice,
       defaultRentalDays: Number(formData.get('defaultRentalDays') ?? 14) || 14,
       coverImageUrl: String(formData.get('coverImageUrl') ?? '').trim() || undefined,
-      status: String(formData.get('status') ?? 'AVAILABLE') as AdminBookStatus,
-      description: String(formData.get('description') ?? '').trim(),
+      description: String(formData.get('description') ?? '').trim() || undefined,
       tableOfContents: String(formData.get('tableOfContents') ?? '').trim() || undefined,
       publisherReview: String(formData.get('publisherReview') ?? '').trim() || undefined,
     };
@@ -261,9 +212,10 @@ export function AdminBookEditPage() {
 
     try {
       await updateAdminBook(numericBookId, payload);
-      const updatedBook = normalizeBook({ ...(book ?? fallbackBook), ...payload, bookId: numericBookId });
-      setBook(updatedBook);
-      setStatusValue(updatedBook.status);
+      const refreshed = await getAdminBook(numericBookId);
+      setBook(refreshed);
+      setRentalType(refreshed.rentalType);
+      setStatusValue(refreshed.status);
       setSuccessMessage('도서 정보가 수정되었습니다.');
     } catch (error) {
       setErrorMessage(getApiErrorMessage(error));
@@ -280,7 +232,9 @@ export function AdminBookEditPage() {
       return;
     }
 
-    if (!statusReason.trim()) {
+    const isActualChange = statusValue !== book?.status;
+
+    if (isActualChange && !statusReason.trim()) {
       setStatusErrorMessage('상태 변경 사유를 입력해 주세요.');
       return;
     }
@@ -394,7 +348,7 @@ export function AdminBookEditPage() {
           <div>
             <span className={styles.eyebrow}>Book</span>
             <h1>도서 수정</h1>
-            <p>기존 도서 정보를 불러오는 중입니다.</p>
+            <p>{isLoading ? '기존 도서 정보를 불러오는 중입니다.' : errorMessage || '도서 정보를 불러오지 못했습니다.'}</p>
           </div>
         </div>
       </section>
@@ -449,11 +403,16 @@ export function AdminBookEditPage() {
               </label>
               <label className={styles.wide}>
                 저자
-                <input name="authors" type="text" placeholder="김하늘 / 1" defaultValue={(book.authors ?? []).join(', ')} />
+                <input
+                  name="authors"
+                  type="text"
+                  placeholder="김하늘 / 1"
+                  defaultValue={(book.authors ?? []).map((author) => author.authorName).join(', ')}
+                />
               </label>
               <label className={styles.wide}>
                 키워드
-                <input name="keywords" type="text" placeholder="SQL, RDBMS, 실무 데이터" defaultValue={(book.keywords ?? []).join(', ')} />
+                <input name="keywords" type="text" placeholder="SQL, RDBMS, 실무 데이터" />
               </label>
             </div>
           </section>
@@ -467,7 +426,7 @@ export function AdminBookEditPage() {
             <div className={styles.fieldGrid}>
               <label className={styles.wide}>
                 문학 카테고리
-                <select name="categoryIds" multiple size={5} defaultValue={(book.categoryIds ?? []).map(String)}>
+                <select name="categoryIds" multiple size={5} defaultValue={(book.categories ?? []).map((category) => String(category.categoryId))}>
                   {categories.map((category) => (
                     <option value={category.categoryId} key={category.categoryId}>
                       {category.name || category.categoryName}
@@ -522,20 +481,20 @@ export function AdminBookEditPage() {
               <textarea
                 name="description"
                 placeholder="데이터베이스의 기본 개념과 실무 활용을 함께 익힐 수 있는 도서입니다."
-                defaultValue={book.description ?? ''}
+                defaultValue={book.detail?.description ?? ''}
               />
             </label>
             <div className={styles.fieldGrid}>
               <label>
                 목차
-                <textarea name="tableOfContents" placeholder={'1장 데이터 모델\n2장 SQL 기초'} defaultValue={book.tableOfContents ?? ''} />
+                <textarea name="tableOfContents" placeholder={'1장 데이터 모델\n2장 SQL 기초'} defaultValue={book.detail?.tableOfContents ?? ''} />
               </label>
               <label>
                 출판사 리뷰/상세 내용
                 <textarea
                   name="publisherReview"
                   placeholder="학습자를 위한 구성과 실무 예제를 담았습니다."
-                  defaultValue={book.publisherReview ?? ''}
+                  defaultValue={book.detail?.publisherReview ?? ''}
                 />
               </label>
             </div>

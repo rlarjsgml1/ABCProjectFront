@@ -1,7 +1,16 @@
 // 회원 상세(A003) 화면 — 회원 상세 정보와 이용 이력을 조회하고 상태 변경/포인트 지급·차감을 담당한다
 import { FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { adjustAdminMemberPoint, changeAdminMemberStatus, getAdminMember } from '../../../api/adminMemberApi';
+import {
+  adjustAdminMemberPoint,
+  changeAdminMemberStatus,
+  getAdminMember,
+  getAdminMemberPayments,
+  getAdminMemberPoints,
+  getAdminMemberRentals,
+  getAdminMemberReports,
+  getAdminMemberSanctions,
+} from '../../../api/adminMemberApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
 import type {
@@ -10,7 +19,6 @@ import type {
   AdminMemberPointHistory,
   AdminMemberReportHistory,
   AdminMemberRentalHistory,
-  AdminMemberReviewHistory,
   AdminMemberSanctionHistory,
   AdminMemberStatus,
   AdminMemberStatusChangeRequest,
@@ -18,7 +26,9 @@ import type {
 } from '../../../types/api';
 import styles from '../../../styles/AdminMemberDetailPage.module.css';
 
-type HistoryTab = 'rentals' | 'payments' | 'reviews' | 'reports' | 'points' | 'sanctions';
+// 'reviews'는 백엔드 탭(RENTALS/PAYMENTS/REPORTS/POINTS/SANCTIONS)에 대응 항목이 없다 — 리뷰 신고는
+// REPORTS 탭(reportSourceType=REVIEW_REPORT)으로 이미 포함되고, 별도 리뷰 이력 API는 없다.
+type HistoryTab = 'rentals' | 'payments' | 'reports' | 'points' | 'sanctions';
 
 const statusOptions: Array<{ value: AdminMemberStatus; label: string }> = [
   { value: 'JOINED', label: '가입' },
@@ -32,16 +42,16 @@ const roleLabels = {
   ADMIN: '관리자',
 };
 
+// 백엔드는 sanctionType=RENTAL_BAN/REVIEW_BAN일 때 status가 JOINED로 유지되어야 한다고 요구한다.
+// 이 화면은 status=SANCTIONED 선택 시에만 제재 유형을 입력하는 흐름이라, 새 UI 흐름 없이는 그 두
+// 유형을 지원할 수 없어 범위에서 제외한다(A002 목록 화면과 동일한 판단).
 const sanctionTypeOptions: Array<{ value: AdminSanctionType; label: string }> = [
   { value: 'ACCOUNT_SUSPENSION', label: '계정 정지' },
-  { value: 'SERVICE_LIMIT', label: '서비스 제한' },
-  { value: 'WARNING', label: '경고' },
 ];
 
 const tabs: Array<{ value: HistoryTab; label: string }> = [
   { value: 'rentals', label: '대여 내역' },
   { value: 'payments', label: '결제 내역' },
-  { value: 'reviews', label: '리뷰 내역' },
   { value: 'reports', label: '책/리뷰 신고 내역' },
   { value: 'points', label: '포인트 이력' },
   { value: 'sanctions', label: '제재 이력' },
@@ -83,7 +93,7 @@ function formatPoint(value: number | undefined) {
 }
 
 function getSanctionText(member: AdminMemberDetail) {
-  const sanction = member.currentSanction;
+  const sanction = member.usageSummary.activeSanctions[0];
   if (!sanction) return '없음';
 
   const type = getOptionLabel(sanctionTypeOptions, sanction.sanctionType);
@@ -92,99 +102,24 @@ function getSanctionText(member: AdminMemberDetail) {
   return [type, endedAt].filter(Boolean).join(' · ');
 }
 
-function createFallbackMember(memberId: number): AdminMemberDetail {
-  return {
-    memberId: Number.isFinite(memberId) ? memberId : 1024,
-    loginId: 'park_reader',
-    name: '박서연',
-    email: 'seoyeon.park@example.com',
-    phone: '010-1234-5678',
-    birthDate: '1994-03-12',
-    gender: '여성',
-    role: 'USER',
-    gradeId: 4,
-    gradeName: '숲',
-    pointBalance: 18500,
-    status: 'JOINED',
-    currentSanction: null,
-    createdAt: '2026-01-12T10:20:00',
-    usageSummary: {
-      rentalCount: 32,
-      paymentAmount: 86000,
-      reportCount: 1,
-      reviewCount: 12,
-      completedBookCount: 18,
-      readingBookCount: 3,
-    },
-    rentalHistories: [
-      {
-        rentalId: 401,
-        bookTitle: '데이터베이스 첫걸음',
-        status: 'READING',
-        progressRate: 68,
-        rentedAt: '2026-06-08T12:20:00',
-      },
-    ],
-    paymentHistories: [
-      {
-        paymentId: 201,
-        bookTitle: '리액트 운영 패턴',
-        originalAmount: 26500,
-        discountAmount: 3000,
-        paidAmount: 23500,
-        status: '완료',
-        paidAt: '2026-06-18T18:40:00',
-      },
-    ],
-    reviewHistories: [
-      {
-        reviewId: 811,
-        bookTitle: '클린 코드 실전편',
-        rating: 4,
-        status: '게시',
-        createdAt: '2026-06-20T09:10:00',
-      },
-    ],
-    reportHistories: [
-      {
-        reportId: 77,
-        targetType: 'REVIEW',
-        reason: '스포일러 포함',
-        status: 'DONE',
-        createdAt: '2026-06-22T11:30:00',
-      },
-    ],
-    pointHistories: [
-      {
-        pointHistoryId: 301,
-        pointType: '적립',
-        pointAmount: 1500,
-        description: '챌린지 보상',
-        createdAt: '2026-06-24T14:00:00',
-      },
-    ],
-    sanctionHistories: [
-      {
-        sanctionHistoryId: 31,
-        sanctionType: 'WARNING',
-        reason: '리뷰 표현 주의',
-        startedAt: '2026-05-02',
-        endedAt: '2026-05-02',
-        status: '완료',
-      },
-    ],
-  };
-}
-
 export function AdminMemberDetailPage() {
   const { memberId } = useParams();
   const navigate = useNavigate();
   const numericMemberId = Number(memberId);
   const [member, setMember] = useState<AdminMemberDetail | null>(null);
+  const [sanctionCount, setSanctionCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
+  const [refreshToken, setRefreshToken] = useState(0);
   const [activeTab, setActiveTab] = useState<HistoryTab>('rentals');
+  const [rentalHistories, setRentalHistories] = useState<AdminMemberRentalHistory[]>([]);
+  const [paymentHistories, setPaymentHistories] = useState<AdminMemberPaymentHistory[]>([]);
+  const [reportHistories, setReportHistories] = useState<AdminMemberReportHistory[]>([]);
+  const [pointHistories, setPointHistories] = useState<AdminMemberPointHistory[]>([]);
+  const [sanctionHistories, setSanctionHistories] = useState<AdminMemberSanctionHistory[]>([]);
+  const [isTabLoading, setIsTabLoading] = useState(false);
+  const [tabErrorMessage, setTabErrorMessage] = useState('');
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isPointModalOpen, setIsPointModalOpen] = useState(false);
   const [modalError, setModalError] = useState('');
@@ -213,8 +148,8 @@ export function AdminMemberDetailPage() {
       const data = await getAdminMember(numericMemberId);
       setMember(data);
     } catch (error) {
-      setMember(createFallbackMember(numericMemberId));
-      setErrorMessage(`${getApiErrorMessage(error)} 화면 확인을 위해 임시 회원 상세를 표시합니다.`);
+      setMember(null);
+      setErrorMessage(getApiErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
@@ -224,13 +159,73 @@ export function AdminMemberDetailPage() {
     void loadMember();
   }, [numericMemberId]);
 
+  // usageSummary.activeSanctions는 "현재 유효한" 제재만 담고 있어 전체 제재 이력 건수와 다르다 —
+  // 정확한 총 건수는 제재 탭 조회의 totalElements로만 확인할 수 있어 별도로 가져온다.
+  useEffect(() => {
+    if (!Number.isFinite(numericMemberId)) return;
+
+    let ignore = false;
+
+    getAdminMemberSanctions(numericMemberId, 0, 1)
+      .then((result) => {
+        if (!ignore) setSanctionCount(result.tab.totalElements);
+      })
+      .catch(() => {
+        if (!ignore) setSanctionCount(0);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [numericMemberId, refreshToken]);
+
+  useEffect(() => {
+    if (!Number.isFinite(numericMemberId)) return;
+
+    let ignore = false;
+
+    async function loadTab() {
+      setIsTabLoading(true);
+      setTabErrorMessage('');
+
+      try {
+        if (activeTab === 'rentals') {
+          const result = await getAdminMemberRentals(numericMemberId);
+          if (!ignore) setRentalHistories(result.tab.content);
+        } else if (activeTab === 'payments') {
+          const result = await getAdminMemberPayments(numericMemberId);
+          if (!ignore) setPaymentHistories(result.tab.content);
+        } else if (activeTab === 'reports') {
+          const result = await getAdminMemberReports(numericMemberId);
+          if (!ignore) setReportHistories(result.tab.content);
+        } else if (activeTab === 'points') {
+          const result = await getAdminMemberPoints(numericMemberId);
+          if (!ignore) setPointHistories(result.tab.content);
+        } else {
+          const result = await getAdminMemberSanctions(numericMemberId);
+          if (!ignore) setSanctionHistories(result.tab.content);
+        }
+      } catch (error) {
+        if (!ignore) setTabErrorMessage(getApiErrorMessage(error));
+      } finally {
+        if (!ignore) setIsTabLoading(false);
+      }
+    }
+
+    void loadTab();
+
+    return () => {
+      ignore = true;
+    };
+  }, [activeTab, numericMemberId, refreshToken]);
+
   function openStatusModal() {
     if (!member) return;
 
     setStatusForm({
-      status: member.status,
+      status: member.profile.status,
       reason: '',
-      sanctionType: member.currentSanction?.sanctionType as AdminSanctionType | undefined,
+      sanctionType: member.usageSummary.activeSanctions[0]?.sanctionType as AdminSanctionType | undefined,
       startedAt: '',
       endedAt: '',
     });
@@ -283,26 +278,9 @@ export function AdminMemberDetailPage() {
       setStatusMessage('회원 상태가 변경되었습니다.');
       setIsStatusModalOpen(false);
       await loadMember();
-    } catch {
-      setMember((current) =>
-        current
-          ? {
-              ...current,
-              status: statusForm.status,
-              currentSanction:
-                statusForm.status === 'SANCTIONED'
-                  ? {
-                      sanctionType: statusForm.sanctionType,
-                      startedAt: statusForm.startedAt,
-                      endedAt: statusForm.endedAt,
-                      reason: statusForm.reason,
-                    }
-                  : null,
-            }
-          : current,
-      );
-      setStatusMessage('임시 데이터에 회원 상태 변경을 반영했습니다.');
-      setIsStatusModalOpen(false);
+      setRefreshToken((token) => token + 1);
+    } catch (error) {
+      setModalError(getApiErrorMessage(error));
     } finally {
       setIsSaving(false);
     }
@@ -319,7 +297,7 @@ export function AdminMemberDetailPage() {
       return;
     }
 
-    if (pointAmount < 0 && member.pointBalance + pointAmount < 0) {
+    if (pointAmount < 0 && member.usageSummary.pointBalance + pointAmount < 0) {
       setModalError('포인트 차감액은 현재 잔액보다 클 수 없습니다.');
       return;
     }
@@ -336,31 +314,14 @@ export function AdminMemberDetailPage() {
       await adjustAdminMemberPoint(member.memberId, {
         pointAmount,
         description: pointForm.description.trim(),
+        requestId: crypto.randomUUID(),
       });
       setStatusMessage('회원 포인트가 조정되었습니다.');
       setIsPointModalOpen(false);
       await loadMember();
-    } catch {
-      setMember((current) =>
-        current
-          ? {
-              ...current,
-              pointBalance: current.pointBalance + pointAmount,
-              pointHistories: [
-                {
-                  pointHistoryId: Date.now(),
-                  pointType: pointAmount > 0 ? '지급' : '차감',
-                  pointAmount,
-                  description: pointForm.description.trim(),
-                  createdAt: new Date().toISOString(),
-                },
-                ...current.pointHistories,
-              ],
-            }
-          : current,
-      );
-      setStatusMessage('임시 데이터에 포인트 조정을 반영했습니다.');
-      setIsPointModalOpen(false);
+      setRefreshToken((token) => token + 1);
+    } catch (error) {
+      setModalError(getApiErrorMessage(error));
     } finally {
       setIsSaving(false);
     }
@@ -411,24 +372,24 @@ export function AdminMemberDetailPage() {
         <InfoCard
           title="기본 정보"
           rows={[
-            ['아이디', member.loginId],
-            ['이름', member.name],
-            ['이메일', member.email],
-            ['전화번호', member.phone ?? '-'],
-            ['생년월일', formatDate(member.birthDate)],
-            ['성별', member.gender ?? '-'],
+            ['아이디', member.profile.loginId],
+            ['이름', member.profile.name],
+            ['이메일', member.profile.email],
+            ['전화번호', member.profile.phone ?? '-'],
+            ['생년월일', formatDate(member.profile.birthDate)],
+            ['성별', member.profile.gender ?? '-'],
           ]}
         />
         <InfoCard
           title="계정 정보"
-          badge={getOptionLabel(statusOptions, member.status)}
-          badgeTone={member.status}
+          badge={getOptionLabel(statusOptions, member.profile.status)}
+          badgeTone={member.profile.status}
           rows={[
-            ['역할', roleLabels[member.role] ?? member.role],
-            ['상태', getOptionLabel(statusOptions, member.status)],
-            ['등급', member.gradeName ?? '-'],
-            ['포인트', formatPoint(member.pointBalance)],
-            ['제재 이력 요약', `${member.sanctionHistories.length}건`],
+            ['역할', roleLabels[member.profile.role] ?? member.profile.role],
+            ['상태', getOptionLabel(statusOptions, member.profile.status)],
+            ['등급', member.profile.gradeName ?? '-'],
+            ['포인트', formatPoint(member.usageSummary.pointBalance)],
+            ['제재 이력 요약', `${sanctionCount}건`],
             ['현재 유효 제재', getSanctionText(member)],
           ]}
         />
@@ -436,10 +397,10 @@ export function AdminMemberDetailPage() {
           title="이용 요약"
           rows={[
             ['대여', `${member.usageSummary.rentalCount.toLocaleString('ko-KR')}건`],
-            ['결제', formatMoney(member.usageSummary.paymentAmount)],
+            ['결제', `${member.usageSummary.paymentCount.toLocaleString('ko-KR')}건`],
             ['책/리뷰 신고', `${member.usageSummary.reportCount.toLocaleString('ko-KR')}건`],
-            ['리뷰', `${member.usageSummary.reviewCount.toLocaleString('ko-KR')}건`],
-            ['독서 통계', `완독 ${member.usageSummary.completedBookCount}권 · 진행 ${member.usageSummary.readingBookCount}권`],
+            ['리뷰', '-'],
+            ['독서 통계', '-'],
             [
               '전체보기',
               <div className={styles.inlineActions} key="links">
@@ -460,7 +421,18 @@ export function AdminMemberDetailPage() {
           ))}
         </div>
 
-        <HistoryTable activeTab={activeTab} member={member} />
+        {tabErrorMessage ? <p className={styles.notice}>{tabErrorMessage}</p> : null}
+
+        <HistoryTable
+          activeTab={activeTab}
+          memberId={member.memberId}
+          isLoading={isTabLoading}
+          rentalHistories={rentalHistories}
+          paymentHistories={paymentHistories}
+          reportHistories={reportHistories}
+          pointHistories={pointHistories}
+          sanctionHistories={sanctionHistories}
+        />
       </div>
 
       {isStatusModalOpen ? (
@@ -470,7 +442,7 @@ export function AdminMemberDetailPage() {
               <div>
                 <h2 id="member-status-modal-title">회원 상태 변경</h2>
                 <p>
-                  {member.loginId} / {member.name}
+                  {member.profile.loginId} / {member.profile.name}
                 </p>
               </div>
               <button type="button" aria-label="닫기" onClick={closeModals}>
@@ -546,7 +518,7 @@ export function AdminMemberDetailPage() {
             <div className={styles.modalHeader}>
               <div>
                 <h2 id="member-point-modal-title">포인트 지급/차감</h2>
-                <p>현재 잔액 {formatPoint(member.pointBalance)}</p>
+                <p>현재 잔액 {formatPoint(member.usageSummary.pointBalance)}</p>
               </div>
               <button type="button" aria-label="닫기" onClick={closeModals}>
                 ×
@@ -609,31 +581,97 @@ function InfoCard({
   );
 }
 
-function HistoryTable({ activeTab, member }: { activeTab: HistoryTab; member: AdminMemberDetail }) {
+function HistoryTable({
+  activeTab,
+  memberId,
+  isLoading,
+  rentalHistories,
+  paymentHistories,
+  reportHistories,
+  pointHistories,
+  sanctionHistories,
+}: {
+  activeTab: HistoryTab;
+  memberId: number;
+  isLoading: boolean;
+  rentalHistories: AdminMemberRentalHistory[];
+  paymentHistories: AdminMemberPaymentHistory[];
+  reportHistories: AdminMemberReportHistory[];
+  pointHistories: AdminMemberPointHistory[];
+  sanctionHistories: AdminMemberSanctionHistory[];
+}) {
   if (activeTab === 'rentals') {
-    return <Table rows={member.rentalHistories} emptyMessage="대여 내역이 없습니다." columns={['도서', '상태', '진행률', '일자', '관리']} renderRow={(item) => <RentalRow item={item} memberId={member.memberId} />} />;
+    return (
+      <Table
+        rows={rentalHistories}
+        isLoading={isLoading}
+        emptyMessage="대여 내역이 없습니다."
+        columns={['도서', '상태', '대여 기간', '등록일', '관리']}
+        renderRow={(item) => <RentalRow item={item} memberId={memberId} />}
+      />
+    );
   }
 
   if (activeTab === 'payments') {
-    return <Table rows={member.paymentHistories} emptyMessage="결제 내역이 없습니다." columns={['도서', '금액', '상태', '일자', '관리']} renderRow={(item) => <PaymentRow item={item} memberId={member.memberId} />} />;
-  }
-
-  if (activeTab === 'reviews') {
-    return <Table rows={member.reviewHistories} emptyMessage="리뷰 내역이 없습니다." columns={['도서', '별점', '상태', '일자', '관리']} renderRow={(item) => <ReviewRow item={item} />} />;
+    return (
+      <Table
+        rows={paymentHistories}
+        isLoading={isLoading}
+        emptyMessage="결제 내역이 없습니다."
+        columns={['도서', '금액', '결제수단/상태', '결제일', '관리']}
+        renderRow={(item) => <PaymentRow item={item} memberId={memberId} />}
+      />
+    );
   }
 
   if (activeTab === 'reports') {
-    return <Table rows={member.reportHistories} emptyMessage="신고 내역이 없습니다." columns={['대상', '내용', '상태', '일자', '관리']} renderRow={(item) => <ReportRow item={item} />} />;
+    return (
+      <Table
+        rows={reportHistories}
+        isLoading={isLoading}
+        emptyMessage="신고 내역이 없습니다."
+        columns={['구분', '신고 유형', '상태', '일자', '관리']}
+        renderRow={(item) => <ReportRow item={item} />}
+      />
+    );
   }
 
   if (activeTab === 'points') {
-    return <Table rows={member.pointHistories} emptyMessage="포인트 이력이 없습니다." columns={['이력 구분', '내용', '포인트', '일자', '관리']} renderRow={(item) => <PointRow item={item} />} />;
+    return (
+      <Table
+        rows={pointHistories}
+        isLoading={isLoading}
+        emptyMessage="포인트 이력이 없습니다."
+        columns={['이력 구분', '내용', '포인트', '일자', '관리']}
+        renderRow={(item) => <PointRow item={item} />}
+      />
+    );
   }
 
-  return <Table rows={member.sanctionHistories} emptyMessage="제재 이력이 없습니다." columns={['제재 유형', '사유', '상태', '기간', '관리']} renderRow={(item) => <SanctionRow item={item} />} />;
+  return (
+    <Table
+      rows={sanctionHistories}
+      isLoading={isLoading}
+      emptyMessage="제재 이력이 없습니다."
+      columns={['제재 유형', '사유', '기간', '등록일', '관리']}
+      renderRow={(item) => <SanctionRow item={item} />}
+    />
+  );
 }
 
-function Table<T>({ rows, columns, emptyMessage, renderRow }: { rows: T[]; columns: string[]; emptyMessage: string; renderRow: (item: T) => JSX.Element }) {
+function Table<T>({
+  rows,
+  columns,
+  emptyMessage,
+  renderRow,
+  isLoading,
+}: {
+  rows: T[];
+  columns: string[];
+  emptyMessage: string;
+  renderRow: (item: T) => JSX.Element;
+  isLoading: boolean;
+}) {
   return (
     <div className={styles.tableWrap}>
       <table className={styles.table}>
@@ -645,7 +683,11 @@ function Table<T>({ rows, columns, emptyMessage, renderRow }: { rows: T[]; colum
           </tr>
         </thead>
         <tbody>
-          {rows.length > 0 ? (
+          {isLoading ? (
+            <tr>
+              <td colSpan={columns.length}>불러오는 중입니다.</td>
+            </tr>
+          ) : rows.length > 0 ? (
             rows.map(renderRow)
           ) : (
             <tr>
@@ -662,9 +704,11 @@ function RentalRow({ item, memberId }: { item: AdminMemberRentalHistory; memberI
   return (
     <tr>
       <td>{item.bookTitle}</td>
-      <td>{item.status}</td>
-      <td>{item.progressRate ?? 0}%</td>
-      <td>{formatDateTime(item.rentedAt)}</td>
+      <td>{item.rentalStatus}</td>
+      <td>
+        {formatDate(item.rentalStartAt)} ~ {formatDate(item.rentalEndAt)}
+      </td>
+      <td>{formatDateTime(item.createdAt)}</td>
       <td>
         <Link className={styles.tableAction} to={`/admin/rentals?memberId=${memberId}`}>
           대여 전체보기
@@ -678,11 +722,10 @@ function PaymentRow({ item, memberId }: { item: AdminMemberPaymentHistory; membe
   return (
     <tr>
       <td>{item.bookTitle}</td>
+      <td>{formatMoney(item.amount)}</td>
       <td>
-        {formatMoney(item.paidAmount)}
-        <span className={styles.subText}>할인 {formatMoney(item.discountAmount)}</span>
+        {item.paymentMethod} · {item.paymentStatus}
       </td>
-      <td>{item.status}</td>
       <td>{formatDateTime(item.paidAt)}</td>
       <td>
         <Link className={styles.tableAction} to={`/admin/payments?memberId=${memberId}`}>
@@ -693,25 +736,13 @@ function PaymentRow({ item, memberId }: { item: AdminMemberPaymentHistory; membe
   );
 }
 
-function ReviewRow({ item }: { item: AdminMemberReviewHistory }) {
-  return (
-    <tr>
-      <td>{item.bookTitle}</td>
-      <td>{item.rating}점</td>
-      <td>{item.status}</td>
-      <td>{formatDateTime(item.createdAt)}</td>
-      <td>-</td>
-    </tr>
-  );
-}
-
 function ReportRow({ item }: { item: AdminMemberReportHistory }) {
   return (
     <tr>
-      <td>{item.targetType}</td>
-      <td>{item.reason}</td>
+      <td>{item.reportSourceType === 'REVIEW_REPORT' ? '리뷰 신고' : '도서 신고'}</td>
+      <td>{item.reportType}</td>
       <td>{item.status}</td>
-      <td>{formatDateTime(item.createdAt)}</td>
+      <td>{formatDateTime(item.processedAt ?? item.createdAt)}</td>
       <td>-</td>
     </tr>
   );
@@ -734,10 +765,10 @@ function SanctionRow({ item }: { item: AdminMemberSanctionHistory }) {
     <tr>
       <td>{getOptionLabel(sanctionTypeOptions, item.sanctionType)}</td>
       <td>{item.reason ?? '-'}</td>
-      <td>{item.status ?? '-'}</td>
       <td>
         {formatDate(item.startedAt)} ~ {formatDate(item.endedAt)}
       </td>
+      <td>{formatDateTime(item.createdAt)}</td>
       <td>-</td>
     </tr>
   );

@@ -28,52 +28,11 @@ const gradeOptions = [
   { value: '4', label: '숲' },
 ];
 
+// 백엔드는 sanctionType=RENTAL_BAN/REVIEW_BAN일 때 회원 status가 JOINED로 유지되어야 한다고 요구한다.
+// 이 화면은 status=SANCTIONED 선택 시에만 제재 유형을 입력하는 기존 흐름이라, status를 바꾸지 않는
+// 소프트 제재(RENTAL_BAN/REVIEW_BAN)는 새 UI 흐름 없이는 지원할 수 없어 범위에서 제외한다.
 const sanctionTypeOptions: Array<{ value: AdminSanctionType; label: string }> = [
   { value: 'ACCOUNT_SUSPENSION', label: '계정 정지' },
-  { value: 'SERVICE_LIMIT', label: '서비스 제한' },
-  { value: 'WARNING', label: '경고' },
-];
-
-const fallbackMembers: AdminMemberSummary[] = [
-  {
-    memberId: 1024,
-    loginId: 'park_reader',
-    name: '박서연',
-    email: 'seoyeon.park@example.com',
-    role: 'USER',
-    gradeId: 4,
-    gradeName: '숲',
-    pointBalance: 12300,
-    status: 'JOINED',
-    currentSanction: null,
-  },
-  {
-    memberId: 991,
-    loginId: 'read_admin',
-    name: '김도윤',
-    email: 'admin@example.com',
-    role: 'ADMIN',
-    pointBalance: 0,
-    status: 'JOINED',
-    currentSanction: null,
-  },
-  {
-    memberId: 873,
-    loginId: 'review_stop',
-    name: '이민준',
-    email: 'minjun@example.com',
-    role: 'USER',
-    gradeId: 1,
-    gradeName: '씨앗',
-    pointBalance: 1500,
-    status: 'SANCTIONED',
-    currentSanction: {
-      sanctionType: 'ACCOUNT_SUSPENSION',
-      startedAt: '2026-07-02T09:00:00',
-      endedAt: '2026-07-16T23:59:00',
-      reason: '리뷰 신고 누적',
-    },
-  },
 ];
 
 function toApiPage(uiPage: number) {
@@ -86,10 +45,6 @@ function toUiPage(apiPage: number | undefined) {
 
 function getOptionLabel<T extends string>(options: Array<{ value: T; label: string }>, value: T | string | undefined) {
   return options.find((option) => option.value === value)?.label ?? value ?? '-';
-}
-
-function formatPoint(value: number | undefined) {
-  return `${(value ?? 0).toLocaleString('ko-KR')}P`;
 }
 
 function formatDateTime(value: string | undefined) {
@@ -107,38 +62,13 @@ function formatDateTime(value: string | undefined) {
 }
 
 function getSanctionText(member: AdminMemberSummary) {
-  const sanction = member.currentSanction;
+  const sanction = member.activeSanctions[0];
   if (!sanction) return '-';
 
   const type = getOptionLabel(sanctionTypeOptions, sanction.sanctionType);
   const endedAt = formatDateTime(sanction.endedAt);
 
   return endedAt ? `${type} · ${endedAt} 종료` : type;
-}
-
-function buildFallbackMemberPage(query: AdminMemberListQuery): PageResponse<AdminMemberSummary> {
-  const keyword = query.q?.trim().toLowerCase();
-  const filtered = fallbackMembers.filter((member) => {
-    const matchesKeyword = keyword ? [member.name, member.loginId, member.email].join(' ').toLowerCase().includes(keyword) : true;
-    const matchesStatus = query.status ? member.status === query.status : true;
-    const matchesRole = query.role ? member.role === query.role : true;
-    const matchesGrade = query.gradeId ? member.gradeId === query.gradeId : true;
-
-    return matchesKeyword && matchesStatus && matchesRole && matchesGrade;
-  });
-
-  const page = query.page ?? 0;
-  const size = query.size ?? PAGE_SIZE;
-  const start = page * size;
-
-  return {
-    content: filtered.slice(start, start + size),
-    page,
-    size,
-    totalElements: filtered.length,
-    totalPages: Math.max(Math.ceil(filtered.length / size), 1),
-    last: start + size >= filtered.length,
-  };
 }
 
 export function AdminMemberListPage() {
@@ -185,8 +115,8 @@ export function AdminMemberListPage() {
         }
       } catch (error) {
         if (!ignore) {
-          setMembersPage(buildFallbackMemberPage(query));
-          setErrorMessage(`${getApiErrorMessage(error)} 화면 확인을 위해 임시 회원 목록을 표시합니다.`);
+          setMembersPage(null);
+          setErrorMessage(getApiErrorMessage(error));
         }
       } finally {
         if (!ignore) {
@@ -241,7 +171,7 @@ export function AdminMemberListPage() {
     setStatusForm({
       status: member.status,
       reason: '',
-      sanctionType: member.currentSanction?.sanctionType as AdminSanctionType | undefined,
+      sanctionType: member.activeSanctions[0]?.sanctionType as AdminSanctionType | undefined,
       startedAt: '',
       endedAt: '',
     });
@@ -284,57 +214,11 @@ export function AdminMemberListPage() {
       await changeAdminMemberStatus(selectedMember.memberId, statusForm);
       setStatusMessage('회원 상태가 변경되었습니다.');
       setSelectedMember(null);
-      setMembersPage((current) => {
-        if (!current) return current;
 
-        return {
-          ...current,
-          content: current.content.map((member) =>
-            member.memberId === selectedMember.memberId
-              ? {
-                  ...member,
-                  status: statusForm.status,
-                  currentSanction:
-                    statusForm.status === 'SANCTIONED'
-                      ? {
-                          sanctionType: statusForm.sanctionType,
-                          startedAt: statusForm.startedAt,
-                          endedAt: statusForm.endedAt,
-                          reason: statusForm.reason,
-                        }
-                      : null,
-                }
-              : member,
-          ),
-        };
-      });
-    } catch {
-      setStatusMessage('임시 데이터에 회원 상태 변경을 반영했습니다.');
-      setSelectedMember(null);
-      setMembersPage((current) => {
-        if (!current) return current;
-
-        return {
-          ...current,
-          content: current.content.map((member) =>
-            member.memberId === selectedMember.memberId
-              ? {
-                  ...member,
-                  status: statusForm.status,
-                  currentSanction:
-                    statusForm.status === 'SANCTIONED'
-                      ? {
-                          sanctionType: statusForm.sanctionType,
-                          startedAt: statusForm.startedAt,
-                          endedAt: statusForm.endedAt,
-                          reason: statusForm.reason,
-                        }
-                      : null,
-                }
-              : member,
-          ),
-        };
-      });
+      const refreshed = await getAdminMembers(query);
+      setMembersPage(refreshed);
+    } catch (error) {
+      setModalError(getApiErrorMessage(error));
     } finally {
       setIsSavingStatus(false);
     }
@@ -450,11 +334,11 @@ export function AdminMemberListPage() {
                           <span>{member.name}</span>
                         </Link>
                       </td>
-                      <td>{member.email}</td>
+                      <td>{member.maskedEmail}</td>
                       <td>
                         {getOptionLabel(roleOptions, member.role)} / {member.gradeName ?? '-'}
                       </td>
-                      <td>{formatPoint(member.pointBalance)}</td>
+                      <td>-</td>
                       <td>
                         <span className={`${styles.statusBadge} ${styles[`status${member.status}`]}`}>{getOptionLabel(statusOptions, member.status)}</span>
                       </td>
@@ -488,7 +372,7 @@ export function AdminMemberListPage() {
                 })
               ) : (
                 <tr>
-                  <td colSpan={8}>검색 조건에 맞는 회원이 없습니다.</td>
+                  <td colSpan={8}>{errorMessage ? '회원 목록을 불러오지 못했습니다.' : '검색 조건에 맞는 회원이 없습니다.'}</td>
                 </tr>
               )}
             </tbody>

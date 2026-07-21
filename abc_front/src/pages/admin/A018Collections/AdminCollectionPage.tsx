@@ -1,5 +1,7 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import {
+  createAdminCollection,
+  getAdminCollectionDetail,
   getAdminCollections,
   patchAdminCollection,
   saveAdminCollection,
@@ -9,6 +11,7 @@ import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
 import type {
   AdminCollectionBookItem,
+  AdminCollectionDetail,
   AdminCollectionItem,
   AdminCollectionListQuery,
   AdminCollectionSaveRequest,
@@ -29,76 +32,6 @@ const statusOptions: Array<{ value: AdminCollectionStatus; label: string }> = [
   { value: 'ACTIVE', label: '활성' },
   { value: 'HIDDEN', label: '숨김' },
   { value: 'ENDED', label: '종료' },
-];
-
-const fallbackCollections: AdminCollectionItem[] = [
-  {
-    collectionId: 1001,
-    collectionName: '이번 주 ABC 추천 도서',
-    collectionType: 'EVENT',
-    discountRate: 20,
-    description: '메인에서 노출할 주간 추천 도서 묶음입니다.',
-    startDate: '2026-07-01',
-    endDate: '2026-07-31',
-    status: 'ACTIVE',
-    displayOrder: 1,
-    bookCount: 4,
-    books: [
-      { bookId: 101, title: '책방의 계절', author: '이서윤', publisherName: '미래출판', displayOrder: 1 },
-      { bookId: 102, title: '해커스 토익 기출 VOCA', author: '김하늘', publisherName: 'ABC Press', displayOrder: 2 },
-      { bookId: 103, title: '유럽 도시 기행', author: '이서윤', publisherName: '여행책방', displayOrder: 3 },
-      { bookId: 104, title: '나의 첫 번째 부동산 교과서', author: '김하늘', publisherName: 'ABC Press', displayOrder: 4 },
-    ],
-  },
-  {
-    collectionId: 1002,
-    collectionName: '전자책 입문 시리즈',
-    collectionType: 'SERIES',
-    discountRate: 0,
-    description: '처음 전자책을 읽는 사용자를 위한 기본 시리즈입니다.',
-    startDate: '2026-07-01',
-    endDate: '2026-12-31',
-    status: 'ACTIVE',
-    displayOrder: 2,
-    bookCount: 3,
-    books: [
-      { bookId: 201, title: '처음 만나는 전자책', author: '박도윤', publisherName: '디지털북스', displayOrder: 1 },
-      { bookId: 202, title: '독서 습관 만들기', author: '최민지', publisherName: 'ABC Press', displayOrder: 2 },
-      { bookId: 203, title: '모바일 독서법', author: '한지우', publisherName: '미래출판', displayOrder: 3 },
-    ],
-  },
-  {
-    collectionId: 1003,
-    collectionName: '여름방학 무료책 모음',
-    collectionType: 'EVENT',
-    discountRate: 100,
-    description: '방학 기간에 무료로 노출할 이벤트 컬렉션입니다.',
-    startDate: '2026-07-10',
-    endDate: '2026-08-20',
-    status: 'HIDDEN',
-    displayOrder: 3,
-    bookCount: 2,
-    books: [
-      { bookId: 301, title: '방학에 읽는 과학', author: '정유나', publisherName: '청림', displayOrder: 1 },
-      { bookId: 302, title: '청소년을 위한 경제', author: '서도현', publisherName: 'ABC Press', displayOrder: 2 },
-    ],
-  },
-  {
-    collectionId: 1004,
-    collectionName: '상반기 베스트 시리즈',
-    collectionType: 'SERIES',
-    discountRate: 10,
-    description: '상반기 베스트셀러를 묶은 시리즈입니다.',
-    startDate: '2026-01-01',
-    endDate: '2026-06-30',
-    status: 'ENDED',
-    displayOrder: 4,
-    bookCount: 5,
-    books: [
-      { bookId: 401, title: '일 잘하는 사람의 문장', author: '김하늘', publisherName: 'ABC Press', displayOrder: 1 },
-      { bookId: 402, title: '품격 있는 대화를 위하여', author: '이서윤', publisherName: '문장사', displayOrder: 2 },
-    ],
-  },
 ];
 
 function toApiPage(uiPage: number) {
@@ -122,69 +55,26 @@ function formatPeriod(collection: AdminCollectionItem) {
   return `${collection.startDate ?? '-'} ~ ${collection.endDate ?? '-'}`;
 }
 
-function buildFallbackPage(query: AdminCollectionListQuery): PageResponse<AdminCollectionItem> {
-  const keyword = query.q?.trim().toLowerCase();
-  const filtered = fallbackCollections.filter((collection) => {
-    const matchesKeyword = keyword
-      ? [collection.collectionName, collection.description].join(' ').toLowerCase().includes(keyword)
-      : true;
-    const matchesType = query.collectionType ? collection.collectionType === query.collectionType : true;
-    const matchesStatus = query.status ? collection.status === query.status : true;
-
-    return matchesKeyword && matchesType && matchesStatus;
-  });
-
-  const page = query.page ?? 0;
-  const size = query.size ?? PAGE_SIZE;
-  const start = page * size;
-
-  return {
-    content: filtered.slice(start, start + size),
-    page,
-    size,
-    totalElements: filtered.length,
-    totalPages: Math.max(Math.ceil(filtered.length / size), 1),
-    last: start + size >= filtered.length,
-  };
-}
-
-function updateCollection(
-  collections: AdminCollectionItem[],
-  collectionId: number,
-  updater: (collection: AdminCollectionItem) => AdminCollectionItem,
-) {
-  return collections.map((collection) => (collection.collectionId === collectionId ? updater(collection) : collection));
-}
-
-function buildPageFromCollections(collections: AdminCollectionItem[], query: AdminCollectionListQuery): PageResponse<AdminCollectionItem> {
-  const page = buildFallbackPage(query);
-  const keyword = query.q?.trim().toLowerCase();
-  const filtered = collections.filter((collection) => {
-    const matchesKeyword = keyword
-      ? [collection.collectionName, collection.description].join(' ').toLowerCase().includes(keyword)
-      : true;
-    const matchesType = query.collectionType ? collection.collectionType === query.collectionType : true;
-    const matchesStatus = query.status ? collection.status === query.status : true;
-
-    return matchesKeyword && matchesType && matchesStatus;
-  });
-  const start = (query.page ?? 0) * (query.size ?? PAGE_SIZE);
-
-  return {
-    ...page,
-    content: filtered.slice(start, start + (query.size ?? PAGE_SIZE)),
-    totalElements: filtered.length,
-    totalPages: Math.max(Math.ceil(filtered.length / (query.size ?? PAGE_SIZE)), 1),
-  };
-}
+const emptyCollectionForm = {
+  name: '',
+  collectionType: 'EVENT' as AdminCollectionType,
+  discountRate: 0,
+  description: '',
+  startDate: '',
+  endDate: '',
+  status: 'ACTIVE' as AdminCollectionStatus,
+};
 
 export function AdminCollectionPage() {
-  const [allCollections, setAllCollections] = useState<AdminCollectionItem[]>(fallbackCollections);
   const [collectionsPage, setCollectionsPage] = useState<PageResponse<AdminCollectionItem> | null>(null);
   const [query, setQuery] = useState<AdminCollectionListQuery>({ page: 0, size: PAGE_SIZE });
-  const [selectedCollection, setSelectedCollection] = useState<AdminCollectionItem | null>(null);
+  const [refreshToken, setRefreshToken] = useState(0);
+  const [summary, setSummary] = useState({ total: 0, active: 0, hidden: 0, ended: 0 });
+  const [editingCollection, setEditingCollection] = useState<AdminCollectionDetail | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [bookManageCollection, setBookManageCollection] = useState<AdminCollectionItem | null>(null);
   const [managedBooks, setManagedBooks] = useState<AdminCollectionBookItem[]>([]);
+  const [originalManagedBookIds, setOriginalManagedBookIds] = useState<number[]>([]);
   const [newBookTitle, setNewBookTitle] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -197,16 +87,8 @@ export function AdminCollectionPage() {
   const shownPage = toUiPage(collectionsPage?.page);
   const totalPages = Math.max(collectionsPage?.totalPages ?? 1, 1);
   const collections = collectionsPage?.content ?? [];
-
-  const summary = useMemo(
-    () => ({
-      total: allCollections.length,
-      active: allCollections.filter((collection) => collection.status === 'ACTIVE').length,
-      hidden: allCollections.filter((collection) => collection.status === 'HIDDEN').length,
-      ended: allCollections.filter((collection) => collection.status === 'ENDED').length,
-    }),
-    [allCollections],
-  );
+  const formMode = isCreateModalOpen ? 'create' : editingCollection ? 'edit' : null;
+  const formDefaults = editingCollection ?? emptyCollectionForm;
 
   useEffect(() => {
     let ignore = false;
@@ -219,12 +101,11 @@ export function AdminCollectionPage() {
         const data = await getAdminCollections(query);
         if (!ignore) {
           setCollectionsPage(data);
-          setAllCollections((current) => (data.content.length ? data.content : current));
         }
       } catch (error) {
         if (!ignore) {
-          setCollectionsPage(buildPageFromCollections(allCollections, query));
-          setNoticeMessage(`${getApiErrorMessage(error)} 서버 연결 전까지 임시 컬렉션이 표시됩니다.`);
+          setCollectionsPage(null);
+          setNoticeMessage(getApiErrorMessage(error));
         }
       } finally {
         if (!ignore) {
@@ -238,14 +119,42 @@ export function AdminCollectionPage() {
     return () => {
       ignore = true;
     };
-  }, [allCollections, query]);
+  }, [query, refreshToken]);
+
+  // 검색·필터와 무관하게 상태별 전체 건수를 반영하기 위해 목록 조회와 별도로 status별 totalElements만 가져온다.
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadSummary() {
+      const [totalResult, activeResult, hiddenResult, endedResult] = await Promise.allSettled([
+        getAdminCollections({ page: 0, size: 1 }),
+        getAdminCollections({ status: 'ACTIVE', page: 0, size: 1 }),
+        getAdminCollections({ status: 'HIDDEN', page: 0, size: 1 }),
+        getAdminCollections({ status: 'ENDED', page: 0, size: 1 }),
+      ]);
+
+      if (ignore) return;
+
+      setSummary({
+        total: totalResult.status === 'fulfilled' ? totalResult.value.totalElements : 0,
+        active: activeResult.status === 'fulfilled' ? activeResult.value.totalElements : 0,
+        hidden: hiddenResult.status === 'fulfilled' ? hiddenResult.value.totalElements : 0,
+        ended: endedResult.status === 'fulfilled' ? endedResult.value.totalElements : 0,
+      });
+    }
+
+    void loadSummary();
+
+    return () => {
+      ignore = true;
+    };
+  }, [refreshToken]);
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
 
     setQuery({
-      q: String(formData.get('q') ?? '').trim() || undefined,
       collectionType: (String(formData.get('collectionType') ?? '') || undefined) as AdminCollectionType | undefined,
       status: (String(formData.get('status') ?? '') || undefined) as AdminCollectionStatus | undefined,
       page: 0,
@@ -258,63 +167,70 @@ export function AdminCollectionPage() {
   }
 
   function openCreateModal() {
-    const nextId = Math.max(...allCollections.map((collection) => collection.collectionId), 1000) + 1;
-    setSelectedCollection({
-      collectionId: nextId,
-      collectionName: '',
-      collectionType: 'EVENT',
-      discountRate: 0,
-      description: '',
-      startDate: '',
-      endDate: '',
-      status: 'ACTIVE',
-      displayOrder: allCollections.length + 1,
-      bookCount: 0,
-      books: [],
-    });
+    setEditingCollection(null);
+    setIsCreateModalOpen(true);
     setModalError('');
   }
 
-  function openEditModal(collection: AdminCollectionItem) {
-    setSelectedCollection(collection);
-    setModalError('');
+  async function openEditModal(collection: AdminCollectionItem) {
+    setIsCreateModalOpen(false);
+    setNoticeMessage('');
+
+    try {
+      const detail = await getAdminCollectionDetail(collection.collectionId);
+      setEditingCollection(detail);
+      setModalError('');
+    } catch (error) {
+      // 상세 조회 실패 시 모달을 열지 않는다 — 모달이 안 열리면 modalError가 화면에 보이지 않으므로
+      // 페이지 상단 noticeMessage로 알린다.
+      setNoticeMessage(getApiErrorMessage(error));
+    }
   }
 
   function closeEditModal() {
     if (isSaving) return;
-    setSelectedCollection(null);
+    setIsCreateModalOpen(false);
+    setEditingCollection(null);
     setModalError('');
   }
 
-  function openBookModal(collection: AdminCollectionItem) {
+  async function openBookModal(collection: AdminCollectionItem) {
     setBookManageCollection(collection);
-    setManagedBooks([...(collection.books ?? [])].sort((a, b) => a.displayOrder - b.displayOrder));
     setNewBookTitle('');
     setBookModalError('');
+
+    try {
+      const detail = await getAdminCollectionDetail(collection.collectionId);
+      const sortedBooks = [...detail.books].sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+      setManagedBooks(sortedBooks);
+      setOriginalManagedBookIds(sortedBooks.map((book) => book.bookId));
+    } catch (error) {
+      setBookModalError(getApiErrorMessage(error));
+      setManagedBooks([]);
+      setOriginalManagedBookIds([]);
+    }
   }
 
   function closeBookModal() {
     if (isSavingBooks) return;
     setBookManageCollection(null);
     setManagedBooks([]);
+    setOriginalManagedBookIds([]);
     setBookModalError('');
   }
 
   async function handleSaveCollection(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!selectedCollection) return;
-
     const formData = new FormData(event.currentTarget);
-    const collectionName = String(formData.get('collectionName') ?? '').trim();
+    const name = String(formData.get('collectionName') ?? '').trim();
     const collectionType = String(formData.get('collectionType') ?? 'EVENT') as AdminCollectionType;
     const status = String(formData.get('status') ?? 'ACTIVE') as AdminCollectionStatus;
     const discountRate = Number(formData.get('discountRate') ?? 0);
-    const displayOrder = Number(formData.get('displayOrder') ?? 1);
     const startDate = String(formData.get('startDate') ?? '').trim();
     const endDate = String(formData.get('endDate') ?? '').trim();
 
-    if (!collectionName) {
+    if (!name) {
       setModalError('컬렉션명을 입력해 주세요.');
       return;
     }
@@ -329,94 +245,56 @@ export function AdminCollectionPage() {
       return;
     }
 
-    if (displayOrder <= 0) {
-      setModalError('표시 순서는 1 이상이어야 합니다.');
-      return;
-    }
-
     const payload: AdminCollectionSaveRequest = {
-      collectionName,
+      name,
       collectionType,
       discountRate,
       description: String(formData.get('description') ?? '').trim() || undefined,
       startDate: startDate || undefined,
       endDate: endDate || undefined,
       status,
-      displayOrder,
     };
 
     setIsSaving(true);
     setModalError('');
 
     try {
-      await saveAdminCollection(selectedCollection.collectionId, payload);
-      setSuccessMessage('컬렉션이 저장되었습니다.');
+      if (editingCollection) {
+        await saveAdminCollection(editingCollection.collectionId, payload);
+      } else {
+        await createAdminCollection(payload);
+      }
+      setSuccessMessage(editingCollection ? '컬렉션이 저장되었습니다.' : '컬렉션이 등록되었습니다.');
+      setRefreshToken((token) => token + 1);
+      setIsCreateModalOpen(false);
+      setEditingCollection(null);
     } catch (error) {
-      setNoticeMessage(getApiErrorMessage(error));
-      setSuccessMessage('서버 연결 전이라 화면에서만 컬렉션이 반영되었습니다.');
+      setModalError(getApiErrorMessage(error));
     } finally {
-      const nextCollection: AdminCollectionItem = {
-        ...selectedCollection,
-        ...payload,
-      };
-      setAllCollections((current) => {
-        const exists = current.some((collection) => collection.collectionId === selectedCollection.collectionId);
-        return exists
-          ? updateCollection(current, selectedCollection.collectionId, () => nextCollection)
-          : [nextCollection, ...current];
-      });
-      setSelectedCollection(null);
       setIsSaving(false);
     }
   }
 
   async function handlePatchStatus(collection: AdminCollectionItem, status: AdminCollectionStatus) {
+    setNoticeMessage('');
+
     try {
-      await patchAdminCollection(collection.collectionId, {
-        status,
-        reason: '관리자 컬렉션 상태 변경',
-      });
+      await patchAdminCollection(collection.collectionId, { status });
       setSuccessMessage('컬렉션 상태가 변경되었습니다.');
+      setRefreshToken((token) => token + 1);
     } catch (error) {
       setNoticeMessage(getApiErrorMessage(error));
-      setSuccessMessage('서버 연결 전이라 화면에서만 상태가 반영되었습니다.');
-    } finally {
-      setAllCollections((current) => updateCollection(current, collection.collectionId, (item) => ({ ...item, status })));
     }
   }
 
   function addManagedBook() {
-    const title = newBookTitle.trim();
-
-    if (!title) {
-      setBookModalError('추가할 도서명을 입력해 주세요.');
-      return;
-    }
-
-    const nextId = Math.max(...managedBooks.map((book) => book.bookId), 500) + 1;
-    setManagedBooks((current) => [
-      ...current,
-      {
-        bookId: nextId,
-        title,
-        author: '관리자 입력',
-        publisherName: 'ABC Press',
-        displayOrder: current.length + 1,
-      },
-    ]);
-    setNewBookTitle('');
-    setBookModalError('');
+    // 실제 도서 번호 검색 연동이 없어 이 입력만으로는 실존 도서를 특정할 수 없다 — 가짜 bookId로
+    // 저장을 시도하면 실제 서버에서 반드시 실패하므로 여기서 명확히 안내하고 목록에 추가하지 않는다.
+    setBookModalError('도서 추가는 실제 도서 번호 검색 연동이 없어 이 화면에서 지원되지 않습니다. 도서 목록 관리 화면에서 등록된 도서 번호를 확인해 주세요.');
   }
 
   function removeManagedBook(bookId: number) {
-    setManagedBooks((current) =>
-      current
-        .filter((book) => book.bookId !== bookId)
-        .map((book, index) => ({
-          ...book,
-          displayOrder: index + 1,
-        })),
-    );
+    setManagedBooks((current) => current.filter((book) => book.bookId !== bookId));
   }
 
   function updateManagedBookOrder(bookId: number, displayOrder: number) {
@@ -435,8 +313,13 @@ export function AdminCollectionPage() {
   async function handleSaveBooks() {
     if (!bookManageCollection) return;
 
-    const sortedBooks = [...managedBooks].sort((a, b) => a.displayOrder - b.displayOrder);
-    const hasDuplicateOrder = new Set(sortedBooks.map((book) => book.displayOrder)).size !== sortedBooks.length;
+    const currentBookIds = new Set(managedBooks.map((book) => book.bookId));
+    const removeBookIds = originalManagedBookIds.filter((bookId) => !currentBookIds.has(bookId));
+
+    const sortedBooks = [...managedBooks].sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+    const hasDuplicateOrder =
+      bookManageCollection.collectionType === 'SERIES' &&
+      new Set(sortedBooks.map((book) => book.displayOrder)).size !== sortedBooks.length;
 
     if (hasDuplicateOrder) {
       setBookModalError('표시 순서가 중복되지 않게 입력해 주세요.');
@@ -447,26 +330,27 @@ export function AdminCollectionPage() {
     setBookModalError('');
 
     try {
-      await saveAdminCollectionBooks(bookManageCollection.collectionId, {
-        books: sortedBooks.map((book) => ({
-          bookId: book.bookId,
-          displayOrder: book.displayOrder,
-        })),
-      });
+      if (removeBookIds.length > 0) {
+        await patchAdminCollection(bookManageCollection.collectionId, { removeBookIds });
+      }
+
+      if (sortedBooks.length > 0) {
+        await saveAdminCollectionBooks(bookManageCollection.collectionId, {
+          books: sortedBooks.map((book) => ({
+            bookId: book.bookId,
+            displayOrder: bookManageCollection.collectionType === 'SERIES' ? book.displayOrder : undefined,
+          })),
+        });
+      }
+
       setSuccessMessage('컬렉션 도서 구성이 저장되었습니다.');
-    } catch (error) {
-      setNoticeMessage(getApiErrorMessage(error));
-      setSuccessMessage('서버 연결 전이라 화면에서만 도서 구성이 반영되었습니다.');
-    } finally {
-      setAllCollections((current) =>
-        updateCollection(current, bookManageCollection.collectionId, (collection) => ({
-          ...collection,
-          books: sortedBooks,
-          bookCount: sortedBooks.length,
-        })),
-      );
+      setRefreshToken((token) => token + 1);
       setBookManageCollection(null);
       setManagedBooks([]);
+      setOriginalManagedBookIds([]);
+    } catch (error) {
+      setBookModalError(getApiErrorMessage(error));
+    } finally {
       setIsSavingBooks(false);
     }
   }
@@ -510,7 +394,7 @@ export function AdminCollectionPage() {
       <form className={styles.filterPanel} onSubmit={handleSearch}>
         <label>
           검색어
-          <input name="q" type="search" placeholder="컬렉션명, 설명" defaultValue={query.q ?? ''} />
+          <input name="q" type="search" placeholder="컬렉션명, 설명" disabled title="백엔드가 컬렉션 검색어 필터를 지원하지 않습니다." />
         </label>
         <label>
           컬렉션 유형
@@ -578,14 +462,14 @@ export function AdminCollectionPage() {
                   <tr key={collection.collectionId}>
                     <td>C-{collection.collectionId}</td>
                     <td className={styles.titleCell}>
-                      <strong>{collection.collectionName}</strong>
-                      <small>{collection.description || '-'}</small>
+                      <strong>{collection.name}</strong>
+                      <small>-</small>
                     </td>
                     <td>{getTypeLabel(collection.collectionType)}</td>
                     <td>{formatPeriod(collection)}</td>
                     <td>{collection.discountRate ? `${collection.discountRate}%` : '-'}</td>
-                    <td>{collection.bookCount.toLocaleString('ko-KR')}</td>
-                    <td>{collection.displayOrder}</td>
+                    <td>{collection.mappedCount.toLocaleString('ko-KR')}</td>
+                    <td>-</td>
                     <td>
                       <span className={`${styles.statusBadge} ${styles[`status${collection.status}`]}`}>
                         {getStatusLabel(collection.status)}
@@ -630,13 +514,13 @@ export function AdminCollectionPage() {
         </div>
       </section>
 
-      {selectedCollection ? (
+      {formMode ? (
         <div className={styles.modalBackdrop} role="presentation" onMouseDown={closeEditModal}>
           <form className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="collection-modal-title" onSubmit={handleSaveCollection} onMouseDown={(event) => event.stopPropagation()}>
             <div className={styles.modalHeader}>
               <div>
-                <h2 id="collection-modal-title">컬렉션 편집</h2>
-                <p>C-{selectedCollection.collectionId} 기본 정보를 저장합니다.</p>
+                <h2 id="collection-modal-title">{formMode === 'edit' ? '컬렉션 편집' : '컬렉션 등록'}</h2>
+                <p>{editingCollection ? `C-${editingCollection.collectionId} 기본 정보를 저장합니다.` : '신규 컬렉션 기본 정보를 입력합니다.'}</p>
               </div>
               <button type="button" aria-label="닫기" onClick={closeEditModal}>
                 ×
@@ -648,11 +532,11 @@ export function AdminCollectionPage() {
             <div className={styles.fieldGrid}>
               <label className={styles.wide}>
                 컬렉션명
-                <input name="collectionName" type="text" placeholder="이번 주 ABC 추천 도서" defaultValue={selectedCollection.collectionName} />
+                <input name="collectionName" type="text" placeholder="이번 주 ABC 추천 도서" defaultValue={formDefaults.name} key={`name-${editingCollection?.collectionId ?? 'new'}`} />
               </label>
               <label>
                 구분
-                <select name="collectionType" defaultValue={selectedCollection.collectionType}>
+                <select name="collectionType" defaultValue={formDefaults.collectionType} key={`type-${editingCollection?.collectionId ?? 'new'}`}>
                   {typeOptions.map((option) => (
                     <option value={option.value} key={option.value}>
                       {option.label}
@@ -662,23 +546,31 @@ export function AdminCollectionPage() {
               </label>
               <label>
                 할인율
-                <input name="discountRate" type="number" min="0" max="100" placeholder="20" defaultValue={selectedCollection.discountRate ?? 0} />
+                <input
+                  name="discountRate"
+                  type="number"
+                  min="0"
+                  max="100"
+                  placeholder="20"
+                  defaultValue={formDefaults.discountRate ?? 0}
+                  key={`discountRate-${editingCollection?.collectionId ?? 'new'}`}
+                />
               </label>
               <label>
                 표시 순서
-                <input name="displayOrder" type="number" min="1" placeholder="1" defaultValue={selectedCollection.displayOrder} />
+                <input name="displayOrder" type="number" min="1" placeholder="1" />
               </label>
               <label>
                 시작일
-                <input name="startDate" type="date" defaultValue={selectedCollection.startDate ?? ''} />
+                <input name="startDate" type="date" defaultValue={formDefaults.startDate ?? ''} key={`startDate-${editingCollection?.collectionId ?? 'new'}`} />
               </label>
               <label>
                 종료일
-                <input name="endDate" type="date" defaultValue={selectedCollection.endDate ?? ''} />
+                <input name="endDate" type="date" defaultValue={formDefaults.endDate ?? ''} key={`endDate-${editingCollection?.collectionId ?? 'new'}`} />
               </label>
               <label>
                 상태
-                <select name="status" defaultValue={selectedCollection.status}>
+                <select name="status" defaultValue={formDefaults.status} key={`status-${editingCollection?.collectionId ?? 'new'}`}>
                   {statusOptions.map((option) => (
                     <option value={option.value} key={option.value}>
                       {option.label}
@@ -688,7 +580,12 @@ export function AdminCollectionPage() {
               </label>
               <label className={styles.wide}>
                 설명
-                <textarea name="description" placeholder="컬렉션 설명을 입력해 주세요." defaultValue={selectedCollection.description ?? ''} />
+                <textarea
+                  name="description"
+                  placeholder="컬렉션 설명을 입력해 주세요."
+                  defaultValue={formDefaults.description ?? ''}
+                  key={`description-${editingCollection?.collectionId ?? 'new'}`}
+                />
               </label>
             </div>
 
@@ -710,7 +607,7 @@ export function AdminCollectionPage() {
             <div className={styles.modalHeader}>
               <div>
                 <h2 id="collection-books-modal-title">컬렉션 도서 관리</h2>
-                <p>{bookManageCollection.collectionName}에 포함될 도서를 정렬하고 제외합니다.</p>
+                <p>{bookManageCollection.name}에 포함될 도서를 정렬하고 제외합니다.</p>
               </div>
               <button type="button" aria-label="닫기" onClick={closeBookModal}>
                 ×
@@ -734,14 +631,12 @@ export function AdminCollectionPage() {
                       aria-label={`${book.title} 표시 순서`}
                       type="number"
                       min="1"
-                      value={book.displayOrder}
+                      value={book.displayOrder ?? ''}
                       onChange={(event) => updateManagedBookOrder(book.bookId, Number(event.target.value))}
                     />
                     <div>
                       <strong>{book.title}</strong>
-                      <span>
-                        {book.author || book.authors?.join(', ') || '-'} · {book.publisherName || '-'}
-                      </span>
+                      <span>도서 상태: {book.status}</span>
                     </div>
                     <Button type="button" variant="danger" onClick={() => removeManagedBook(book.bookId)}>
                       제외
