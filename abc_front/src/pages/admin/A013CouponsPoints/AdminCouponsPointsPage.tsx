@@ -89,12 +89,13 @@ const fallbackCoupons: AdminCouponSummary[] = [
   },
 ];
 
-// 관리자 회원 목록 API(AdminMemberSummaryResponse)에는 pointBalance가 없다 — 이 화면의 포인트 조정
-// 흐름은 실데이터 연동 전부터 로컬 상태로만 잔액을 추적해 왔으므로, 그 로컬 전용 필드를 별도 타입으로
-// 분리해 공통 회원 타입을 실제 API 계약과 다시 맞춘다(2026-07-20 API 연결 작업 부수 수정).
-type MemberWithPointBalance = AdminMemberSummary & { pointBalance: number };
+// 관리자 회원 목록 API(AdminMemberSummaryResponse)에는 pointBalance가 없다 — 목록 단계에서는 실제로
+// 조회하기 전까지 잔액을 알 수 없다는 사실을 타입에도 반영해, 미조회 상태(옵션 필드)와 조회 완료 상태
+// (상세 API 또는 포인트 조정 성공 응답으로 확인된 number)를 구분한다(PR #100 코드리뷰 대응).
+type MemberListRow = AdminMemberSummary & { pointBalance?: number };
+type SelectedMember = AdminMemberSummary & { pointBalance: number };
 
-const fallbackMembers: MemberWithPointBalance[] = [
+const fallbackMembers: MemberListRow[] = [
   {
     memberId: 1024,
     loginId: 'park_reader',
@@ -103,7 +104,6 @@ const fallbackMembers: MemberWithPointBalance[] = [
     maskedPhone: '010-****-5678',
     role: 'USER',
     gradeName: 'GOLD',
-    pointBalance: 12300,
     status: 'JOINED',
     activeSanctions: [],
   },
@@ -114,7 +114,6 @@ const fallbackMembers: MemberWithPointBalance[] = [
     maskedEmail: 'ad***@example.com',
     maskedPhone: '010-****-0000',
     role: 'ADMIN',
-    pointBalance: 0,
     status: 'JOINED',
     activeSanctions: [],
   },
@@ -126,7 +125,6 @@ const fallbackMembers: MemberWithPointBalance[] = [
     maskedPhone: '010-****-1234',
     role: 'USER',
     gradeName: 'BASIC',
-    pointBalance: 1500,
     status: 'SANCTIONED',
     activeSanctions: [{ sanctionType: 'ACCOUNT_SUSPENSION', endedAt: '2026-07-16T23:59:00' }],
   },
@@ -185,7 +183,9 @@ function formatCompactDate(value: string | undefined) {
   }).format(time);
 }
 
-function formatPoint(value: number) {
+function formatPoint(value: number | undefined) {
+  if (value === undefined) return '-';
+
   return `${value.toLocaleString('ko-KR')}P`;
 }
 
@@ -219,7 +219,7 @@ function buildFallbackCouponPage(query: AdminCouponListQuery): PageResponse<Admi
   };
 }
 
-function buildFallbackMemberPage(query: AdminMemberListQuery): PageResponse<MemberWithPointBalance> {
+function buildFallbackMemberPage(query: AdminMemberListQuery): PageResponse<MemberListRow> {
   const keyword = query.q?.trim().toLowerCase();
   const filtered = fallbackMembers.filter((member) =>
     keyword ? [member.loginId, member.name, member.maskedEmail].join(' ').toLowerCase().includes(keyword) : true,
@@ -243,8 +243,8 @@ export function AdminCouponsPointsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabKey>('coupons');
   const [couponsPage, setCouponsPage] = useState<PageResponse<AdminCouponSummary> | null>(null);
-  const [membersPage, setMembersPage] = useState<PageResponse<MemberWithPointBalance> | null>(null);
-  const [selectedMember, setSelectedMember] = useState<MemberWithPointBalance | null>(null);
+  const [membersPage, setMembersPage] = useState<PageResponse<MemberListRow> | null>(null);
+  const [selectedMember, setSelectedMember] = useState<SelectedMember | null>(null);
   const [pointHistories, setPointHistories] = useState<AdminMemberPointHistory[]>(fallbackPointHistories);
   const [issueCoupon, setIssueCoupon] = useState<AdminCouponSummary | null>(null);
   const [couponForm, setCouponForm] = useState<CouponForm>({
@@ -256,8 +256,8 @@ export function AdminCouponsPointsPage() {
   });
   const [issueForm, setIssueForm] = useState<IssueForm>({ quantity: '1' });
   const [issueMemberQuery, setIssueMemberQuery] = useState('');
-  const [issueMemberResults, setIssueMemberResults] = useState<MemberWithPointBalance[]>([]);
-  const [selectedIssueMembers, setSelectedIssueMembers] = useState<MemberWithPointBalance[]>([]);
+  const [issueMemberResults, setIssueMemberResults] = useState<MemberListRow[]>([]);
+  const [selectedIssueMembers, setSelectedIssueMembers] = useState<MemberListRow[]>([]);
   const [pointForm, setPointForm] = useState<PointForm>({ pointAmount: '', description: '' });
   const [isCouponLoading, setIsCouponLoading] = useState(true);
   const [isMemberLoading, setIsMemberLoading] = useState(false);
@@ -328,7 +328,7 @@ export function AdminCouponsPointsPage() {
       try {
         const data = await getAdminMembers(memberQuery);
         if (!ignore) {
-          setMembersPage({ ...data, content: data.content.map((member) => ({ ...member, pointBalance: 0 })) });
+          setMembersPage(data);
         }
       } catch (error) {
         if (!ignore) {
@@ -481,13 +481,13 @@ export function AdminCouponsPointsPage() {
   async function searchIssueMembers() {
     try {
       const data = await getAdminMembers({ q: issueMemberQuery.trim(), page: 0, size: 10 });
-      setIssueMemberResults(data.content.map((member) => ({ ...member, pointBalance: 0 })));
+      setIssueMemberResults(data.content);
     } catch {
       setIssueMemberResults(buildFallbackMemberPage({ q: issueMemberQuery.trim(), page: 0, size: 10 }).content);
     }
   }
 
-  function toggleIssueMember(member: MemberWithPointBalance) {
+  function toggleIssueMember(member: MemberListRow) {
     setSelectedIssueMembers((current) =>
       current.some((item) => item.memberId === member.memberId) ? current.filter((item) => item.memberId !== member.memberId) : [...current, member],
     );
@@ -548,13 +548,23 @@ export function AdminCouponsPointsPage() {
     );
   }
 
-  async function handleSelectMember(member: MemberWithPointBalance) {
+  async function handleSelectMember(member: MemberListRow) {
     setFormError('');
     setSelectedMember(null);
 
     try {
       const detail = await getAdminMember(member.memberId);
-      setSelectedMember({ ...member, pointBalance: detail.usageSummary.pointBalance });
+      const resolvedBalance = detail.usageSummary.pointBalance;
+
+      setSelectedMember({ ...member, pointBalance: resolvedBalance });
+      setMembersPage((current) =>
+        current
+          ? {
+              ...current,
+              content: current.content.map((row) => (row.memberId === member.memberId ? { ...row, pointBalance: resolvedBalance } : row)),
+            }
+          : current,
+      );
     } catch (error) {
       setFormError(`${getApiErrorMessage(error)} 회원 잔액을 불러오지 못해 포인트를 조정할 수 없습니다.`);
     }
