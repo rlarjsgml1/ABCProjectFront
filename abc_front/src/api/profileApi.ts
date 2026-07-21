@@ -7,6 +7,7 @@ import type {
   UserPasswordChangeRequest,
   UserProfile,
   UserProfileUpdateRequest,
+  UserWithdrawalRequest,
 } from '../types/api';
 
 // apiClient의 baseURL에 /api/v1이 포함되어 있으므로 API 명세의 하위 경로만 사용한다.
@@ -25,8 +26,8 @@ export async function changeMyPassword(payload: UserPasswordChangeRequest) {
   return response.data;
 }
 
-export async function withdrawMyAccount() {
-  const response = await apiClient.delete<ApiResponse<void>>('/me');
+export async function withdrawMyAccount(payload: UserWithdrawalRequest) {
+  const response = await apiClient.delete<ApiResponse<void>>('/me', { data: payload });
   return response.data;
 }
 
