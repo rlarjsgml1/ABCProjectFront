@@ -225,7 +225,7 @@ export function HomePage() {
     if (collectionSection) {
       sections.push({
         title: collectionSection.title,
-        moreTo: '/books?section=collection&source=home',
+        moreTo: `/books?section=collection&collectionId=${collectionSection.collectionId}&source=home`,
         books: collectionSection.books,
       });
     }

@@ -2,7 +2,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { createAdminCoupon, getAdminCoupons, issueAdminCoupon } from '../../../api/adminCouponApi';
-import { adjustAdminMemberPoint, getAdminMembers } from '../../../api/adminMemberApi';
+import { adjustAdminMemberPoint, getAdminMember, getAdminMembers } from '../../../api/adminMemberApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
 import type {
@@ -548,6 +548,18 @@ export function AdminCouponsPointsPage() {
     );
   }
 
+  async function handleSelectMember(member: MemberWithPointBalance) {
+    setFormError('');
+    setSelectedMember(null);
+
+    try {
+      const detail = await getAdminMember(member.memberId);
+      setSelectedMember({ ...member, pointBalance: detail.usageSummary.pointBalance });
+    } catch (error) {
+      setFormError(`${getApiErrorMessage(error)} 회원 잔액을 불러오지 못해 포인트를 조정할 수 없습니다.`);
+    }
+  }
+
   async function handlePointSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -573,39 +585,42 @@ export function AdminCouponsPointsPage() {
       return;
     }
 
+    const memberId = selectedMember.memberId;
+
     setIsSaving(true);
     setFormError('');
+    setStatusMessage('');
 
     try {
-      await adjustAdminMemberPoint(selectedMember.memberId, {
+      const response = await adjustAdminMemberPoint(memberId, {
         pointAmount,
         description: pointForm.description.trim(),
         requestId: crypto.randomUUID(),
       });
-      setStatusMessage('회원 포인트가 조정되었습니다.');
-    } catch {
-      setStatusMessage('임시 데이터에 포인트 조정을 반영했습니다.');
-    } finally {
-      const nextBalance = selectedMember.pointBalance + pointAmount;
+
       const history: AdminMemberPointHistory = {
-        pointHistoryId: Date.now(),
-        pointType: 'ADMIN_ADJUST',
-        pointAmount,
+        pointHistoryId: response.pointHistoryId,
+        pointType: response.pointType,
+        pointAmount: response.pointAmount,
         description: pointForm.description.trim(),
-        createdAt: new Date().toISOString(),
+        createdAt: response.createdAt,
       };
 
-      setSelectedMember((current) => (current ? { ...current, pointBalance: nextBalance } : current));
+      setSelectedMember((current) => (current && current.memberId === memberId ? { ...current, pointBalance: response.pointBalance } : current));
       setMembersPage((current) =>
         current
           ? {
               ...current,
-              content: current.content.map((member) => (member.memberId === selectedMember.memberId ? { ...member, pointBalance: nextBalance } : member)),
+              content: current.content.map((member) => (member.memberId === memberId ? { ...member, pointBalance: response.pointBalance } : member)),
             }
           : current,
       );
       setPointHistories((current) => [history, ...current]);
       setPointForm({ pointAmount: '', description: '' });
+      setStatusMessage('회원 포인트가 조정되었습니다.');
+    } catch (error) {
+      setFormError(getApiErrorMessage(error));
+    } finally {
       setIsSaving(false);
     }
   }
@@ -874,7 +889,7 @@ export function AdminCouponsPointsPage() {
                         <td>{formatPoint(member.pointBalance)}</td>
                         <td>
                           <div className={styles.rowActions}>
-                            <button type="button" onClick={() => setSelectedMember(member)}>
+                            <button type="button" onClick={() => void handleSelectMember(member)}>
                               선택
                             </button>
                           </div>
