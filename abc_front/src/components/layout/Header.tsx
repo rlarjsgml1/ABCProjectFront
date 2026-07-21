@@ -258,6 +258,14 @@ export function Header() {
                     <img src={abcLogo} alt="ABC" />
                 </Link>
 
+                <nav className="abc-nav" aria-label="주요 메뉴">
+                    {navItems.map((item) => (
+                        <Link key={item.label} className={`abc-nav-link ${isActiveNav(item.to) ? 'active' : ''}`} to={item.to}>
+                            {item.label}
+                        </Link>
+                    ))}
+                </nav>
+
                 <form className="abc-search" onSubmit={handleSearch} onBlur={handleSearchBlur} onKeyDown={handleSearchFormKeyDown}>
                     <button className="abc-search-button" type="submit" aria-label="검색">
                         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -392,14 +400,6 @@ export function Header() {
                     </Link>
                 </div>
             </div>
-
-            <nav className="abc-nav" aria-label="주요 메뉴">
-                {navItems.map((item) => (
-                    <Link key={item.label} className={`abc-nav-link ${isActiveNav(item.to) ? 'active' : ''}`} to={item.to}>
-                        {item.label}
-                    </Link>
-                ))}
-            </nav>
             </div>
         </header>
     );

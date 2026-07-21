@@ -2,9 +2,15 @@
   --books-green: #003d2d;
   --books-panel: #eeeeee;
   --books-page-gutter: var(--space-8);
+  --books-content-width: min(1440px, calc(100% - (var(--books-page-gutter) * 2)));
+  --books-banner-width: var(--books-content-width);
+  --books-banner-height: clamp(360px, 25vw, 460px);
   display: grid;
   gap: 0;
-  margin: calc(var(--space-8) * -1);
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
+  overflow-x: hidden;
   background: var(--color-surface);
 }
 
@@ -16,16 +22,17 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: clamp(var(--space-6), 6vw, 80px);
-  width: calc(100% - (var(--books-page-gutter) * 2));
-  max-width: 1680px;
-  min-height: clamp(380px, 31vw, 520px);
+  gap: clamp(var(--space-6), 4vw, 64px);
+  width: var(--books-banner-width);
+  max-width: 100%;
+  min-height: 0;
+  height: var(--books-banner-height);
   margin: var(--space-8) auto 0;
-  border: 0;
-  border-radius: 0;
-  padding: var(--space-8);
-  background: transparent;
-  box-shadow: none;
+  padding: clamp(var(--space-8), 4vw, 72px);
+  background: #f8fafc;
+  user-select: none;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .books-featured-row {
@@ -63,12 +70,13 @@
 }
 
 .books-recommend-section {
+  position: relative;
   grid-template-columns: 1fr;
-  gap: var(--space-2);
-  align-content: start;
-  min-height: clamp(380px, 31vw, 520px);
-  padding-top: clamp(var(--space-3), 2vw, var(--space-5));
-  padding-bottom: clamp(var(--space-5), 4vw, var(--space-8));
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: clamp(var(--space-3), 1.6vw, var(--space-5));
+  align-content: stretch;
+  height: clamp(420px, 29vw, 520px);
+  padding: clamp(var(--space-6), 3vw, 52px);
 }
 
 .books-recommend-heading {
@@ -97,14 +105,19 @@
 
 .books-recommend-carousel {
   position: relative;
-  padding: 0 var(--space-8);
+  display: flex;
+  align-items: stretch;
+  min-height: 0;
+  padding: 0 clamp(var(--space-4), 3vw, var(--space-8));
 }
 
 .books-recommend-viewport {
+  flex: 1;
   position: relative;
   overflow: visible;
   min-width: 0;
-  height: clamp(330px, 24vw, 400px);
+  min-height: 0;
+  height: 100%;
 }
 
 .books-recommend-track {
@@ -113,11 +126,11 @@
 }
 
 .books-recommend-card {
-  --card-step: clamp(148px, 15vw, 215px);
-  --card-base-width: clamp(108px, 10.5vw, 148px);
-  --card-featured-width: clamp(168px, 15.5vw, 218px);
+  --card-step: clamp(108px, 11vw, 166px);
+  --card-base-width: clamp(84px, 7.8vw, 112px);
+  --card-featured-width: clamp(120px, 10.5vw, 150px);
   position: absolute;
-  top: 49%;
+  top: 45%;
   left: 50%;
   display: grid;
   justify-items: center;
@@ -140,7 +153,9 @@
   justify-content: center;
   align-items: center;
   gap: var(--space-2);
-  margin-top: calc(var(--space-3) * -1);
+  min-height: 14px;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .books-recommend-dot {
@@ -207,7 +222,9 @@
   grid-template-columns: 230px minmax(0, 1fr);
   gap: clamp(var(--space-8), 5vw, 64px);
   align-items: start;
-  padding: var(--space-8) var(--space-8) var(--space-10);
+  width: var(--books-content-width);
+  margin: 0 auto;
+  padding: var(--space-8) 0 var(--space-10);
 }
 
 .books-filter {
@@ -302,54 +319,52 @@
   line-height: 1.2;
 }
 
-.books-view-toggle {
+.books-view-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
 }
 
-.books-view-toggle button {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
+.books-view-tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 46px;
+  height: 38px;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 0;
+  border-radius: 999px;
+  padding: 0 var(--space-4);
   color: var(--color-text);
   background: var(--color-surface);
   box-shadow: none;
   transition: border-color 0.2s ease, transform 0.2s ease;
 }
 
-.books-view-toggle button:hover,
-.books-view-toggle button:focus-visible,
-.books-view-toggle button.is-active {
+.books-view-tabs button:hover,
+.books-view-tabs button:focus-visible,
+.books-view-tabs button.is-active {
   border-color: var(--books-green);
   box-shadow: none;
   transform: translateY(-1px);
 }
 
+.books-view-tabs button.is-active {
+  color: #ffffff;
+  background: var(--books-green);
+}
+
 .books-view-icon {
-  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  gap: 2px;
+}
+
+.books-view-icon i {
   display: block;
-  width: 20px;
-  height: 20px;
-}
-
-.books-view-icon-grid {
-  background:
-    linear-gradient(var(--color-text), var(--color-text)) 2px 2px / 6px 6px no-repeat,
-    linear-gradient(var(--color-text), var(--color-text)) 12px 2px / 6px 6px no-repeat,
-    linear-gradient(var(--color-text), var(--color-text)) 2px 12px / 6px 6px no-repeat,
-    linear-gradient(var(--color-text), var(--color-text)) 12px 12px / 6px 6px no-repeat;
-}
-
-.books-view-icon-list {
-  background:
-    linear-gradient(var(--color-text), var(--color-text)) 3px 4px / 14px 3px no-repeat,
-    linear-gradient(var(--color-text), var(--color-text)) 3px 9px / 14px 3px no-repeat,
-    linear-gradient(var(--color-text), var(--color-text)) 3px 14px / 14px 3px no-repeat;
+  width: 3px;
+  height: 18px;
+  border-radius: 999px;
+  background: currentColor;
 }
 
 .books-grid {
@@ -359,9 +374,17 @@
   align-items: start;
 }
 
-.books-grid-list {
-  grid-template-columns: 1fr;
-  gap: var(--space-4);
+.books-grid-3 {
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+}
+
+.books-grid-5 {
+  grid-template-columns: repeat(5, minmax(120px, 1fr));
+}
+
+.books-grid-3 .books-card img,
+.books-grid-3 .books-card span {
+  width: min(100%, 220px);
 }
 
 .books-card {
@@ -374,16 +397,6 @@
   text-decoration: none;
 }
 
-.books-grid-list .books-card {
-  grid-template-columns: 84px minmax(0, 1fr);
-  justify-items: start;
-  align-items: center;
-  column-gap: var(--space-4);
-  border-bottom: 1px solid var(--color-border);
-  padding: var(--space-3) 0;
-  text-align: left;
-}
-
 .books-card span,
 .books-card img {
   display: block;
@@ -392,13 +405,6 @@
   border-radius: var(--radius-lg);
   background: #969191;
   object-fit: cover;
-}
-
-.books-grid-list .books-card span,
-.books-grid-list .books-card img {
-  grid-row: span 2;
-  width: 84px;
-  border-radius: var(--radius-md);
 }
 
 .books-card strong,
@@ -421,46 +427,54 @@
 .books-section-more-hero {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 360px);
-  align-items: end;
-  width: min(calc(100% - (var(--space-8) * 2)), 1280px);
-  min-height: 320px;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 210px);
+  align-items: center;
+  width: var(--books-banner-width);
+  max-width: 100%;
+  min-height: 0;
+  height: var(--books-banner-height);
   margin: var(--space-8) auto var(--space-10);
-  border: 1px solid #4d4d4d;
-  border-radius: var(--radius-lg);
-  padding: var(--space-8);
+  border: 0;
+  border-radius: 28px;
+  padding: clamp(42px, 4.2vw, 72px);
   overflow: hidden;
-  background: #969191;
+  box-sizing: border-box;
+  user-select: none;
+  background:
+    radial-gradient(circle at 82% 22%, rgba(255, 210, 79, 0.24), transparent 27%),
+    radial-gradient(circle at 12% 18%, rgba(15, 118, 110, 0.08), transparent 30%),
+    linear-gradient(135deg, #ffffff 0%, #f1fbf7 48%, #edf7ff 100%);
 }
 
 .books-section-more-hero h1 {
   margin: 0;
-  color: #ffffff;
-  font-size: clamp(2rem, 3vw, 2.8rem);
+  color: var(--books-green);
+  font-size: clamp(2rem, 3vw, 3.45rem);
   font-weight: 900;
-  line-height: 1.15;
+  line-height: 1.22;
 }
 
 .books-section-more-visual {
   display: flex;
   align-items: end;
   justify-content: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
   align-self: center;
-  min-height: 190px;
+  justify-self: center;
+  min-height: clamp(150px, 12vw, 210px);
   transform: rotate(4deg);
 }
 
 .books-section-more-visual span {
   display: block;
-  width: clamp(42px, 5vw, 62px);
-  height: clamp(150px, 16vw, 205px);
-  border-radius: 10px 10px 8px 8px;
+  width: clamp(34px, 3vw, 48px);
+  height: clamp(135px, 10vw, 178px);
+  border-radius: 14px 14px 10px 10px;
   box-shadow: inset 0 10px rgba(255, 255, 255, 0.3);
 }
 
 .books-section-more-visual span:nth-child(1) {
-  height: clamp(130px, 14vw, 185px);
+  height: clamp(118px, 8.8vw, 158px);
   background: #67ad36;
   transform: rotate(-14deg);
 }

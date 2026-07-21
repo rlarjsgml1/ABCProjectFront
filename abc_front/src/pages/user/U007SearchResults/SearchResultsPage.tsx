@@ -7,7 +7,7 @@ import { getApiErrorCode, getApiErrorMessage } from '../../../api/profileApi';
 import { EmptyState } from '../../../components/common/EmptyState';
 import { Pagination } from '../../../components/common/Pagination';
 import type { BookCard, Category, PageResponse } from '../../../types/api';
-import '../../../styles/books.css';
+import '../../../styles/BooksPage.css';
 import '../../../styles/search.css';
 
 const PAGE_SIZE = 15;

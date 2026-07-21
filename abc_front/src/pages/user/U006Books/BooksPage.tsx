@@ -1,5 +1,5 @@
 ﻿// 도서 목록 화면(U006) — 목록 조회, 카테고리/정렬/유형 필터, 페이지네이션, 섹션별 더보기를 담당한다.
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { getBooks, getCategories, getRecommendedBooks, type BookListQuery } from '../../../api/bookApi';
 import { getCollectionDetail } from '../../../api/collectionApi';
@@ -7,10 +7,14 @@ import { getApiErrorMessage } from '../../../api/profileApi';
 import { EmptyState } from '../../../components/common/EmptyState';
 import { Pagination } from '../../../components/common/Pagination';
 import type { BookCard, Category, PageResponse } from '../../../types/api';
-import '../../../styles/books.css';
+import '../../../styles/BooksPage.css';
 
 const PAGE_SIZE = 15;
 const SECTION_PAGE_SIZE = 16;
+const viewOptions = [
+  { label: '3개씩 보기', value: '3', columns: 3 },
+  { label: '5개씩 보기', value: '5', columns: 5 },
+];
 
 const fallbackCategories: Category[] = [
   { categoryId: 1, name: '소설' },
@@ -126,11 +130,11 @@ function getEmptyBookPage(page: number, size: number): PageResponse<BookCard> {
 
 export function BooksPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const booksResultRef = useRef<HTMLDivElement>(null);
   const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
   const [bookPage, setBookPage] = useState<PageResponse<BookCard>>(() => getEmptyBookPage(0, PAGE_SIZE));
   const [featuredBooks, setFeaturedBooks] = useState<BookCard[]>(weeklyArrivalBooks);
   const [featuredIndex, setFeaturedIndex] = useState(0);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [categories, setCategories] = useState<Category[]>(fallbackCategories);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -151,6 +155,8 @@ export function BooksPage() {
   const categoryName = searchParams.get('category') ?? undefined;
   const rentalType = searchParams.get('rentalType') ?? undefined;
   const availableOnly = searchParams.get('status') === 'AVAILABLE';
+  const urlViewCount = searchParams.get('view') === '3' ? '3' : '5';
+  const [viewCount, setViewCount] = useState<'3' | '5'>(urlViewCount);
 
   const query = useMemo<BookListQuery>(
     () => ({
@@ -164,6 +170,10 @@ export function BooksPage() {
     }),
     [availableOnly, categoryId, categoryName, parentCategoryId, rentalType, searchParams, sort],
   );
+
+  useEffect(() => {
+    setViewCount(urlViewCount);
+  }, [urlViewCount]);
 
   useEffect(() => {
     if (!categoryId || parentCategoryId) return;
@@ -312,7 +322,16 @@ export function BooksPage() {
 
   const totalPages = Math.max(1, bookPage.totalPages);
 
-  const updateFilter = (updates: Record<string, string | undefined>) => {
+  const scrollToBooksResult = useCallback(() => {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const target = booksResultRef.current ?? document.querySelector('.books-section-more-content');
+        target?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      });
+    });
+  }, []);
+
+  const updateFilter = (updates: Record<string, string | undefined>, options?: { focusResult?: boolean }) => {
     const next = new URLSearchParams(searchParams);
     next.delete('page');
 
@@ -324,13 +343,17 @@ export function BooksPage() {
       }
     });
 
-    setSearchParams(next);
+    setSearchParams(next, { preventScrollReset: true });
+    if (options?.focusResult) {
+      scrollToBooksResult();
+    }
   };
 
   const movePage = (page: number) => {
     const next = new URLSearchParams(searchParams);
     next.set('page', String(page));
-    setSearchParams(next);
+    setSearchParams(next, { preventScrollReset: true });
+    scrollToBooksResult();
   };
 
   if (sectionKey && sectionConfig) {
@@ -476,16 +499,33 @@ export function BooksPage() {
           </div>
         </aside>
 
-        <div className="books-result">
+        <div className="books-result" ref={booksResultRef}>
           <div className="books-result-heading">
             <h1>전체 {bookPage.totalElements.toLocaleString('ko-KR')}건</h1>
-            <div className="books-view-toggle" aria-label="도서 목록 보기 방식">
-              <button className={viewMode === 'grid' ? 'is-active' : ''} type="button" aria-label="카드형 보기" onClick={() => setViewMode('grid')}>
-                <span className="books-view-icon books-view-icon-grid" aria-hidden="true" />
-              </button>
-              <button className={viewMode === 'list' ? 'is-active' : ''} type="button" aria-label="목록형 보기" onClick={() => setViewMode('list')}>
-                <span className="books-view-icon books-view-icon-list" aria-hidden="true" />
-              </button>
+            <div className="books-view-tabs" aria-label="도서 목록 보기 방식">
+              {viewOptions.map((option) => (
+                <button
+                  className={viewCount === option.value ? 'is-active' : ''}
+                  type="button"
+                  onClick={() => {
+                    if (viewCount === option.value) {
+                      scrollToBooksResult();
+                      return;
+                    }
+                    setViewCount(option.value as '3' | '5');
+                    scrollToBooksResult();
+                  }}
+                  key={option.value}
+                  aria-label={option.label}
+                  title={option.label}
+                >
+                  <span className="books-view-icon" aria-hidden="true">
+                    {Array.from({ length: option.columns }).map((_, index) => (
+                      <i key={index} />
+                    ))}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -494,7 +534,7 @@ export function BooksPage() {
 
           {!isLoading && !bookPage.content.length ? <EmptyState title="표시할 도서가 없습니다." description="필터를 바꾸거나 전체 도서를 확인해보세요." /> : null}
 
-          <div className={`books-grid books-grid-${viewMode}`} aria-label="도서 목록">
+          <div className={`books-grid books-grid-${viewCount}`} aria-label="도서 목록">
             {bookPage.content.map((book) => (
               <Link className="books-card" to={`/books/${book.bookId}`} key={book.bookId}>
                 {book.coverImageUrl ? <img src={book.coverImageUrl} alt="" /> : <span />}
@@ -510,5 +550,3 @@ export function BooksPage() {
     </div>
   );
 }
-
-
