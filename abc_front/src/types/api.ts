@@ -827,6 +827,12 @@ export type UserPasswordChangeRequest = {
   newPasswordConfirm: string;
 };
 
+// API-ME-004 회원 탈퇴. 진행 중 대여가 있으면 백엔드가 거부한다.
+export type UserWithdrawalRequest = {
+  currentPassword: string;
+  withdrawalReason?: string;
+};
+
 // API-READING-001 (U-028 최근 읽은 책)
 export type RecentBooksQuery = {
   limit?: number;
