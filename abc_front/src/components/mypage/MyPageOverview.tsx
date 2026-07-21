@@ -108,13 +108,13 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
   const grade = displayProfile.gradeName ?? displayProfile.membershipGrade ?? '새싹';
   const gradeDetails = getMembershipGradeDetails(displayProfile, grade);
   const topStats: TopStat[] = [
-    { label: '포인트', value: formatPoint(displayProfile.point), to: '/me/points-coupons' },
-    { label: '쿠폰', value: valueOrDash(displayProfile.couponCount), to: '/me/points-coupons' },
+    { label: '포인트', value: formatPoint(displayProfile.point), to: '/me/points-coupons?tab=points' },
+    { label: '쿠폰', value: valueOrDash(displayProfile.couponCount), to: '/me/points-coupons?tab=coupons' },
   ];
   const bottomStats: TopStat[] = [
     { label: '대여', value: valueOrDash(displayProfile.rentalCount), to: '/me/rentals' },
-    { label: '완독', value: valueOrDash(displayProfile.completedBookCount) },
-    { label: '즐겨찾기', value: valueOrDash(displayProfile.favoriteCount) },
+    { label: '완독', value: valueOrDash(displayProfile.completedBookCount), to: '/me/rentals' },
+    { label: '즐겨찾기', value: valueOrDash(displayProfile.favoriteCount), to: '/me/favorites' },
   ];
   const readingBars = [
     { label: '리뷰', value: valueOrDash(displayProfile.reviewCount), percent: getPercent(displayProfile.reviewCount, 44) },
@@ -197,16 +197,16 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
         </section>
 
         <section className="mypage-grid" aria-label="알림과 활동 요약">
-          <article className="alert-panel overview-widget">
+          <Link className="alert-panel overview-widget overview-widget-link" to="/me/rentals" aria-label="대여 현황 페이지로 이동">
             <div className="overview-widget-title">
               <span className="overview-alert-icon" aria-hidden="true">
                 !
               </span>
-              <h2>반납 알림</h2>
+              <h2>대여 현황</h2>
             </div>
             <p className="overview-widget-surface">대여 {valueOrDash(displayProfile.rentalCount)}권 확인</p>
-          </article>
-          <article className="alert-panel overview-widget" aria-label="일반 알림">
+          </Link>
+          <Link className="alert-panel overview-widget overview-widget-link" to="/me/notifications" aria-label="알림 내역 페이지로 이동">
             <div className="overview-widget-title">
               <span className="overview-alert-icon" aria-hidden="true">
                 !
@@ -214,7 +214,7 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
               <h2>알림</h2>
             </div>
             <p className="overview-widget-surface">새 알림 {valueOrDash(displayProfile.unreadNotificationCount)}건</p>
-          </article>
+          </Link>
           <Link className="activity-card overview-widget overview-widget-link" to="/me/attendance" aria-label="출석체크 페이지로 이동">
             <h2>출석체크</h2>
             <div className="overview-stamp-row" aria-label={`출석 스탬프 ${attendanceCount}개`}>
