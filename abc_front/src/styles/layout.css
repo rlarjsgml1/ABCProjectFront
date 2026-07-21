@@ -40,8 +40,141 @@
 }
 
 .site-footer {
-  padding: var(--space-4) var(--space-8);
-  color: var(--color-muted);
+  border-top: 1px solid #d7d7d7;
+  border-bottom: 0;
+  padding: 0;
+  color: #4f4f4f;
+  background: var(--color-surface);
+}
+
+.abc-footer-inner {
+  display: grid;
+  grid-template-columns: minmax(300px, 1.25fr) minmax(280px, 0.95fr) minmax(260px, 0.85fr);
+  gap: clamp(var(--space-6), 4vw, var(--space-10));
+  width: min(1440px, 100%);
+  margin: 0 auto;
+  padding: clamp(var(--space-6), 4vw, var(--space-10)) var(--space-8);
+}
+
+.abc-footer-brand,
+.abc-footer-column,
+.abc-footer-contact {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.abc-footer-brand {
+  justify-content: flex-start;
+  gap: var(--space-2);
+}
+
+.abc-footer-logo {
+  display: inline-flex;
+  margin-bottom: var(--space-5);
+}
+
+.abc-footer-logo img {
+  display: block;
+  width: 96px;
+  height: auto;
+}
+
+.abc-footer-brand p,
+.abc-footer-column a,
+.abc-footer-contact p,
+.abc-footer-contact small {
+  margin: 0;
+  color: #4f4f4f;
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.abc-footer-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  gap: clamp(var(--space-8), 4vw, var(--space-10));
+}
+
+.abc-footer-column {
+  gap: var(--space-3);
+}
+
+.abc-footer-column h2 {
+  margin: 0 0 var(--space-1);
+  color: #202020;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.abc-footer-column a,
+.abc-footer-contact a {
+  text-decoration: none;
+}
+
+.abc-footer-column a:hover,
+.abc-footer-column a:focus-visible,
+.abc-footer-contact a:hover,
+.abc-footer-contact a:focus-visible {
+  color: #003d2d;
+  outline: 0;
+}
+
+.abc-footer-contact {
+  justify-content: flex-start;
+  gap: var(--space-3);
+}
+
+.abc-footer-contact strong {
+  color: #202020;
+  font-size: clamp(1.25rem, 1.6vw, 1.5rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.abc-footer-contact-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.abc-footer-contact-links a {
+  border-bottom: 1px solid currentColor;
+  color: #202020;
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.abc-footer-contact small {
+  margin-top: var(--space-3);
+  max-width: 260px;
+  text-transform: uppercase;
+}
+
+@media (max-width: 1100px) {
+  .abc-footer-inner {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .abc-footer-contact {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .abc-footer-inner,
+  .abc-footer-links {
+    grid-template-columns: 1fr;
+  }
+
+  .abc-footer-inner {
+    gap: var(--space-8);
+  }
+
+  .abc-footer-logo {
+    margin-bottom: var(--space-4);
+  }
 }
 
 .scroll-top-button {
