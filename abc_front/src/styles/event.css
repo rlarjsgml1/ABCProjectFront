@@ -16,6 +16,7 @@
 
 .event-page-heading h1 {
   margin: 0;
+  font-family: var(--font-heading);
   font-size: clamp(2rem, 3vw, 2.75rem);
   font-weight: 900;
   letter-spacing: 0;

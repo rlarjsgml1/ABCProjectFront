@@ -1,6 +1,7 @@
 // 관리자 대시보드(A-001) 화면 — KPI 통계와 최근 신고/희망도서/결제를 한 화면에서 보여주고 주요 관리 화면으로 이동시킨다
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import { getAdminDashboard, getFallbackAdminDashboard } from '../../../api/adminDashboardApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import type { AdminDashboardResponse, AdminRecentReport } from '../../../types/api';
@@ -37,6 +38,16 @@ const candidateStatusLabels: Record<string, string> = {
   IN_REVIEW: '검토 중',
   APPROVED: '승인',
   REJECTED: '반려',
+};
+
+const kpiGridVariants: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.06 } },
+};
+
+const kpiCardVariants: Variants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } },
 };
 
 function getReportTargetLabel(targetType: AdminRecentReport['targetType']) {
@@ -131,6 +142,7 @@ function buildCombinedRecent(dashboard: AdminDashboardResponse): CombinedRecentI
 }
 
 export function AdminDashboardPage() {
+  const prefersReducedMotion = useReducedMotion();
   const [dashboard, setDashboard] = useState<AdminDashboardResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -168,9 +180,25 @@ export function AdminDashboardPage() {
 
   if (isLoading) {
     return (
-      <section className="page-section">
-        <div className="status-banner">데이터를 불러오는 중입니다.</div>
-      </section>
+      <div className="admin-dashboard">
+        <section className="page-section admin-dashboard-header">
+          <div className="admin-dashboard-header-top">
+            <span className="admin-dashboard-eyebrow">Admin</span>
+          </div>
+          <h1>관리자 대시보드</h1>
+          <div className="status-banner">데이터를 불러오는 중입니다.</div>
+        </section>
+
+        <div className="admin-dashboard-kpi-grid">
+          {Array.from({ length: 8 }, (_, index) => (
+            <div className="admin-dashboard-kpi-card admin-dashboard-kpi-skeleton" key={index} aria-hidden="true">
+              <span className="admin-dashboard-kpi-skeleton-pill" />
+              <span className="admin-dashboard-kpi-skeleton-value" />
+              <span className="admin-dashboard-kpi-skeleton-caption" />
+            </div>
+          ))}
+        </div>
+      </div>
     );
   }
 
@@ -200,7 +228,12 @@ export function AdminDashboardPage() {
         {errorMessage ? <div className="status-banner status-banner-error">{errorMessage}</div> : null}
       </section>
 
-      <div className="admin-dashboard-kpi-grid">
+      <motion.div
+        className="admin-dashboard-kpi-grid"
+        variants={kpiGridVariants}
+        initial={prefersReducedMotion ? false : 'hidden'}
+        animate={prefersReducedMotion ? undefined : 'visible'}
+      >
         {kpiCards.map((card) => {
           const content = (
             <>
@@ -210,17 +243,19 @@ export function AdminDashboardPage() {
             </>
           );
 
-          return card.to ? (
-            <Link className="admin-dashboard-kpi-card" to={card.to} key={card.label}>
-              {content}
-            </Link>
-          ) : (
-            <div className="admin-dashboard-kpi-card" key={card.label}>
-              {content}
-            </div>
+          return (
+            <motion.div variants={kpiCardVariants} key={card.label}>
+              {card.to ? (
+                <Link className="admin-dashboard-kpi-card" to={card.to}>
+                  {content}
+                </Link>
+              ) : (
+                <div className="admin-dashboard-kpi-card">{content}</div>
+              )}
+            </motion.div>
           );
         })}
-      </div>
+      </motion.div>
 
       <div className="admin-dashboard-panels">
         <section className="page-section admin-dashboard-panel">

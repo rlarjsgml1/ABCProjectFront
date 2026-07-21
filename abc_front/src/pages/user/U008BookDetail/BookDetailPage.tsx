@@ -1,6 +1,7 @@
 // 도서 상세 화면(U008) — 도서 정보 조회, 찜하기, 리뷰 작성/수정/삭제, 신고 모달을 담당한다.
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { AUTH_CHANGED_EVENT } from '../../../api/authApi';
 import { getBookDetail, getRelatedBooks } from '../../../api/bookApi';
 import { createMyFavorite, deleteMyFavorite, getMyFavorites } from '../../../api/favoritesApi';
@@ -474,14 +475,16 @@ export function BookDetailPage() {
             {book?.coverImageUrl ? <img src={book.coverImageUrl} alt={book.title} /> : <span>표지 영역</span>}
           </div>
 
-          <button
+          <motion.button
             className={`${styles.favorite} ${isFavorite ? styles.active : ''}`}
             type="button"
             onClick={handleFavoriteClick}
             aria-pressed={isFavorite}
+            whileTap={{ scale: 0.85 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 15 }}
           >
             {isFavorite ? '♥ 찜하기' : '♡ 찜하기'}
-          </button>
+          </motion.button>
           {favoriteMessage && <p className={styles.favoriteMessage}>{favoriteMessage}</p>}
         </div>
 
