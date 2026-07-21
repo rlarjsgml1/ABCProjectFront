@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AUTH_CHANGED_EVENT } from '../../../api/authApi';
 import { getBookDetail, getRelatedBooks } from '../../../api/bookApi';
-import { createMyFavorite, deleteMyFavorite } from '../../../api/favoritesApi';
+import { createMyFavorite, deleteMyFavorite, getMyFavorites } from '../../../api/favoritesApi';
 import { getMyRentals } from '../../../api/myRentalsApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { createReview, deleteReview, getBookReviews, updateReview } from '../../../api/reviewApi';
@@ -192,7 +192,7 @@ export function BookDetailPage() {
       try {
         const bookDetail = await getBookDetail(Number(bookId));
         setBook(bookDetail);
-        setIsFavorite(false);
+        setIsFavorite(Boolean(bookDetail.myFavoriteYn));
         setIsDescriptionExpanded(false);
       } catch {
         setErrorMessage('도서 정보를 불러오지 못했습니다.');
@@ -203,6 +203,33 @@ export function BookDetailPage() {
 
     loadBookDetail();
   }, [bookId]);
+
+  useEffect(() => {
+    if (!bookId || !isSignedIn || book?.myFavoriteYn !== undefined) return;
+
+    let ignore = false;
+
+    async function loadFavoriteState() {
+      try {
+        const favoritePage = await getMyFavorites({ page: 0, size: 100 });
+        const hasFavorite = favoritePage.content.some((favoriteBook) => favoriteBook.bookId === Number(bookId));
+
+        if (!ignore) {
+          setIsFavorite(hasFavorite);
+        }
+      } catch {
+        if (!ignore) {
+          setIsFavorite(false);
+        }
+      }
+    }
+
+    void loadFavoriteState();
+
+    return () => {
+      ignore = true;
+    };
+  }, [book?.myFavoriteYn, bookId, isSignedIn]);
 
   useEffect(() => {
     void loadReviews();

@@ -8,11 +8,10 @@ const menuItems = [
   { label: '챌린지', to: '/me/challenges', enabled: true, end: true },
   { label: '즐겨찾기', to: '/me/favorites', enabled: true, end: true },
   { label: '최근 읽은 책', to: '/me/recent-books', enabled: true, end: true },
-  { label: '이용 내역', enabled: false },
   { label: '포인트/쿠폰', to: '/me/points-coupons', enabled: true, end: true },
   { label: '프로필 수정', to: '/me/profile', enabled: true, end: true },
   { label: '희망 도서 신청 내역', to: '/me/book-requests/history', enabled: true, end: true },
-  { label: '결제 내역', to: '/me/payments', enabled: true, end: true },
+  { label: '이용/결제 내역', to: '/me/payments', enabled: true, end: true },
   { label: '신고 내역', to: '/me/reports', enabled: true, end: true },
 ];
 

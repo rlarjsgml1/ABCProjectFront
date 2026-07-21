@@ -156,12 +156,12 @@ export function FavoritesPage() {
 
                 <button
                   type="button"
-                  className="favorite-heart"
+                  className="favorite-heart is-active"
                   aria-label={`${book.title} 즐겨찾기 해제`}
                   disabled={isDeletingBookId === book.bookId}
                   onClick={() => void handleDeleteFavorite(book.bookId)}
                 >
-                  ♡
+                  ♥
                 </button>
               </article>
             ))}

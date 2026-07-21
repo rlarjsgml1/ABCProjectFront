@@ -555,8 +555,13 @@ a.admin-dashboard-kpi-card:focus-visible {
 }
 
 .button-secondary {
-  color: var(--color-text);
-  background: var(--color-border);
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.button-secondary:hover {
+  color: #ffffff;
+  background: var(--color-primary);
 }
 
 .button-danger {
@@ -1039,6 +1044,10 @@ a.admin-dashboard-kpi-card:focus-visible {
   font-size: 1.45rem;
   line-height: 1;
   cursor: pointer;
+}
+
+.favorite-heart.is-active {
+  color: var(--color-primary);
 }
 
 .favorite-heart:hover,
@@ -2930,7 +2939,7 @@ a.count-card:focus-visible {
   width: 100%;
   position: relative;
   z-index: 50;
-  padding: var(--space-6) 0 var(--space-8);
+  padding: var(--space-6) 0;
   background: var(--abc-header-surface);
   border-bottom: 1px solid var(--color-border);
 }
@@ -2942,7 +2951,6 @@ a.count-card:focus-visible {
 }
 
 .abc-header-top {
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2962,14 +2970,14 @@ a.count-card:focus-visible {
 }
 
 .abc-search {
-  position: absolute;
+  position: relative;
   z-index: 60;
-  left: 50%;
-  transform: translateX(-50%);
   display: grid;
   grid-template-columns: 44px 1fr;
   align-items: center;
+  flex: 1 1 360px;
   width: min(42vw, 560px);
+  max-width: 560px;
   height: 44px;
   border-radius: 999px;
   background: var(--color-surface-muted);
@@ -3200,6 +3208,7 @@ a.count-card:focus-visible {
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-2);
+  flex: 0 0 auto;
   min-width: 240px;
 }
 
@@ -3312,27 +3321,20 @@ a.count-card:focus-visible {
 }
 
 .abc-nav {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
   align-items: center;
-  width: 100%;
-  margin-top: var(--space-8);
+  justify-content: center;
+  gap: clamp(var(--space-4), 3vw, var(--space-10));
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .abc-nav-link {
   color: var(--abc-header-muted);
-  font-size: 1.25rem;
+  font-size: clamp(0.95rem, 1vw, 1.08rem);
   font-weight: 700;
   text-align: center;
   text-decoration: none;
-}
-
-.abc-nav-link:first-child {
-  text-align: left;
-}
-
-.abc-nav-link:last-child {
-  text-align: right;
 }
 
 .abc-nav-link.active {
@@ -3348,7 +3350,15 @@ a.count-card:focus-visible {
     position: static;
     order: 3;
     width: 100%;
+    max-width: none;
     transform: none;
+  }
+
+  .abc-nav {
+    order: 4;
+    width: 100%;
+    justify-content: space-between;
+    gap: var(--space-4);
   }
 
   .abc-actions {

@@ -1,9 +1,9 @@
 // 홈 화면(U001) — 배너 슬라이드, 카테고리, 추천/신간/베스트 도서 섹션을 보여준다.
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getBestBooks, getCategories, getLatestBooks, getRecommendedBooks } from '../../../api/bookApi';
-import type { BookCard, Category } from '../../../types/api';
-import '../../../styles/home.css';
+import { getBestBooks, getLatestBooks, getRecommendedBooks } from '../../../api/bookApi';
+import type { BookCard } from '../../../types/api';
+import '../../../styles/HomePage.css';
 
 type BookItem = {
   id: number;
@@ -13,15 +13,11 @@ type BookItem = {
   coverImageUrl?: string;
 };
 
-type HomeCategory = {
-  id?: number;
-  name: string;
-};
-
 type BookSection = {
   title: string;
   moreTo: string;
   books: BookItem[];
+  kind: 'recommend' | 'latest' | 'best';
   ranked?: boolean;
 };
 
@@ -50,20 +46,8 @@ const quickMenuItems = [
   { to: '/me/attendance', icon: 'D-1', label: '출석체크', description: '매일 읽고 혜택 받기' },
   { to: '/events', icon: '🎁', label: '이벤트', description: '진행 중인 혜택 보기' },
   { to: '/me/challenges', icon: '🏆', label: '챌린지', description: '독서 미션 확인하기' },
+  { to: '/books', icon: '📚', label: '카테고리', description: '분야별 도서 보기' },
 ];
-
-const fallbackCategories: HomeCategory[] = [
-  { name: '소설' },
-  { name: '경제 / 경영' },
-  { name: '인문 / 사회 / 역사' },
-  { name: '컴퓨터 / IT' },
-  { name: '자기계발' },
-  { name: '에세이 / 시' },
-  { name: '자연 / 환경' },
-  { name: '전공서적' },
-];
-
-const categoryIcons = ['📖', '💼', '🏛', '💻', '🌱', '✒️', '🌿', '⭐'];
 
 const fallbackRecommendedBooks: BookItem[] = [
   { id: 1, title: '바람의 문장', author: '김하늘', tone: '#eda0a4' },
@@ -106,27 +90,9 @@ function toBookItems(books: BookCard[], fallbackBooks: BookItem[]) {
   }));
 }
 
-function toHomeCategories(categories: Category[]) {
-  if (!categories.length) return fallbackCategories;
-
-  return categories.map((category) => ({
-    id: category.categoryId,
-    name: category.name,
-  }));
-}
-
-function getCategoryLink(category: HomeCategory) {
-  if (category.id) {
-    return `/books?parentCategoryId=${category.id}`;
-  }
-
-  return `/books?category=${encodeURIComponent(category.name)}`;
-}
-
 export function HomePage() {
   const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
-  const [categories, setCategories] = useState<HomeCategory[]>(fallbackCategories);
   const [recommendedBooks, setRecommendedBooks] = useState<BookItem[]>(isLoggedIn ? fallbackRecommendedBooks : fallbackBestBooks);
   const [newBooks, setNewBooks] = useState<BookItem[]>(fallbackNewBooks);
   const [bestBooks, setBestBooks] = useState<BookItem[]>(fallbackBestBooks);
@@ -144,18 +110,13 @@ export function HomePage() {
     let ignore = false;
 
     async function loadHomeData() {
-      const [categoriesResult, recommendedResult, latestResult, bestResult] = await Promise.allSettled([
-        getCategories(),
+      const [recommendedResult, latestResult, bestResult] = await Promise.allSettled([
         isLoggedIn ? getRecommendedBooks(5) : getBestBooks(5),
         getLatestBooks(5),
         getBestBooks(10),
       ]);
 
       if (ignore) return;
-
-      if (categoriesResult.status === 'fulfilled') {
-        setCategories(toHomeCategories(categoriesResult.value));
-      }
 
       if (recommendedResult.status === 'fulfilled') {
         setRecommendedBooks(toBookItems(recommendedResult.value, isLoggedIn ? fallbackRecommendedBooks : fallbackBestBooks));
@@ -183,16 +144,19 @@ export function HomePage() {
         title: memberName ? `${memberName}님을 위한 ABC 추천 도서` : 'ABC 추천 도서',
         moreTo: '/books?section=recommend&source=home',
         books: recommendedBooks,
+        kind: 'recommend',
       },
       {
         title: 'NEW 신간',
         moreTo: '/books?section=latest&source=home',
         books: newBooks,
+        kind: 'latest',
       },
       {
         title: 'BEST 작품',
         moreTo: '/books?section=best&source=home',
         books: bestBooks,
+        kind: 'best',
         ranked: true,
       },
     ],
@@ -247,27 +211,6 @@ export function HomePage() {
         </div>
       </section>
 
-      <Link className="home-notice-ticker" to="/notices">
-        <span className="home-notice-icon" aria-hidden="true">📢</span>
-        <strong>NOTICE</strong>
-        <p>공지사항과 이벤트 소식을 ABC 메인에서 확인하세요.</p>
-      </Link>
-
-      <section className="home-category-section">
-        <div className="home-section-heading">
-          <h2>카테고리</h2>
-          <Link to="/books">더보기 &gt;</Link>
-        </div>
-        <div className="home-category-grid">
-          {categories.map((category, index) => (
-            <Link className="home-category-item" to={getCategoryLink(category)} key={category.id ?? category.name}>
-              <span aria-hidden="true">{categoryIcons[index % categoryIcons.length]}</span>
-              <strong>{category.name}</strong>
-            </Link>
-          ))}
-        </div>
-      </section>
-
       <div className="home-quick-menu" aria-label="빠른 메뉴">
         {quickMenuItems.map((item) => (
           <Link to={item.to} key={item.to}>
@@ -279,10 +222,18 @@ export function HomePage() {
       </div>
 
       {bookSections.map((section) => (
-        <section className={`home-book-section ${section.ranked ? 'home-book-section-best' : ''}`} key={section.title}>
+        <section className={`home-book-section home-book-section-${section.kind} ${section.ranked ? 'home-book-section-best' : ''}`} key={section.title}>
           <div className="home-section-heading">
             <div>
-              <h2>{section.title}</h2>
+              <h2>
+                {section.kind === 'recommend' && memberName ? (
+                  <>
+                    <span className="home-member-name">{memberName}</span>님을 위한 ABC 추천 도서
+                  </>
+                ) : (
+                  section.title
+                )}
+              </h2>
               {!memberName && section.title === 'ABC 추천 도서' ? (
                 <p>
                   지금 로그인하시면 ABC가 선택한 책을 보여드립니다. <Link to="/login">로그인하기</Link>
@@ -307,6 +258,12 @@ export function HomePage() {
           </div>
         </section>
       ))}
+
+      <Link className="home-notice-ticker home-notice-footer" to="/notices">
+        <span className="home-notice-icon" aria-hidden="true">📢</span>
+        <strong>NOTICE</strong>
+        <p>공지사항과 이벤트 소식을 ABC 메인에서 확인하세요.</p>
+      </Link>
     </div>
   );
 }
