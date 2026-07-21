@@ -7,9 +7,11 @@ import {
   saveAdminCollection,
   saveAdminCollectionBooks,
 } from '../../../api/adminCollectionApi';
+import { getAdminBooks } from '../../../api/adminBookApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
 import type {
+  AdminBookSummary,
   AdminCollectionBookItem,
   AdminCollectionDetail,
   AdminCollectionItem,
@@ -72,10 +74,13 @@ export function AdminCollectionPage() {
   const [summary, setSummary] = useState({ total: 0, active: 0, hidden: 0, ended: 0 });
   const [editingCollection, setEditingCollection] = useState<AdminCollectionDetail | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedType, setSelectedType] = useState<AdminCollectionType>(emptyCollectionForm.collectionType);
   const [bookManageCollection, setBookManageCollection] = useState<AdminCollectionItem | null>(null);
   const [managedBooks, setManagedBooks] = useState<AdminCollectionBookItem[]>([]);
   const [originalManagedBookIds, setOriginalManagedBookIds] = useState<number[]>([]);
-  const [newBookTitle, setNewBookTitle] = useState('');
+  const [bookSearchKeyword, setBookSearchKeyword] = useState('');
+  const [bookSearchResults, setBookSearchResults] = useState<AdminBookSummary[]>([]);
+  const [isSearchingBooks, setIsSearchingBooks] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSavingBooks, setIsSavingBooks] = useState(false);
@@ -169,6 +174,7 @@ export function AdminCollectionPage() {
   function openCreateModal() {
     setEditingCollection(null);
     setIsCreateModalOpen(true);
+    setSelectedType(emptyCollectionForm.collectionType);
     setModalError('');
   }
 
@@ -179,6 +185,7 @@ export function AdminCollectionPage() {
     try {
       const detail = await getAdminCollectionDetail(collection.collectionId);
       setEditingCollection(detail);
+      setSelectedType(detail.collectionType);
       setModalError('');
     } catch (error) {
       // 상세 조회 실패 시 모달을 열지 않는다 — 모달이 안 열리면 modalError가 화면에 보이지 않으므로
@@ -196,7 +203,8 @@ export function AdminCollectionPage() {
 
   async function openBookModal(collection: AdminCollectionItem) {
     setBookManageCollection(collection);
-    setNewBookTitle('');
+    setBookSearchKeyword('');
+    setBookSearchResults([]);
     setBookModalError('');
 
     try {
@@ -216,6 +224,8 @@ export function AdminCollectionPage() {
     setBookManageCollection(null);
     setManagedBooks([]);
     setOriginalManagedBookIds([]);
+    setBookSearchKeyword('');
+    setBookSearchResults([]);
     setBookModalError('');
   }
 
@@ -226,16 +236,19 @@ export function AdminCollectionPage() {
     const name = String(formData.get('collectionName') ?? '').trim();
     const collectionType = String(formData.get('collectionType') ?? 'EVENT') as AdminCollectionType;
     const status = String(formData.get('status') ?? 'ACTIVE') as AdminCollectionStatus;
-    const discountRate = Number(formData.get('discountRate') ?? 0);
-    const startDate = String(formData.get('startDate') ?? '').trim();
-    const endDate = String(formData.get('endDate') ?? '').trim();
+    const isSeries = collectionType === 'SERIES';
+
+    // 시리즈는 할인율/기간을 아예 안 쓰는 정책(D-07)이라, 폼에 값이 남아있어도 무조건 비운다.
+    const discountRate = isSeries ? undefined : Number(formData.get('discountRate') ?? 0);
+    const startDate = isSeries ? '' : String(formData.get('startDate') ?? '').trim();
+    const endDate = isSeries ? '' : String(formData.get('endDate') ?? '').trim();
 
     if (!name) {
       setModalError('컬렉션명을 입력해 주세요.');
       return;
     }
 
-    if (discountRate < 0 || discountRate > 100) {
+    if (discountRate !== undefined && (discountRate < 0 || discountRate > 100)) {
       setModalError('할인율은 0부터 100 사이로 입력해 주세요.');
       return;
     }
@@ -287,10 +300,44 @@ export function AdminCollectionPage() {
     }
   }
 
-  function addManagedBook() {
-    // 실제 도서 번호 검색 연동이 없어 이 입력만으로는 실존 도서를 특정할 수 없다 — 가짜 bookId로
-    // 저장을 시도하면 실제 서버에서 반드시 실패하므로 여기서 명확히 안내하고 목록에 추가하지 않는다.
-    setBookModalError('도서 추가는 실제 도서 번호 검색 연동이 없어 이 화면에서 지원되지 않습니다. 도서 목록 관리 화면에서 등록된 도서 번호를 확인해 주세요.');
+  async function handleBookSearch() {
+    const keyword = bookSearchKeyword.trim();
+    if (!keyword) return;
+
+    setIsSearchingBooks(true);
+    setBookModalError('');
+
+    try {
+      const data = await getAdminBooks({ q: keyword, page: 0, size: 5 });
+      setBookSearchResults(data.content);
+    } catch (error) {
+      setBookSearchResults([]);
+      setBookModalError(getApiErrorMessage(error));
+    } finally {
+      setIsSearchingBooks(false);
+    }
+  }
+
+  function addManagedBook(book: AdminBookSummary) {
+    if (managedBooks.some((existing) => existing.bookId === book.bookId)) {
+      setBookModalError('이미 추가된 도서입니다.');
+      return;
+    }
+
+    const nextDisplayOrder = managedBooks.reduce((max, item) => Math.max(max, item.displayOrder ?? 0), 0) + 1;
+
+    setManagedBooks((current) => [
+      ...current,
+      {
+        // 실제 매핑 전이라 아직 collectionBookId가 없다 — 화면 리스트 key로만 쓰이는 임시값이다.
+        collectionBookId: -Date.now(),
+        bookId: book.bookId,
+        title: book.title,
+        status: book.status,
+        displayOrder: nextDisplayOrder,
+      },
+    ]);
+    setBookModalError('');
   }
 
   function removeManagedBook(bookId: number) {
@@ -536,7 +583,12 @@ export function AdminCollectionPage() {
               </label>
               <label>
                 구분
-                <select name="collectionType" defaultValue={formDefaults.collectionType} key={`type-${editingCollection?.collectionId ?? 'new'}`}>
+                <select
+                  name="collectionType"
+                  defaultValue={formDefaults.collectionType}
+                  key={`type-${editingCollection?.collectionId ?? 'new'}`}
+                  onChange={(event) => setSelectedType(event.target.value as AdminCollectionType)}
+                >
                   {typeOptions.map((option) => (
                     <option value={option.value} key={option.value}>
                       {option.label}
@@ -554,6 +606,7 @@ export function AdminCollectionPage() {
                   placeholder="20"
                   defaultValue={formDefaults.discountRate ?? 0}
                   key={`discountRate-${editingCollection?.collectionId ?? 'new'}`}
+                  disabled={selectedType === 'SERIES'}
                 />
               </label>
               <label>
@@ -562,11 +615,23 @@ export function AdminCollectionPage() {
               </label>
               <label>
                 시작일
-                <input name="startDate" type="date" defaultValue={formDefaults.startDate ?? ''} key={`startDate-${editingCollection?.collectionId ?? 'new'}`} />
+                <input
+                  name="startDate"
+                  type="date"
+                  defaultValue={formDefaults.startDate ?? ''}
+                  key={`startDate-${editingCollection?.collectionId ?? 'new'}`}
+                  disabled={selectedType === 'SERIES'}
+                />
               </label>
               <label>
                 종료일
-                <input name="endDate" type="date" defaultValue={formDefaults.endDate ?? ''} key={`endDate-${editingCollection?.collectionId ?? 'new'}`} />
+                <input
+                  name="endDate"
+                  type="date"
+                  defaultValue={formDefaults.endDate ?? ''}
+                  key={`endDate-${editingCollection?.collectionId ?? 'new'}`}
+                  disabled={selectedType === 'SERIES'}
+                />
               </label>
               <label>
                 상태
@@ -588,6 +653,10 @@ export function AdminCollectionPage() {
                 />
               </label>
             </div>
+
+            {selectedType === 'SERIES' ? (
+              <p className="field-hint">시리즈는 할인율/시작일/종료일을 사용하지 않아 입력이 비활성화됩니다.</p>
+            ) : null}
 
             <div className={styles.modalActions}>
               <Button type="button" variant="secondary" onClick={closeEditModal} disabled={isSaving}>
@@ -617,11 +686,34 @@ export function AdminCollectionPage() {
             {bookModalError ? <p className={styles.modalError}>{bookModalError}</p> : null}
 
             <div className={styles.addBookRow}>
-              <input value={newBookTitle} onChange={(event) => setNewBookTitle(event.target.value)} placeholder="추가할 도서명" />
-              <Button type="button" onClick={addManagedBook}>
-                도서 추가
+              <input
+                value={bookSearchKeyword}
+                onChange={(event) => setBookSearchKeyword(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    void handleBookSearch();
+                  }
+                }}
+                placeholder="도서 제목으로 검색"
+              />
+              <Button type="button" onClick={() => void handleBookSearch()} disabled={isSearchingBooks}>
+                {isSearchingBooks ? '검색 중' : '검색'}
               </Button>
             </div>
+
+            {bookSearchResults.length > 0 ? (
+              <div className={styles.bookSearchResults}>
+                {bookSearchResults.map((book) => (
+                  <div className={styles.bookSearchResultRow} key={book.bookId}>
+                    <span>{book.title}</span>
+                    <Button type="button" variant="secondary" onClick={() => addManagedBook(book)}>
+                      추가
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
 
             <div className={styles.bookList}>
               {managedBooks.length > 0 ? (

@@ -130,7 +130,7 @@ export function HomePage() {
         getLatestBooks(5),
         getBestBooks(10),
         getNotices(0, 1),
-        getCollections({ status: 'ACTIVE', page: 0, size: 1, previewSize: 10 }),
+        getCollections({ status: 'ACTIVE', page: 0, size: 5, previewSize: 10 }),
       ]);
 
       if (ignore) return;
@@ -152,12 +152,14 @@ export function HomePage() {
       }
 
       if (collectionsResult.status === 'fulfilled') {
-        const firstCollection = collectionsResult.value.content[0];
-        if (firstCollection && firstCollection.previewBooks.length > 0) {
+        // 정렬 1순위가 startDate라서 기간이 없는 시리즈보다 이벤트가 항상 앞에 온다.
+        // 앞선 컬렉션에 도서가 하나도 없으면 건너뛰고, 실제로 보여줄 도서가 있는 첫 컬렉션을 찾는다.
+        const collectionWithBooks = collectionsResult.value.content.find((collection) => collection.previewBooks.length > 0);
+        if (collectionWithBooks) {
           setCollectionSection({
-            collectionId: firstCollection.collectionId,
-            title: firstCollection.collectionName,
-            books: toCollectionBookItems(firstCollection.previewBooks),
+            collectionId: collectionWithBooks.collectionId,
+            title: collectionWithBooks.collectionName,
+            books: toCollectionBookItems(collectionWithBooks.previewBooks),
           });
         }
       }
