@@ -1,8 +1,8 @@
 // 쿠폰/포인트 관리(A013) 화면 — 쿠폰 정의 등록/발급과 회원 포인트 지급·차감을 담당한다
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { createAdminCoupon, getAdminCoupons, issueAdminCoupon } from '../../../api/adminCouponApi';
-import { adjustAdminMemberPoint, getAdminMember, getAdminMembers } from '../../../api/adminMemberApi';
+import { adjustAdminMemberPoint, getAdminMember, getAdminMemberPoints, getAdminMembers } from '../../../api/adminMemberApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
 import type {
@@ -130,23 +130,6 @@ const fallbackMembers: MemberListRow[] = [
   },
 ];
 
-const fallbackPointHistories: AdminMemberPointHistory[] = [
-  {
-    pointHistoryId: 7001,
-    pointType: 'ADMIN_ADJUST',
-    pointAmount: 2000,
-    description: '독서 이벤트 참여 보상',
-    createdAt: '2026-07-12T10:20:00',
-  },
-  {
-    pointHistoryId: 7002,
-    pointType: 'ADMIN_ADJUST',
-    pointAmount: -500,
-    description: '중복 지급 조정',
-    createdAt: '2026-07-10T15:45:00',
-  },
-];
-
 function toApiPage(uiPage: number) {
   return Math.max(uiPage - 1, 0);
 }
@@ -245,7 +228,11 @@ export function AdminCouponsPointsPage() {
   const [couponsPage, setCouponsPage] = useState<PageResponse<AdminCouponSummary> | null>(null);
   const [membersPage, setMembersPage] = useState<PageResponse<MemberListRow> | null>(null);
   const [selectedMember, setSelectedMember] = useState<SelectedMember | null>(null);
-  const [pointHistories, setPointHistories] = useState<AdminMemberPointHistory[]>(fallbackPointHistories);
+  const [pointHistories, setPointHistories] = useState<AdminMemberPointHistory[]>([]);
+  const [pointHistoryError, setPointHistoryError] = useState('');
+  const [isPointHistoryLoading, setIsPointHistoryLoading] = useState(false);
+  const selectionRequestSequenceRef = useRef(0);
+  const pointHistoryRequestSequenceRef = useRef(0);
   const [issueCoupon, setIssueCoupon] = useState<AdminCouponSummary | null>(null);
   const [couponForm, setCouponForm] = useState<CouponForm>({
     couponName: '',
@@ -549,25 +536,51 @@ export function AdminCouponsPointsPage() {
   }
 
   async function handleSelectMember(member: MemberListRow) {
+    if (isSaving) return;
+
+    const memberId = member.memberId;
+    const mySelectionSeq = ++selectionRequestSequenceRef.current;
+    const myHistorySeq = ++pointHistoryRequestSequenceRef.current;
+
     setFormError('');
     setSelectedMember(null);
+    setPointHistories([]);
+    setPointHistoryError('');
+    setIsPointHistoryLoading(true);
 
-    try {
-      const detail = await getAdminMember(member.memberId);
-      const resolvedBalance = detail.usageSummary.pointBalance;
+    const [detailResult, pointsResult] = await Promise.allSettled([getAdminMember(memberId), getAdminMemberPoints(memberId)]);
 
-      setSelectedMember({ ...member, pointBalance: resolvedBalance });
-      setMembersPage((current) =>
-        current
-          ? {
-              ...current,
-              content: current.content.map((row) => (row.memberId === member.memberId ? { ...row, pointBalance: resolvedBalance } : row)),
-            }
-          : current,
-      );
-    } catch (error) {
-      setFormError(`${getApiErrorMessage(error)} 회원 잔액을 불러오지 못해 포인트를 조정할 수 없습니다.`);
+    if (selectionRequestSequenceRef.current !== mySelectionSeq) return;
+
+    if (detailResult.status === 'rejected') {
+      setFormError(`${getApiErrorMessage(detailResult.reason)} 회원 잔액을 불러오지 못해 포인트를 조정할 수 없습니다.`);
+      setIsPointHistoryLoading(false);
+      return;
     }
+
+    const resolvedBalance = detailResult.value.usageSummary.pointBalance;
+
+    setSelectedMember({ ...member, pointBalance: resolvedBalance });
+    setMembersPage((current) =>
+      current
+        ? {
+            ...current,
+            content: current.content.map((row) => (row.memberId === memberId ? { ...row, pointBalance: resolvedBalance } : row)),
+          }
+        : current,
+    );
+
+    if (pointHistoryRequestSequenceRef.current !== myHistorySeq) return;
+
+    if (pointsResult.status === 'fulfilled' && pointsResult.value.memberId === memberId) {
+      setPointHistories(pointsResult.value.tab.content);
+      setPointHistoryError('');
+    } else {
+      setPointHistories([]);
+      setPointHistoryError('포인트 이력을 불러오지 못했습니다.');
+    }
+
+    setIsPointHistoryLoading(false);
   }
 
   async function handlePointSubmit(event: FormEvent<HTMLFormElement>) {
@@ -596,6 +609,7 @@ export function AdminCouponsPointsPage() {
     }
 
     const memberId = selectedMember.memberId;
+    const mySelectionSeq = selectionRequestSequenceRef.current;
 
     setIsSaving(true);
     setFormError('');
@@ -608,13 +622,7 @@ export function AdminCouponsPointsPage() {
         requestId: crypto.randomUUID(),
       });
 
-      const history: AdminMemberPointHistory = {
-        pointHistoryId: response.pointHistoryId,
-        pointType: response.pointType,
-        pointAmount: response.pointAmount,
-        description: pointForm.description.trim(),
-        createdAt: response.createdAt,
-      };
+      if (selectionRequestSequenceRef.current !== mySelectionSeq) return;
 
       setSelectedMember((current) => (current && current.memberId === memberId ? { ...current, pointBalance: response.pointBalance } : current));
       setMembersPage((current) =>
@@ -625,11 +633,38 @@ export function AdminCouponsPointsPage() {
             }
           : current,
       );
-      setPointHistories((current) => [history, ...current]);
       setPointForm({ pointAmount: '', description: '' });
       setStatusMessage('회원 포인트가 조정되었습니다.');
+
+      const myHistorySeq = ++pointHistoryRequestSequenceRef.current;
+      setIsPointHistoryLoading(true);
+
+      try {
+        const pointsResponse = await getAdminMemberPoints(memberId);
+
+        if (selectionRequestSequenceRef.current !== mySelectionSeq || pointHistoryRequestSequenceRef.current !== myHistorySeq) return;
+
+        if (pointsResponse.memberId === memberId) {
+          setPointHistories(pointsResponse.tab.content);
+          setPointHistoryError('');
+        } else {
+          setPointHistories([]);
+          setPointHistoryError('포인트 이력을 불러오지 못했습니다.');
+        }
+      } catch {
+        if (selectionRequestSequenceRef.current !== mySelectionSeq || pointHistoryRequestSequenceRef.current !== myHistorySeq) return;
+
+        setPointHistories([]);
+        setPointHistoryError('포인트 이력을 불러오지 못했습니다.');
+      } finally {
+        if (selectionRequestSequenceRef.current === mySelectionSeq && pointHistoryRequestSequenceRef.current === myHistorySeq) {
+          setIsPointHistoryLoading(false);
+        }
+      }
     } catch (error) {
-      setFormError(getApiErrorMessage(error));
+      if (selectionRequestSequenceRef.current === mySelectionSeq) {
+        setFormError(getApiErrorMessage(error));
+      }
     } finally {
       setIsSaving(false);
     }
@@ -899,7 +934,7 @@ export function AdminCouponsPointsPage() {
                         <td>{formatPoint(member.pointBalance)}</td>
                         <td>
                           <div className={styles.rowActions}>
-                            <button type="button" onClick={() => void handleSelectMember(member)}>
+                            <button type="button" disabled={isSaving} onClick={() => void handleSelectMember(member)}>
                               선택
                             </button>
                           </div>
@@ -954,15 +989,23 @@ export function AdminCouponsPointsPage() {
             </form>
             <div className={styles.historyList} aria-label="포인트 조정 이력">
               <h3>최근 조정 이력</h3>
-              {pointHistories.map((history) => (
-                <dl key={history.pointHistoryId}>
-                  <div>
-                    <dt>{history.description}</dt>
-                    <dd className={history.pointAmount > 0 ? styles.plusPoint : styles.minusPoint}>{formatPoint(history.pointAmount)}</dd>
-                  </div>
-                  <span>{formatDate(history.createdAt)}</span>
-                </dl>
-              ))}
+              {isPointHistoryLoading ? (
+                <p>포인트 이력을 불러오는 중입니다.</p>
+              ) : pointHistoryError ? (
+                <p className={styles.modalError}>{pointHistoryError}</p>
+              ) : pointHistories.length > 0 ? (
+                pointHistories.map((history) => (
+                  <dl key={history.pointHistoryId}>
+                    <div>
+                      <dt>{history.description}</dt>
+                      <dd className={history.pointAmount > 0 ? styles.plusPoint : styles.minusPoint}>{formatPoint(history.pointAmount)}</dd>
+                    </div>
+                    <span>{formatDate(history.createdAt)}</span>
+                  </dl>
+                ))
+              ) : (
+                <p>포인트 조정 이력이 없습니다.</p>
+              )}
             </div>
           </aside>
         </div>
