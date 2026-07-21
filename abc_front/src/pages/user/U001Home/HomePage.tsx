@@ -1,6 +1,7 @@
 // 홈 화면(U001) — 배너 슬라이드, 카테고리, 추천/신간/베스트 도서 섹션을 보여준다.
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { AnimatePresence, motion, useReducedMotion, type Variants } from 'framer-motion';
 import { getBestBooks, getLatestBooks, getRecommendedBooks } from '../../../api/bookApi';
 import { getCollections } from '../../../api/collectionApi';
 import { getNotices } from '../../../api/noticeApi';
@@ -80,6 +81,22 @@ const fallbackBestBooks: BookItem[] = [
   { id: 30, title: '책상 위 우주', author: '송이준', tone: '#dd4594' },
 ];
 
+const heroSlideVariants: Variants = {
+  enter: (direction: number) => ({ x: direction > 0 ? '100%' : '-100%', opacity: 0 }),
+  center: { x: '0%', opacity: 1 },
+  exit: (direction: number) => ({ x: direction > 0 ? '-100%' : '100%', opacity: 0 }),
+};
+
+const sectionGridVariants: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.08 } },
+};
+
+const sectionCardVariants: Variants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+};
+
 function toBookItems(books: BookCard[], fallbackBooks: BookItem[]) {
   if (!books.length) return fallbackBooks;
 
@@ -105,7 +122,8 @@ function toCollectionBookItems(books: BookCard[]) {
 
 export function HomePage() {
   const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
-  const [activeBannerIndex, setActiveBannerIndex] = useState(0);
+  const prefersReducedMotion = useReducedMotion();
+  const [[activeBannerIndex, bannerDirection], setBannerState] = useState<[number, number]>([0, 1]);
   const [recommendedBooks, setRecommendedBooks] = useState<BookItem[]>(isLoggedIn ? fallbackRecommendedBooks : fallbackBestBooks);
   const [newBooks, setNewBooks] = useState<BookItem[]>(fallbackNewBooks);
   const [bestBooks, setBestBooks] = useState<BookItem[]>(fallbackBestBooks);
@@ -115,7 +133,7 @@ export function HomePage() {
 
   useEffect(() => {
     const timerId = window.setInterval(() => {
-      setActiveBannerIndex((currentIndex) => (currentIndex + 1) % bannerItems.length);
+      setBannerState(([currentIndex]) => [(currentIndex + 1) % bannerItems.length, 1]);
     }, 5000);
 
     return () => window.clearInterval(timerId);
@@ -231,29 +249,40 @@ export function HomePage() {
   }, [bestBooks, collectionSection, memberName, newBooks, recommendedBooks]);
 
   function moveBanner(direction: 1 | -1) {
-    setActiveBannerIndex((currentIndex) => (currentIndex + direction + bannerItems.length) % bannerItems.length);
+    setBannerState(([currentIndex]) => [(currentIndex + direction + bannerItems.length) % bannerItems.length, direction]);
   }
+
+  const activeBanner = bannerItems[activeBannerIndex];
 
   return (
     <div className="home-page">
       <section className="home-hero" aria-label="광고 이벤트 배너">
         <Link className="home-hero-link" to="/events">
-          <div className="home-hero-track" style={{ transform: `translateX(-${activeBannerIndex * 100}%)` }}>
-            {bannerItems.map((banner) => (
-              <article className="home-hero-slide" key={banner.title}>
+          <div className="home-hero-track">
+            <AnimatePresence initial={false} custom={bannerDirection} mode="wait">
+              <motion.article
+                className="home-hero-slide"
+                key={activeBanner.title}
+                custom={bannerDirection}
+                variants={heroSlideVariants}
+                initial={prefersReducedMotion ? 'center' : 'enter'}
+                animate="center"
+                exit={prefersReducedMotion ? 'center' : 'exit'}
+                transition={{ duration: prefersReducedMotion ? 0 : 0.45, ease: 'easeInOut' }}
+              >
                 <div className="home-hero-copy">
-                  <span>{banner.badge}</span>
-                  <h1>{banner.title}</h1>
-                  <p>{banner.description}</p>
+                  <span>{activeBanner.badge}</span>
+                  <h1>{activeBanner.title}</h1>
+                  <p>{activeBanner.description}</p>
                 </div>
                 <div className="home-hero-book" aria-hidden="true">
                   <div className="home-hero-face">
-                    <strong>{banner.coverTitle}</strong>
+                    <strong>{activeBanner.coverTitle}</strong>
                     <small>ABC Book</small>
                   </div>
                 </div>
-              </article>
-            ))}
+              </motion.article>
+            </AnimatePresence>
           </div>
         </Link>
         <button type="button" className="home-hero-arrow home-hero-arrow-prev" aria-label="이전 배너 보기" onClick={() => moveBanner(-1)}>
@@ -272,7 +301,7 @@ export function HomePage() {
               className={`home-hero-dot ${index === activeBannerIndex ? 'is-active' : ''}`}
               aria-label={`${index + 1}번째 배너로 이동`}
               aria-selected={index === activeBannerIndex}
-              onClick={() => setActiveBannerIndex(index)}
+              onClick={() => setBannerState(([currentIndex]) => [index, index > currentIndex ? 1 : -1])}
             />
           ))}
         </div>
@@ -319,19 +348,27 @@ export function HomePage() {
               <Link to={section.moreTo}>더보기 &gt;</Link>
             </div>
 
-            <div className={section.ranked ? 'home-best-grid' : 'home-book-row'}>
+            <motion.div
+              className={section.ranked ? 'home-best-grid' : 'home-book-row'}
+              variants={sectionGridVariants}
+              initial={prefersReducedMotion ? false : 'hidden'}
+              whileInView={prefersReducedMotion ? undefined : 'visible'}
+              viewport={{ once: true, amount: 0.15 }}
+            >
               {section.books.map((book, index) => (
-                <Link className="home-book-card" to={`/books/${book.id}`} key={book.id}>
-                  {book.coverImageUrl ? (
-                    <img className="home-book-cover" src={book.coverImageUrl} alt="" />
-                  ) : (
-                    <span className="home-book-cover" style={{ backgroundColor: book.tone }} />
-                  )}
-                  <strong>{section.ranked ? `${index + 1}. ${book.title}` : book.title}</strong>
-                  <small>{book.author}</small>
-                </Link>
+                <motion.div variants={sectionCardVariants} key={book.id}>
+                  <Link className="home-book-card" to={`/books/${book.id}`}>
+                    {book.coverImageUrl ? (
+                      <img className="home-book-cover" src={book.coverImageUrl} alt="" />
+                    ) : (
+                      <span className="home-book-cover" style={{ backgroundColor: book.tone }} />
+                    )}
+                    <strong>{section.ranked ? `${index + 1}. ${book.title}` : book.title}</strong>
+                    <small>{book.author}</small>
+                  </Link>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </section>
         );
       })}

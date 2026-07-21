@@ -395,6 +395,7 @@
   color: var(--color-text);
   text-align: center;
   text-decoration: none;
+  perspective: 800px;
 }
 
 .books-card span,
@@ -405,6 +406,29 @@
   border-radius: var(--radius-lg);
   background: #969191;
   object-fit: cover;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.books-card:hover span,
+.books-card:hover img,
+.books-card:focus-visible span,
+.books-card:focus-visible img {
+  transform: rotateX(4deg) rotateY(-4deg) scale(1.03);
+  box-shadow: var(--shadow-md);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .books-card span,
+  .books-card img {
+    transition: none;
+  }
+
+  .books-card:hover span,
+  .books-card:hover img,
+  .books-card:focus-visible span,
+  .books-card:focus-visible img {
+    transform: none;
+  }
 }
 
 .books-card strong,

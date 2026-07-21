@@ -2,6 +2,7 @@
 import { useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import type { UserProfile } from '../../types/api';
+import { CountUpValue } from '../common/CountUpValue';
 
 type MyPageOverviewProps = {
   profile: UserProfile | null;
@@ -30,6 +31,8 @@ type MembershipGradeDetails = {
 type TopStat = {
   label: string;
   value: string | number;
+  numericValue?: number;
+  suffix?: string;
   to?: string;
 };
 
@@ -108,13 +111,13 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
   const grade = displayProfile.gradeName ?? displayProfile.membershipGrade ?? '새싹';
   const gradeDetails = getMembershipGradeDetails(displayProfile, grade);
   const topStats: TopStat[] = [
-    { label: '포인트', value: formatPoint(displayProfile.point), to: '/me/points-coupons' },
-    { label: '쿠폰', value: valueOrDash(displayProfile.couponCount), to: '/me/points-coupons' },
+    { label: '포인트', value: formatPoint(displayProfile.point), numericValue: displayProfile.point ?? 0, suffix: 'p', to: '/me/points-coupons' },
+    { label: '쿠폰', value: valueOrDash(displayProfile.couponCount), numericValue: displayProfile.couponCount, to: '/me/points-coupons' },
   ];
   const bottomStats: TopStat[] = [
-    { label: '대여', value: valueOrDash(displayProfile.rentalCount), to: '/me/rentals' },
-    { label: '완독', value: valueOrDash(displayProfile.completedBookCount) },
-    { label: '즐겨찾기', value: valueOrDash(displayProfile.favoriteCount) },
+    { label: '대여', value: valueOrDash(displayProfile.rentalCount), numericValue: displayProfile.rentalCount, to: '/me/rentals' },
+    { label: '완독', value: valueOrDash(displayProfile.completedBookCount), numericValue: displayProfile.completedBookCount },
+    { label: '즐겨찾기', value: valueOrDash(displayProfile.favoriteCount), numericValue: displayProfile.favoriteCount },
   ];
   const readingBars = [
     { label: '리뷰', value: valueOrDash(displayProfile.reviewCount), percent: getPercent(displayProfile.reviewCount, 44) },
@@ -167,12 +170,12 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
               {topStats.map((card) =>
                 card.to ? (
                   <Link className="count-card" key={card.label} to={card.to}>
-                    <strong>{card.value}</strong>
+                    <strong>{typeof card.numericValue === 'number' ? <CountUpValue value={card.numericValue} suffix={card.suffix} /> : card.value}</strong>
                     <span>{card.label}</span>
                   </Link>
                 ) : (
                   <div className="count-card" key={card.label}>
-                    <strong>{card.value}</strong>
+                    <strong>{typeof card.numericValue === 'number' ? <CountUpValue value={card.numericValue} suffix={card.suffix} /> : card.value}</strong>
                     <span>{card.label}</span>
                   </div>
                 ),
@@ -183,12 +186,12 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
             {bottomStats.map((card) =>
               card.to ? (
                 <Link className="count-card" key={card.label} to={card.to}>
-                  <strong>{card.value}</strong>
+                  <strong>{typeof card.numericValue === 'number' ? <CountUpValue value={card.numericValue} suffix={card.suffix} /> : card.value}</strong>
                   <span>{card.label}</span>
                 </Link>
               ) : (
                 <div className="count-card" key={card.label}>
-                  <strong>{card.value}</strong>
+                  <strong>{typeof card.numericValue === 'number' ? <CountUpValue value={card.numericValue} suffix={card.suffix} /> : card.value}</strong>
                   <span>{card.label}</span>
                 </div>
               ),

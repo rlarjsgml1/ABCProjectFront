@@ -66,6 +66,7 @@
 .info h1 {
   margin: 0 0 var(--space-4);
   color: var(--color-text);
+  font-family: var(--font-heading);
 }
 
 .meta,
