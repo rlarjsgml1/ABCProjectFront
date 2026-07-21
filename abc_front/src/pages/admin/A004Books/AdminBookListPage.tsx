@@ -36,61 +36,6 @@ const fallbackCategories: Category[] = [
   { categoryId: 5, name: '자기계발' },
 ];
 
-const fallbackBooks: AdminBookSummary[] = [
-  {
-    bookId: 1001,
-    title: '나의 첫 번째 부동산 교과서',
-    author: '김하늘',
-    publisherName: 'ABC 출판',
-    isbn: '9791190001001',
-    categoryId: 2,
-    categoryName: '경제 / 경영',
-    rentalType: 'PAID',
-    rentalPrice: 3500,
-    status: 'AVAILABLE',
-    createdAt: '2026-07-01T09:00:00',
-  },
-  {
-    bookId: 1002,
-    title: '해커스 토익 기출 VOCA',
-    author: '이서윤',
-    publisherName: '어학북스',
-    isbn: '9791190001002',
-    categoryId: 5,
-    categoryName: '자기계발',
-    rentalType: 'FREE',
-    rentalPrice: 0,
-    status: 'AVAILABLE',
-    createdAt: '2026-07-02T10:30:00',
-  },
-  {
-    bookId: 1003,
-    title: '품격 있는 대화를 위한 말하기',
-    author: '박도현',
-    publisherName: '문장사',
-    isbn: '9791190001003',
-    categoryId: 3,
-    categoryName: '인문 / 사회 / 역사',
-    rentalType: 'PAID',
-    rentalPrice: 2800,
-    status: 'HIDDEN',
-    createdAt: '2026-07-03T14:10:00',
-  },
-  {
-    bookId: 1004,
-    title: '리액트 관리 화면 만들기',
-    author: '최민지',
-    publisherName: '테크북',
-    isbn: '9791190001004',
-    categoryId: 4,
-    categoryName: '컴퓨터 / IT',
-    rentalType: 'PAID',
-    rentalPrice: 4200,
-    status: 'INACTIVE',
-    createdAt: '2026-07-04T16:20:00',
-  },
-];
-
 function toApiPage(uiPage: number) {
   return Math.max(uiPage - 1, 0);
 }
@@ -104,19 +49,15 @@ function getOptionLabel<T extends string>(options: Array<{ value: T; label: stri
 }
 
 function getAuthorText(book: AdminBookSummary) {
-  if (book.authors?.length) {
-    return book.authors.join(', ');
-  }
-
-  return book.author || '-';
+  return book.authorNames.length ? book.authorNames.join(', ') : '-';
 }
 
 function getPublisherText(book: AdminBookSummary) {
-  return book.publisherName || book.publisher || '-';
+  return book.publisherName || '-';
 }
 
 function getCategoryText(book: AdminBookSummary) {
-  return book.categoryName || book.categories?.map((category) => category.name || category.categoryName).filter(Boolean).join(', ') || '-';
+  return book.categories.length ? book.categories.map((category) => category.categoryName).join(', ') : '-';
 }
 
 function formatPrice(book: AdminBookSummary) {
@@ -129,34 +70,6 @@ function formatPrice(book: AdminBookSummary) {
 
 function flattenCategories(categories: Category[]): Category[] {
   return categories.flatMap((category) => [category, ...(category.children ? flattenCategories(category.children) : [])]);
-}
-
-function buildFallbackBookPage(query: AdminBookListQuery): PageResponse<AdminBookSummary> {
-  const keyword = query.q?.trim().toLowerCase();
-
-  const filtered = fallbackBooks.filter((book) => {
-    const matchesKeyword = keyword
-      ? [book.title, getAuthorText(book), getPublisherText(book), book.isbn].join(' ').toLowerCase().includes(keyword)
-      : true;
-    const matchesCategory = query.categoryId ? book.categoryId === query.categoryId : true;
-    const matchesRentalType = query.rentalType ? book.rentalType === query.rentalType : true;
-    const matchesStatus = query.status ? book.status === query.status : true;
-
-    return matchesKeyword && matchesCategory && matchesRentalType && matchesStatus;
-  });
-
-  const page = query.page ?? 0;
-  const size = query.size ?? PAGE_SIZE;
-  const start = page * size;
-
-  return {
-    content: filtered.slice(start, start + size),
-    page,
-    size,
-    totalElements: filtered.length,
-    totalPages: Math.max(Math.ceil(filtered.length / size), 1),
-    last: start + size >= filtered.length,
-  };
 }
 
 export function AdminBookListPage() {
@@ -227,8 +140,8 @@ export function AdminBookListPage() {
         }
       } catch (error) {
         if (!ignore) {
-          setBooksPage(buildFallbackBookPage(query));
-          setErrorMessage(`${getApiErrorMessage(error)} 화면 확인을 위해 임시 도서 목록을 표시합니다.`);
+          setBooksPage(null);
+          setErrorMessage(getApiErrorMessage(error));
         }
       } finally {
         if (!ignore) {
@@ -298,7 +211,9 @@ export function AdminBookListPage() {
 
     if (!selectedBook) return;
 
-    if (!statusForm.reason.trim()) {
+    const isActualChange = statusForm.status !== selectedBook.status;
+
+    if (isActualChange && !statusForm.reason?.trim()) {
       setModalError('상태 변경 사유를 입력해 주세요.');
       return;
     }
@@ -310,16 +225,9 @@ export function AdminBookListPage() {
       await changeAdminBookStatus(selectedBook.bookId, statusForm);
       setStatusMessage('도서 상태가 변경되었습니다.');
       setSelectedBook(null);
-      setBooksPage((current) => {
-        if (!current) return current;
 
-        return {
-          ...current,
-          content: current.content.map((book) =>
-            book.bookId === selectedBook.bookId ? { ...book, status: statusForm.status } : book,
-          ),
-        };
-      });
+      const refreshed = await getAdminBooks(query);
+      setBooksPage(refreshed);
     } catch (error) {
       setModalError(getApiErrorMessage(error));
     } finally {
@@ -482,7 +390,7 @@ export function AdminBookListPage() {
                 })
               ) : (
                 <tr>
-                  <td colSpan={10}>표시할 도서가 없습니다.</td>
+                  <td colSpan={10}>{errorMessage ? '도서 목록을 불러오지 못했습니다.' : '표시할 도서가 없습니다.'}</td>
                 </tr>
               )}
             </tbody>
