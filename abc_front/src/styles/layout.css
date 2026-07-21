@@ -351,7 +351,7 @@
   flex-direction: column;
   height: 100vh;
   min-width: 0;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .admin-topbar {
@@ -456,7 +456,6 @@
   flex: 1;
   padding: var(--space-8);
   background: var(--color-background);
-  overflow-y: auto;
 }
 
 @media (max-width: 900px) {
@@ -3264,7 +3263,8 @@ a.count-card:focus-visible {
   --abc-header-muted: var(--color-muted);
   --abc-header-control: 40px;
   width: 100%;
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 50;
   padding: var(--space-6) 0;
   background: var(--abc-header-surface);
