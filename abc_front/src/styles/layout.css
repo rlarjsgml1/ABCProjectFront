@@ -579,6 +579,54 @@ a.admin-dashboard-kpi-card:focus-visible {
   color: var(--color-danger);
 }
 
+.admin-dashboard-kpi-skeleton {
+  gap: var(--space-3);
+}
+
+.admin-dashboard-kpi-skeleton-pill,
+.admin-dashboard-kpi-skeleton-value,
+.admin-dashboard-kpi-skeleton-caption {
+  display: block;
+  border-radius: var(--radius-md);
+  background: linear-gradient(90deg, var(--color-surface-muted) 25%, var(--color-border) 37%, var(--color-surface-muted) 63%);
+  background-size: 400% 100%;
+  animation: admin-skeleton-shimmer 1.4s ease infinite;
+}
+
+.admin-dashboard-kpi-skeleton-pill {
+  width: 72px;
+  height: 22px;
+  border-radius: var(--space-10);
+}
+
+.admin-dashboard-kpi-skeleton-value {
+  width: 60%;
+  height: 28px;
+}
+
+.admin-dashboard-kpi-skeleton-caption {
+  width: 85%;
+  height: 14px;
+}
+
+@keyframes admin-skeleton-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-kpi-skeleton-pill,
+  .admin-dashboard-kpi-skeleton-value,
+  .admin-dashboard-kpi-skeleton-caption {
+    animation: none;
+  }
+}
+
 .admin-dashboard-panels {
   display: grid;
   grid-template-columns: minmax(220px, 1fr) 1.6fr 1.6fr;
@@ -3306,9 +3354,27 @@ a.count-card:focus-visible {
   width: min(42vw, 560px);
   max-width: 560px;
   height: 44px;
+  border: 1px solid transparent;
   border-radius: 999px;
   background: var(--color-surface-muted);
   overflow: visible;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.abc-search:focus-within {
+  transform: scale(1.01);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .abc-search {
+    transition: none;
+  }
+
+  .abc-search:focus-within {
+    transform: none;
+  }
 }
 
 .abc-search-button {
