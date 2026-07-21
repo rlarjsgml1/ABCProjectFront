@@ -1,11 +1,20 @@
 // 프로필 수정 화면(U015) — 회원 기본 정보 수정과 비밀번호 변경을 담당한다.
 import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { changeMyPassword, getApiErrorMessage, updateMyProfile } from '../../../api/profileApi';
+import { AUTH_CHANGED_EVENT } from '../../../api/authApi';
+import { changeMyPassword, getApiErrorMessage, updateMyProfile, withdrawMyAccount } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
+import { Modal } from '../../../components/common/Modal';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
 import { useMyProfile } from '../../../context/MyProfileContext';
-import type { UserPasswordChangeRequest, UserProfile, UserProfileUpdateRequest } from '../../../types/api';
+import type {
+  UserPasswordChangeRequest,
+  UserProfile,
+  UserProfileUpdateRequest,
+  UserWithdrawalRequest,
+} from '../../../types/api';
+
+const authStorageKeys = ['accessToken', 'memberRole', 'memberId', 'loginId', 'memberName'];
 
 const emptyProfile: UserProfile = {
   loginId: '-',
@@ -22,6 +31,11 @@ const initialPasswordForm: UserPasswordChangeRequest = {
   currentPassword: '',
   newPassword: '',
   newPasswordConfirm: '',
+};
+
+const initialWithdrawalForm: UserWithdrawalRequest = {
+  currentPassword: '',
+  withdrawalReason: '',
 };
 
 // API-ME-002 기준으로 수정 가능한 필드만 검증한다.
@@ -62,17 +76,30 @@ function validatePasswordForm(form: UserPasswordChangeRequest) {
   return '';
 }
 
+// API-ME-004는 현재 비밀번호 확인을 필수로 요구한다. 탈퇴 사유는 선택.
+function validateWithdrawalForm(form: UserWithdrawalRequest) {
+  if (!form.currentPassword) {
+    return '현재 비밀번호를 입력하세요.';
+  }
+
+  return '';
+}
+
 export function ProfileEditPage() {
   const navigate = useNavigate();
   const { profile, isLoading, refetchProfile } = useMyProfile();
   const [form, setForm] = useState<UserProfileUpdateRequest>({ name: '', email: '', phone: '', gender: '' });
   const [passwordForm, setPasswordForm] = useState<UserPasswordChangeRequest>(initialPasswordForm);
+  const [withdrawalForm, setWithdrawalForm] = useState<UserWithdrawalRequest>(initialWithdrawalForm);
   const [isSaving, setIsSaving] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [isWithdrawalModalOpen, setIsWithdrawalModalOpen] = useState(false);
   const [profileMessage, setProfileMessage] = useState('');
   const [profileError, setProfileError] = useState('');
   const [passwordMessage, setPasswordMessage] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [withdrawalError, setWithdrawalError] = useState('');
 
   useEffect(() => {
     if (profile) {
@@ -133,6 +160,43 @@ export function ProfileEditPage() {
       setPasswordError(getApiErrorMessage(error));
     } finally {
       setIsChangingPassword(false);
+    }
+  }
+
+  function openWithdrawalModal() {
+    setWithdrawalForm(initialWithdrawalForm);
+    setWithdrawalError('');
+    setIsWithdrawalModalOpen(true);
+  }
+
+  function closeWithdrawalModal() {
+    if (isWithdrawing) return;
+    setIsWithdrawalModalOpen(false);
+  }
+
+  async function handleWithdrawalSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const validationMessage = validateWithdrawalForm(withdrawalForm);
+
+    if (validationMessage) {
+      setWithdrawalError(validationMessage);
+      return;
+    }
+
+    setIsWithdrawing(true);
+    setWithdrawalError('');
+
+    try {
+      await withdrawMyAccount({
+        currentPassword: withdrawalForm.currentPassword,
+        withdrawalReason: withdrawalForm.withdrawalReason?.trim() || undefined,
+      });
+      authStorageKeys.forEach((key) => localStorage.removeItem(key));
+      window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
+      navigate('/', { state: { withdrawalComplete: true } });
+    } catch (error) {
+      setWithdrawalError(getApiErrorMessage(error));
+      setIsWithdrawing(false);
     }
   }
 
@@ -280,11 +344,58 @@ export function ProfileEditPage() {
         <section className="page-section withdrawal-panel">
           <p className="eyebrow">WITHDRAWAL</p>
           <h2>회원 탈퇴</h2>
-          <p>탈퇴 기능은 안전 확인 절차가 준비된 뒤 활성화됩니다. 현재 화면에서는 신청할 수 없습니다.</p>
-          <button className="button button-danger" type="button" disabled aria-disabled="true">
-            회원 탈퇴 비활성화
+          <p>탈퇴 시 계정이 즉시 비활성화됩니다. 진행 중인 대여가 있으면 탈퇴할 수 없습니다.</p>
+          <button className="button button-danger" type="button" onClick={openWithdrawalModal}>
+            회원 탈퇴
           </button>
         </section>
+
+        <Modal
+          isOpen={isWithdrawalModalOpen}
+          onClose={closeWithdrawalModal}
+          title="회원 탈퇴"
+          eyebrow="WITHDRAWAL"
+          titleId="withdrawal-modal-title"
+          closeLabel="닫기"
+        >
+          <form onSubmit={handleWithdrawalSubmit}>
+            <p>
+              탈퇴하면 계정을 다시 사용할 수 없습니다. 계속하려면 현재 비밀번호를 입력하세요.
+            </p>
+            <div className="profile-form-grid">
+              <label>
+                현재 비밀번호
+                <input
+                  type="password"
+                  value={withdrawalForm.currentPassword}
+                  onChange={(event) =>
+                    setWithdrawalForm((current) => ({ ...current, currentPassword: event.target.value }))
+                  }
+                  autoFocus
+                />
+              </label>
+              <label>
+                탈퇴 사유 (선택)
+                <input
+                  type="text"
+                  value={withdrawalForm.withdrawalReason}
+                  onChange={(event) =>
+                    setWithdrawalForm((current) => ({ ...current, withdrawalReason: event.target.value }))
+                  }
+                />
+              </label>
+            </div>
+            {withdrawalError ? <div className="status-banner status-banner-error">{withdrawalError}</div> : null}
+            <div className="form-action-row">
+              <Button type="button" variant="secondary" onClick={closeWithdrawalModal} disabled={isWithdrawing}>
+                취소
+              </Button>
+              <Button type="submit" variant="danger" disabled={isWithdrawing}>
+                {isWithdrawing ? '탈퇴 처리 중' : '탈퇴하기'}
+              </Button>
+            </div>
+          </form>
+        </Modal>
     </MyPageLayout>
   );
 }
