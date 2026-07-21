@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getBestBooks, getCategories, getLatestBooks, getRecommendedBooks } from '../../../api/bookApi';
+import { getCollections } from '../../../api/collectionApi';
 import { getNotices } from '../../../api/noticeApi';
 import type { BookCard, Category, NoticeItem } from '../../../types/api';
 import '../../../styles/home.css';
@@ -107,6 +108,17 @@ function toBookItems(books: BookCard[], fallbackBooks: BookItem[]) {
   }));
 }
 
+// 컬렉션 섹션은 실데이터가 없으면 더미로 대체하지 않고 섹션 자체를 표시하지 않는다.
+function toCollectionBookItems(books: BookCard[]) {
+  return books.map((book, index) => ({
+    id: book.bookId,
+    title: book.title,
+    author: book.authors?.join(', ') || book.publisherName || 'ABC',
+    tone: fallbackBestBooks[index % fallbackBestBooks.length].tone,
+    coverImageUrl: book.coverImageUrl,
+  }));
+}
+
 function toHomeCategories(categories: Category[]) {
   if (!categories.length) return fallbackCategories;
 
@@ -132,6 +144,7 @@ export function HomePage() {
   const [newBooks, setNewBooks] = useState<BookItem[]>(fallbackNewBooks);
   const [bestBooks, setBestBooks] = useState<BookItem[]>(fallbackBestBooks);
   const [latestNotice, setLatestNotice] = useState<NoticeItem | null>(null);
+  const [collectionSection, setCollectionSection] = useState<{ collectionId: number; title: string; books: BookItem[] } | null>(null);
   const memberName = localStorage.getItem('memberName');
 
   useEffect(() => {
@@ -146,12 +159,13 @@ export function HomePage() {
     let ignore = false;
 
     async function loadHomeData() {
-      const [categoriesResult, recommendedResult, latestResult, bestResult, noticeResult] = await Promise.allSettled([
+      const [categoriesResult, recommendedResult, latestResult, bestResult, noticeResult, collectionsResult] = await Promise.allSettled([
         getCategories(),
         isLoggedIn ? getRecommendedBooks(5) : getBestBooks(5),
         getLatestBooks(5),
         getBestBooks(10),
         getNotices(0, 1),
+        getCollections({ status: 'ACTIVE', page: 0, size: 1, previewSize: 10 }),
       ]);
 
       if (ignore) return;
@@ -174,6 +188,17 @@ export function HomePage() {
 
       if (bestResult.status === 'fulfilled') {
         setBestBooks(toBookItems(bestResult.value, fallbackBestBooks));
+      }
+
+      if (collectionsResult.status === 'fulfilled') {
+        const firstCollection = collectionsResult.value.content[0];
+        if (firstCollection && firstCollection.previewBooks.length > 0) {
+          setCollectionSection({
+            collectionId: firstCollection.collectionId,
+            title: firstCollection.collectionName,
+            books: toCollectionBookItems(firstCollection.previewBooks),
+          });
+        }
       }
     }
 
@@ -208,8 +233,8 @@ export function HomePage() {
     };
   }, []);
 
-  const bookSections: BookSection[] = useMemo(
-    () => [
+  const bookSections: BookSection[] = useMemo(() => {
+    const sections: BookSection[] = [
       {
         title: memberName ? `${memberName}님을 위한 ABC 추천 도서` : 'ABC 추천 도서',
         moreTo: '/books?section=recommend&source=home',
@@ -226,9 +251,18 @@ export function HomePage() {
         books: bestBooks,
         ranked: true,
       },
-    ],
-    [bestBooks, memberName, newBooks, recommendedBooks],
-  );
+    ];
+
+    if (collectionSection) {
+      sections.push({
+        title: collectionSection.title,
+        moreTo: `/books?section=collection&collectionId=${collectionSection.collectionId}&source=home`,
+        books: collectionSection.books,
+      });
+    }
+
+    return sections;
+  }, [bestBooks, collectionSection, memberName, newBooks, recommendedBooks]);
 
   function moveBanner(direction: 1 | -1) {
     setActiveBannerIndex((currentIndex) => (currentIndex + direction + bannerItems.length) % bannerItems.length);
