@@ -4,7 +4,8 @@
 
 html {
   scroll-behavior: smooth;
-  overflow-x: hidden;
+  /* hidden을 쓰면 overflow-y가 auto로 강제돼 하위 position:sticky가 깨진다. clip은 그 부작용 없이 가로 스크롤만 막는다. */
+  overflow-x: clip;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -17,7 +18,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
   color: var(--color-text);
   background: var(--color-background);
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
