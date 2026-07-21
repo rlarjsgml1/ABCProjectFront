@@ -108,7 +108,6 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
   const grade = displayProfile.gradeName ?? displayProfile.membershipGrade ?? '새싹';
   const gradeDetails = getMembershipGradeDetails(displayProfile, grade);
   const topStats: TopStat[] = [
-    { label: '리뷰', value: valueOrDash(displayProfile.reviewCount) },
     { label: '포인트', value: formatPoint(displayProfile.point), to: '/me/points-coupons' },
     { label: '쿠폰', value: valueOrDash(displayProfile.couponCount), to: '/me/points-coupons' },
   ];
@@ -164,7 +163,7 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
                 <small>{grade}</small>
               </button>
             </div>
-            <div className="count-card-grid count-card-grid-top" aria-label="리뷰 포인트 쿠폰 요약">
+            <div className="count-card-grid count-card-grid-top" aria-label="포인트 쿠폰 요약">
               {topStats.map((card) =>
                 card.to ? (
                   <Link className="count-card" key={card.label} to={card.to}>
