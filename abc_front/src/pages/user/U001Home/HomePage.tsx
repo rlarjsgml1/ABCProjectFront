@@ -3,7 +3,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getBestBooks, getLatestBooks, getRecommendedBooks } from '../../../api/bookApi';
 import { getCollections } from '../../../api/collectionApi';
-import type { BookCard } from '../../../types/api';
+import { getNotices } from '../../../api/noticeApi';
+import type { BookCard, NoticeItem } from '../../../types/api';
 import '../../../styles/HomePage.css';
 
 type BookItem = {
@@ -108,6 +109,7 @@ export function HomePage() {
   const [recommendedBooks, setRecommendedBooks] = useState<BookItem[]>(isLoggedIn ? fallbackRecommendedBooks : fallbackBestBooks);
   const [newBooks, setNewBooks] = useState<BookItem[]>(fallbackNewBooks);
   const [bestBooks, setBestBooks] = useState<BookItem[]>(fallbackBestBooks);
+  const [latestNotice, setLatestNotice] = useState<NoticeItem | null>(null);
   const [collectionSection, setCollectionSection] = useState<{ collectionId: number; title: string; books: BookItem[] } | null>(null);
   const memberName = localStorage.getItem('memberName');
 
@@ -123,14 +125,19 @@ export function HomePage() {
     let ignore = false;
 
     async function loadHomeData() {
-      const [recommendedResult, latestResult, bestResult, collectionsResult] = await Promise.allSettled([
+      const [recommendedResult, latestResult, bestResult, noticeResult, collectionsResult] = await Promise.allSettled([
         isLoggedIn ? getRecommendedBooks(5) : getBestBooks(5),
         getLatestBooks(5),
         getBestBooks(10),
+        getNotices(0, 1),
         getCollections({ status: 'ACTIVE', page: 0, size: 1, previewSize: 10 }),
       ]);
 
       if (ignore) return;
+
+      if (noticeResult.status === 'fulfilled') {
+        setLatestNotice(noticeResult.value.content[0] ?? null);
+      }
 
       if (recommendedResult.status === 'fulfilled') {
         setRecommendedBooks(toBookItems(recommendedResult.value, isLoggedIn ? fallbackRecommendedBooks : fallbackBestBooks));
@@ -162,6 +169,30 @@ export function HomePage() {
       ignore = true;
     };
   }, [isLoggedIn]);
+
+  // 최초 로딩은 위 loadHomeData가 담당하고, 여기서는 1분 주기로 최신 공지만 재조회한다.
+  // 실시간은 아니고 최대 1분 지연되는 polling 방식이다.
+  useEffect(() => {
+    let ignore = false;
+
+    async function pollLatestNotice() {
+      try {
+        const data = await getNotices(0, 1);
+        if (!ignore) {
+          setLatestNotice(data.content[0] ?? null);
+        }
+      } catch {
+        // 폴링 실패는 조용히 무시하고 다음 주기에 재시도한다.
+      }
+    }
+
+    const intervalId = window.setInterval(() => void pollLatestNotice(), 60000);
+
+    return () => {
+      ignore = true;
+      window.clearInterval(intervalId);
+    };
+  }, []);
 
   const bookSections: BookSection[] = useMemo(() => {
     const sections: BookSection[] = [
@@ -303,10 +334,10 @@ export function HomePage() {
         );
       })}
 
-      <Link className="home-notice-ticker home-notice-footer" to="/notices">
+      <Link className="home-notice-ticker home-notice-footer" to={latestNotice ? `/notices/${latestNotice.noticeId}` : '/notices'}>
         <span className="home-notice-icon" aria-hidden="true">📢</span>
         <strong>NOTICE</strong>
-        <p>공지사항과 이벤트 소식을 ABC 메인에서 확인하세요.</p>
+        <p>{latestNotice ? latestNotice.title : '공지사항과 이벤트 소식을 ABC 메인에서 확인하세요.'}</p>
       </Link>
     </div>
   );
