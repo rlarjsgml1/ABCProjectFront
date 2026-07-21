@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getBestBooks, getLatestBooks, getRecommendedBooks } from '../../../api/bookApi';
+import { getCollections } from '../../../api/collectionApi';
 import type { BookCard } from '../../../types/api';
 import '../../../styles/HomePage.css';
 
@@ -17,7 +18,7 @@ type BookSection = {
   title: string;
   moreTo: string;
   books: BookItem[];
-  kind: 'recommend' | 'latest' | 'best';
+  kind?: 'recommend' | 'latest' | 'best';
   ranked?: boolean;
 };
 
@@ -90,12 +91,24 @@ function toBookItems(books: BookCard[], fallbackBooks: BookItem[]) {
   }));
 }
 
+// 컬렉션 섹션은 실데이터가 없으면 더미로 대체하지 않고 섹션 자체를 표시하지 않는다.
+function toCollectionBookItems(books: BookCard[]) {
+  return books.map((book, index) => ({
+    id: book.bookId,
+    title: book.title,
+    author: book.authors?.join(', ') || book.publisherName || 'ABC',
+    tone: fallbackBestBooks[index % fallbackBestBooks.length].tone,
+    coverImageUrl: book.coverImageUrl,
+  }));
+}
+
 export function HomePage() {
   const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
   const [recommendedBooks, setRecommendedBooks] = useState<BookItem[]>(isLoggedIn ? fallbackRecommendedBooks : fallbackBestBooks);
   const [newBooks, setNewBooks] = useState<BookItem[]>(fallbackNewBooks);
   const [bestBooks, setBestBooks] = useState<BookItem[]>(fallbackBestBooks);
+  const [collectionSection, setCollectionSection] = useState<{ collectionId: number; title: string; books: BookItem[] } | null>(null);
   const memberName = localStorage.getItem('memberName');
 
   useEffect(() => {
@@ -110,10 +123,11 @@ export function HomePage() {
     let ignore = false;
 
     async function loadHomeData() {
-      const [recommendedResult, latestResult, bestResult] = await Promise.allSettled([
+      const [recommendedResult, latestResult, bestResult, collectionsResult] = await Promise.allSettled([
         isLoggedIn ? getRecommendedBooks(5) : getBestBooks(5),
         getLatestBooks(5),
         getBestBooks(10),
+        getCollections({ status: 'ACTIVE', page: 0, size: 1, previewSize: 10 }),
       ]);
 
       if (ignore) return;
@@ -129,6 +143,17 @@ export function HomePage() {
       if (bestResult.status === 'fulfilled') {
         setBestBooks(toBookItems(bestResult.value, fallbackBestBooks));
       }
+
+      if (collectionsResult.status === 'fulfilled') {
+        const firstCollection = collectionsResult.value.content[0];
+        if (firstCollection && firstCollection.previewBooks.length > 0) {
+          setCollectionSection({
+            collectionId: firstCollection.collectionId,
+            title: firstCollection.collectionName,
+            books: toCollectionBookItems(firstCollection.previewBooks),
+          });
+        }
+      }
     }
 
     void loadHomeData();
@@ -138,8 +163,8 @@ export function HomePage() {
     };
   }, [isLoggedIn]);
 
-  const bookSections: BookSection[] = useMemo(
-    () => [
+  const bookSections: BookSection[] = useMemo(() => {
+    const sections: BookSection[] = [
       {
         title: memberName ? `${memberName}님을 위한 ABC 추천 도서` : 'ABC 추천 도서',
         moreTo: '/books?section=recommend&source=home',
@@ -159,9 +184,18 @@ export function HomePage() {
         kind: 'best',
         ranked: true,
       },
-    ],
-    [bestBooks, memberName, newBooks, recommendedBooks],
-  );
+    ];
+
+    if (collectionSection) {
+      sections.push({
+        title: collectionSection.title,
+        moreTo: `/books?section=collection&collectionId=${collectionSection.collectionId}&source=home`,
+        books: collectionSection.books,
+      });
+    }
+
+    return sections;
+  }, [bestBooks, collectionSection, memberName, newBooks, recommendedBooks]);
 
   function moveBanner(direction: 1 | -1) {
     setActiveBannerIndex((currentIndex) => (currentIndex + direction + bannerItems.length) % bannerItems.length);
@@ -221,43 +255,53 @@ export function HomePage() {
         ))}
       </div>
 
-      {bookSections.map((section) => (
-        <section className={`home-book-section home-book-section-${section.kind} ${section.ranked ? 'home-book-section-best' : ''}`} key={section.title}>
-          <div className="home-section-heading">
-            <div>
-              <h2>
-                {section.kind === 'recommend' && memberName ? (
-                  <>
-                    <span className="home-member-name">{memberName}</span>님을 위한 ABC 추천 도서
-                  </>
-                ) : (
-                  section.title
-                )}
-              </h2>
-              {!memberName && section.title === 'ABC 추천 도서' ? (
-                <p>
-                  지금 로그인하시면 ABC가 선택한 책을 보여드립니다. <Link to="/login">로그인하기</Link>
-                </p>
-              ) : null}
-            </div>
-            <Link to={section.moreTo}>더보기 &gt;</Link>
-          </div>
+      {bookSections.map((section) => {
+        const sectionClassName = [
+          'home-book-section',
+          section.kind ? `home-book-section-${section.kind}` : '',
+          section.ranked ? 'home-book-section-best' : '',
+        ]
+          .filter(Boolean)
+          .join(' ');
 
-          <div className={section.ranked ? 'home-best-grid' : 'home-book-row'}>
-            {section.books.map((book, index) => (
-              <Link className="home-book-card" to={`/books/${book.id}`} key={book.id}>
-                {book.coverImageUrl ? (
-                  <img className="home-book-cover" src={book.coverImageUrl} alt="" />
-                ) : (
-                  <span className="home-book-cover" style={{ backgroundColor: book.tone }} />
-                )}
-                <strong>{section.ranked ? `${index + 1}. ${book.title}` : book.title}</strong>
-                <small>{book.author}</small>
-              </Link>
-            ))}
-          </div>
-        </section>
-      ))}
+        return (
+          <section className={sectionClassName} key={section.title}>
+            <div className="home-section-heading">
+              <div>
+                <h2>
+                  {section.kind === 'recommend' && memberName ? (
+                    <>
+                      <span className="home-member-name">{memberName}</span>님을 위한 ABC 추천 도서
+                    </>
+                  ) : (
+                    section.title
+                  )}
+                </h2>
+                {!memberName && section.title === 'ABC 추천 도서' ? (
+                  <p>
+                    지금 로그인하시면 ABC가 선택한 책을 보여드립니다. <Link to="/login">로그인하기</Link>
+                  </p>
+                ) : null}
+              </div>
+              <Link to={section.moreTo}>더보기 &gt;</Link>
+            </div>
+
+            <div className={section.ranked ? 'home-best-grid' : 'home-book-row'}>
+              {section.books.map((book, index) => (
+                <Link className="home-book-card" to={`/books/${book.id}`} key={book.id}>
+                  {book.coverImageUrl ? (
+                    <img className="home-book-cover" src={book.coverImageUrl} alt="" />
+                  ) : (
+                    <span className="home-book-cover" style={{ backgroundColor: book.tone }} />
+                  )}
+                  <strong>{section.ranked ? `${index + 1}. ${book.title}` : book.title}</strong>
+                  <small>{book.author}</small>
+                </Link>
+              ))}
+            </div>
+          </section>
+        );
+      })}
 
       <Link className="home-notice-ticker home-notice-footer" to="/notices">
         <span className="home-notice-icon" aria-hidden="true">📢</span>

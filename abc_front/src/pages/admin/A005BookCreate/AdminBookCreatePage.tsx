@@ -8,7 +8,6 @@ import { Button } from '../../../components/common/Button';
 import type {
   AdminBookCreateRequest,
   AdminBookRentalType,
-  AdminBookStatus,
   Category,
 } from '../../../types/api';
 import styles from '../../../styles/AdminBookFormPage.module.css';
@@ -114,17 +113,15 @@ export function AdminBookCreatePage() {
 
     const payload: AdminBookCreateRequest = {
       title,
-      isbn: String(formData.get('isbn') ?? '').trim(),
+      isbn: String(formData.get('isbn') ?? '').trim() || undefined,
       publisherName,
       authors,
       categoryIds,
-      keywords: splitList(formData.get('keywords')),
       rentalType,
       rentalPrice,
       defaultRentalDays: Number(formData.get('defaultRentalDays') ?? 14) || 14,
       coverImageUrl: String(formData.get('coverImageUrl') ?? '').trim() || undefined,
-      status: String(formData.get('status') ?? 'AVAILABLE') as AdminBookStatus,
-      description: String(formData.get('description') ?? '').trim(),
+      description: String(formData.get('description') ?? '').trim() || undefined,
       tableOfContents: String(formData.get('tableOfContents') ?? '').trim() || undefined,
       publisherReview: String(formData.get('publisherReview') ?? '').trim() || undefined,
     };

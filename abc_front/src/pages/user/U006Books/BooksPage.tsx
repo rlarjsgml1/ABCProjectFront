@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { getBooks, getCategories, getRecommendedBooks, type BookListQuery } from '../../../api/bookApi';
+import { getCollectionDetail } from '../../../api/collectionApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { EmptyState } from '../../../components/common/EmptyState';
 import { Pagination } from '../../../components/common/Pagination';
@@ -60,7 +61,8 @@ const weeklyArrivalBooks: BookCard[] = [
   favoriteYn: false,
 })) as BookCard[];
 
-type SectionKey = 'recommend' | 'latest' | 'best';
+type StaticSectionKey = 'recommend' | 'latest' | 'best';
+type SectionKey = StaticSectionKey | 'collection';
 
 type SectionConfig = {
   title: string;
@@ -69,7 +71,7 @@ type SectionConfig = {
   emptyTitle: string;
 };
 
-const sectionConfigs: Record<SectionKey, SectionConfig> = {
+const sectionConfigs: Record<StaticSectionKey, SectionConfig> = {
   recommend: {
     title: '추천 도서',
     count: 16,
@@ -100,11 +102,17 @@ function formatAuthors(book: BookCard) {
 }
 
 function getSectionKey(section: string | null): SectionKey | null {
-  if (section === 'recommend' || section === 'latest' || section === 'best') {
+  if (section === 'recommend' || section === 'latest' || section === 'best' || section === 'collection') {
     return section;
   }
 
   return null;
+}
+
+function getCollectionIdParam(value: string | null): number | undefined {
+  if (!value || !/^\d+$/.test(value)) return undefined;
+
+  return Number(value);
 }
 
 // 도서 목록 API(API-BOOK-001)는 이미 구현되어 있으므로, 조회 실패는 가짜 도서로
@@ -130,10 +138,17 @@ export function BooksPage() {
   const [categories, setCategories] = useState<Category[]>(fallbackCategories);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const [collectionTitle, setCollectionTitle] = useState('');
 
   const currentPage = Number(searchParams.get('page') ?? '0');
   const sectionKey = getSectionKey(searchParams.get('section'));
-  const sectionConfig = sectionKey ? sectionConfigs[sectionKey] : null;
+  const collectionId = getCollectionIdParam(searchParams.get('collectionId'));
+  const sectionConfig =
+    sectionKey === 'collection'
+      ? { title: collectionTitle || '컬렉션 도서', count: SECTION_PAGE_SIZE, query: {} as BookListQuery, emptyTitle: '컬렉션에 도서가 없습니다.' }
+      : sectionKey
+        ? sectionConfigs[sectionKey]
+        : null;
   const sort = searchParams.get('sort') ?? (searchParams.get('section') === 'best' ? 'popular' : 'popular');
   const categoryId = searchParams.get('categoryId') ? Number(searchParams.get('categoryId')) : undefined;
   const parentCategoryId = searchParams.get('parentCategoryId') ? Number(searchParams.get('parentCategoryId')) : undefined;
@@ -256,8 +271,26 @@ export function BooksPage() {
             totalPages: 1,
             last: true,
           };
+        } else if (sectionKey === 'collection') {
+          if (!collectionId) {
+            throw new Error('컬렉션 정보를 찾을 수 없습니다.');
+          }
+
+          const detail = await getCollectionDetail(collectionId);
+          if (!ignore) {
+            setCollectionTitle(detail.collectionName);
+          }
+          data = {
+            content: detail.books,
+            page: 0,
+            size: SECTION_PAGE_SIZE,
+            totalElements: detail.books.length,
+            totalPages: 1,
+            last: true,
+          };
         } else {
-          const sectionQuery = sectionKey === 'recommend' && !isLoggedIn ? sectionConfigs.best.query : sectionConfig?.query;
+          const sectionQuery =
+            sectionKey === 'recommend' && !isLoggedIn ? sectionConfigs.best.query : sectionKey ? sectionConfigs[sectionKey].query : undefined;
           data = await getBooks(currentPage, sectionKey ? SECTION_PAGE_SIZE : PAGE_SIZE, sectionQuery ?? query);
         }
 
@@ -285,7 +318,7 @@ export function BooksPage() {
     return () => {
       ignore = true;
     };
-  }, [currentPage, isLoggedIn, query, sectionConfig, sectionKey]);
+  }, [collectionId, currentPage, isLoggedIn, query, sectionKey]);
 
   const totalPages = Math.max(1, bookPage.totalPages);
 

@@ -32,10 +32,11 @@ const statusOptions: Array<{ value: ReportStatus; label: string }> = [
   { value: 'REJECTED', label: '반려' },
 ];
 
+// 실제 백엔드 AdminSanctionType은 ACCOUNT_SUSPENSION/RENTAL_BAN/REVIEW_BAN만 허용한다(2026-07-20 API
+// 연결 작업에서 확인). RENTAL_BAN/REVIEW_BAN은 회원 status를 JOINED로 유지해야 하는데 이 화면은 그
+// 흐름을 지원하지 않아, 기존에 쓰던 계정 정지만 남긴다.
 const sanctionTypeOptions: Array<{ value: AdminSanctionType; label: string }> = [
   { value: 'ACCOUNT_SUSPENSION', label: '계정 정지' },
-  { value: 'SERVICE_LIMIT', label: '서비스 제한' },
-  { value: 'WARNING', label: '경고' },
 ];
 
 const fallbackReports: AdminReportItem[] = [
@@ -152,7 +153,7 @@ export function AdminReportListPage() {
     processResult: '',
     hideReviewYn: false,
     useSanction: false,
-    sanctionType: 'WARNING',
+    sanctionType: 'ACCOUNT_SUSPENSION',
     startedAt: '',
     endedAt: '',
     sanctionReason: '',
@@ -242,7 +243,7 @@ export function AdminReportListPage() {
       processResult: '',
       hideReviewYn: false,
       useSanction: false,
-      sanctionType: 'WARNING',
+      sanctionType: 'ACCOUNT_SUSPENSION',
       startedAt: '',
       endedAt: '',
       sanctionReason: '',
