@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Pagination } from '../../../components/common/Pagination';
 import '../../../styles/event.css';
 
 type EventItem = {
@@ -75,7 +76,6 @@ export function EventPage() {
 
   const changePage = (nextPage: number) => {
     setPage(Math.min(Math.max(nextPage, 1), totalPages));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleKeywordChange = (value: string) => {
@@ -140,31 +140,13 @@ export function EventPage() {
         <div className="event-empty">검색 결과가 없습니다.</div>
       )}
 
-      <nav className="event-pagination" aria-label="이벤트 페이지 이동">
-        <button type="button" onClick={() => changePage(currentPage - 1)} disabled={currentPage === 1}>
-          &lt;
-        </button>
-
-        {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
-          <button
-            className={pageNumber === currentPage ? 'is-active' : ''}
-            type="button"
-            onClick={() => changePage(pageNumber)}
-            key={pageNumber}
-            aria-current={pageNumber === currentPage ? 'page' : undefined}
-          >
-            {pageNumber}
-          </button>
-        ))}
-
-        <button
-          type="button"
-          onClick={() => changePage(currentPage + 1)}
-          disabled={currentPage === totalPages}
-        >
-          &gt;
-        </button>
-      </nav>
+      <Pagination
+        className="event-pagination"
+        currentPage={currentPage - 1}
+        totalPages={totalPages}
+        onPageChange={(nextPage) => changePage(nextPage + 1)}
+        ariaLabel="이벤트 페이지 이동"
+      />
     </div>
   );
 }

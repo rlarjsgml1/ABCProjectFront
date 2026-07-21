@@ -199,6 +199,11 @@ export function BooksPage() {
     setFeaturedIndex((currentIndex) => (currentIndex + 1) % featuredBooks.length);
   }, [featuredBooks.length]);
 
+  const moveFeaturedPrevious = useCallback(() => {
+    if (featuredBooks.length <= 1) return;
+    setFeaturedIndex((currentIndex) => (currentIndex - 1 + featuredBooks.length) % featuredBooks.length);
+  }, [featuredBooks.length]);
+
   useEffect(() => {
     let ignore = false;
 
@@ -406,6 +411,16 @@ export function BooksPage() {
         </div>
 
         <div className="books-recommend-carousel">
+          {featuredBooks.length > 1 ? (
+            <button
+              type="button"
+              className="books-recommend-arrow is-prev"
+              onClick={moveFeaturedPrevious}
+              aria-label="이전 입고 도서 보기"
+            >
+              &lt;
+            </button>
+          ) : null}
           <div className="books-recommend-viewport">
             <div className="books-recommend-track">
               {featuredBooks.map((book, index) => {
@@ -427,6 +442,16 @@ export function BooksPage() {
               })}
             </div>
           </div>
+          {featuredBooks.length > 1 ? (
+            <button
+              type="button"
+              className="books-recommend-arrow is-next"
+              onClick={moveFeaturedNext}
+              aria-label="다음 입고 도서 보기"
+            >
+              &gt;
+            </button>
+          ) : null}
         </div>
 
         <div className="books-recommend-dots" role="tablist" aria-label="입고 도서 슬라이드 이동">

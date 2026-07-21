@@ -1,5 +1,5 @@
 // 검색 결과 화면(U007) — 키워드 검색 결과 조회, 필터/정렬, 결과 없을 때 희망 도서 신청을 담당한다.
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getBooks, getCategories, searchBooks, type BookSearchQuery } from '../../../api/bookApi';
 import { createBookRequest } from '../../../api/bookRequestsApi';
@@ -120,10 +120,15 @@ export function SearchResultsPage() {
     return offset;
   };
 
-  const moveFeaturedNext = () => {
+  const moveFeaturedNext = useCallback(() => {
     if (featuredBooks.length <= 1) return;
     setFeaturedIndex((currentIndex) => (currentIndex + 1) % featuredBooks.length);
-  };
+  }, [featuredBooks.length]);
+
+  const moveFeaturedPrevious = useCallback(() => {
+    if (featuredBooks.length <= 1) return;
+    setFeaturedIndex((currentIndex) => (currentIndex - 1 + featuredBooks.length) % featuredBooks.length);
+  }, [featuredBooks.length]);
 
   useEffect(() => {
     setIsRequested(Boolean(keyword && localStorage.getItem(getRequestStorageKey(keyword))));
@@ -158,7 +163,7 @@ export function SearchResultsPage() {
     }, 5000);
 
     return () => window.clearInterval(timerId);
-  }, [featuredPage.content.length, featuredIndex]);
+  }, [moveFeaturedNext]);
 
   useEffect(() => {
     let ignore = false;
@@ -291,6 +296,16 @@ export function SearchResultsPage() {
         </div>
 
         <div className="books-recommend-carousel">
+          {featuredBooks.length > 1 ? (
+            <button
+              type="button"
+              className="books-recommend-arrow is-prev"
+              onClick={moveFeaturedPrevious}
+              aria-label="이전 입고 도서 보기"
+            >
+              &lt;
+            </button>
+          ) : null}
           <div className="books-recommend-viewport">
             <div className="books-recommend-track">
               {featuredBooks.map((book, index) => {
@@ -312,6 +327,16 @@ export function SearchResultsPage() {
               })}
             </div>
           </div>
+          {featuredBooks.length > 1 ? (
+            <button
+              type="button"
+              className="books-recommend-arrow is-next"
+              onClick={moveFeaturedNext}
+              aria-label="다음 입고 도서 보기"
+            >
+              &gt;
+            </button>
+          ) : null}
         </div>
 
         <div className="books-recommend-dots" role="tablist" aria-label="입고 도서 슬라이드 이동">

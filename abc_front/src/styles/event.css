@@ -204,44 +204,7 @@
 }
 
 .event-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
   margin-top: clamp(var(--space-8), 6vw, 80px);
-}
-
-.event-pagination button {
-  display: grid;
-  place-items: center;
-  min-width: 40px;
-  height: 40px;
-  padding: 0 var(--space-3);
-  border: 0;
-  border-radius: var(--radius-md);
-  color: var(--color-text);
-  background: #e5e7eb;
-  font: inherit;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.event-pagination button:first-child,
-.event-pagination button:last-child {
-  min-width: 40px;
-  border-radius: 50%;
-  color: #fff;
-  background: #003d2d;
-}
-
-.event-pagination button.is-active {
-  color: #fff;
-  background: #777;
-}
-
-.event-pagination button:disabled {
-  opacity: 0.45;
-  cursor: default;
 }
 
 @media (max-width: 900px) {
