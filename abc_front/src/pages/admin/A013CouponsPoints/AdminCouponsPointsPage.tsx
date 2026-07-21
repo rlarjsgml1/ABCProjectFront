@@ -451,7 +451,7 @@ export function AdminCouponsPointsPage() {
             }
           : current,
       );
-    } catch (error) {
+    } catch {
       setCouponsPage((current) =>
         current
           ? {
@@ -516,7 +516,7 @@ export function AdminCouponsPointsPage() {
       const data = await issueAdminCoupon(issueCoupon.couponId, { memberIds, quantity });
       updateIssuedCount(issueCoupon.couponId, data.issuedCount);
       setStatusMessage('쿠폰이 회원에게 발급되었습니다.');
-    } catch (error) {
+    } catch {
       updateIssuedCount(issueCoupon.couponId, memberIds.length * quantity);
       setStatusMessage('임시 데이터에 쿠폰 발급 수량을 반영했습니다.');
     } finally {
@@ -581,7 +581,7 @@ export function AdminCouponsPointsPage() {
         description: pointForm.description.trim(),
       });
       setStatusMessage('회원 포인트가 조정되었습니다.');
-    } catch (error) {
+    } catch {
       setStatusMessage('임시 데이터에 포인트 조정을 반영했습니다.');
     } finally {
       const nextBalance = selectedMember.pointBalance + pointAmount;

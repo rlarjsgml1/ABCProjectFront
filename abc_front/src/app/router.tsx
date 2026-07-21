@@ -37,6 +37,7 @@ const AdminLibraryPage = lazyNamed(() => import('../pages/admin/A015Libraries/Ad
 const AdminStatisticsPage = lazyNamed(() => import('../pages/admin/A016Statistics/AdminStatisticsPage'), 'AdminStatisticsPage');
 const AdminAuditLogPage = lazyNamed(() => import('../pages/admin/A017AuditLogs/AdminAuditLogPage'), 'AdminAuditLogPage');
 const AdminCollectionPage = lazyNamed(() => import('../pages/admin/A018Collections/AdminCollectionPage'), 'AdminCollectionPage');
+const AdminBookIsbnTempPage = lazyNamed(() => import('../pages/admin/A019BookIsbnTemps/AdminBookIsbnTempPage'), 'AdminBookIsbnTempPage');
 const BookDetailPage = lazyNamed(() => import('../pages/user/U008BookDetail/BookDetailPage'), 'BookDetailPage');
 const BooksPage = lazyNamed(() => import('../pages/user/U006Books/BooksPage'), 'BooksPage');
 const HomePage = lazyNamed(() => import('../pages/user/U001Home/HomePage'), 'HomePage');
@@ -143,6 +144,7 @@ export const router = createBrowserRouter([
       { path: 'books', element: page(<AdminBookListPage />) },
       { path: 'books/new', element: page(<AdminBookCreatePage />) },
       { path: 'books/:bookId/edit', element: page(<AdminBookEditPage />) },
+      { path: 'book-isbn-temps', element: page(<AdminBookIsbnTempPage />) },
       { path: 'categories', element: page(<AdminCategoryPage />) },
       { path: 'rentals', element: page(<AdminRentalListPage />) },
       { path: 'payments', element: page(<AdminPaymentListPage />) },

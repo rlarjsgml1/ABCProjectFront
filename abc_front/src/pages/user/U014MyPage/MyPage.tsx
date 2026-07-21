@@ -84,7 +84,7 @@ export function MyPage() {
                         </Link>
 
                         <p className="recent-book-progress-text">
-                          {book.currentPage} / {book.totalPages} 페이지 ({formatProgressRate(book.progressRate)}%)
+                          진행률 {formatProgressRate(book.progressRate)}%
                         </p>
 
                         <div className="recent-book-progress-track">
@@ -93,7 +93,7 @@ export function MyPage() {
                       </div>
 
                       <Link
-                        to={`/rentals/${book.rentalId}/read?page=${book.currentPage > 0 ? book.currentPage : 1}`}
+                        to={`/rentals/${book.rentalId}/read`}
                         className="button button-primary recent-book-continue-button"
                       >
                         이어보기
@@ -123,7 +123,7 @@ export function MyPage() {
                         </Link>
 
                         <p className="recent-book-progress-text">
-                          {book.currentPage} / {book.totalPages} 페이지 ({formatProgressRate(book.progressRate)}%)
+                          진행률 {formatProgressRate(book.progressRate)}%
                         </p>
 
                         <div className="recent-book-progress-track">
@@ -132,7 +132,7 @@ export function MyPage() {
                       </div>
 
                       <Link
-                        to={`/rentals/${book.rentalId}/read?page=${book.currentPage > 0 ? book.currentPage : 1}`}
+                        to={`/rentals/${book.rentalId}/read`}
                         className="button button-primary recent-book-continue-button"
                       >
                         읽기

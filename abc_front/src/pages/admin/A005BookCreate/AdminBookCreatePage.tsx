@@ -1,12 +1,12 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { createAdminBook } from '../../../api/adminBookApi';
+import { updateAdminBookRequestCandidateStatus } from '../../../api/adminBookRequestApi';
 import { getCategories } from '../../../api/bookApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
 import type {
   AdminBookCreateRequest,
-  AdminBookPageRequest,
   AdminBookRentalType,
   AdminBookStatus,
   Category,
@@ -32,10 +32,17 @@ function splitList(value: FormDataEntryValue | null) {
     .filter(Boolean);
 }
 
+// 희망도서 관리 화면(AdminBookRequestPage)의 "도서 등록" 액션에서 넘어온 경우에만 채워진다.
+type BookRequestPrefillState = { title?: string; author?: string; publisher?: string } | null;
+
 export function AdminBookCreatePage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const candidateIdParam = searchParams.get('candidateId');
+  const candidateId = candidateIdParam ? Number(candidateIdParam) : null;
+  const prefill = (location.state as BookRequestPrefillState) ?? null;
   const [categories, setCategories] = useState<Category[]>(fallbackCategories);
-  const [pages, setPages] = useState<AdminBookPageRequest[]>([{ pageNo: 1, pageContent: '' }]);
   const [rentalType, setRentalType] = useState<AdminBookRentalType>('PAID');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -64,33 +71,6 @@ export function AdminBookCreatePage() {
     };
   }, []);
 
-  function addPage() {
-    setPages((current) => [...current, { pageNo: current.length + 1, pageContent: '' }]);
-  }
-
-  function updatePage(index: number, field: keyof AdminBookPageRequest, value: string) {
-    setPages((current) =>
-      current.map((page, pageIndex) =>
-        pageIndex === index
-          ? {
-              ...page,
-              [field]: field === 'pageNo' ? Number(value) || 1 : value,
-            }
-          : page,
-      ),
-    );
-  }
-
-  function removePage(index: number) {
-    setPages((current) => {
-      if (current.length === 1) {
-        return current;
-      }
-
-      return current.filter((_, pageIndex) => pageIndex !== index);
-    });
-  }
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage('');
@@ -104,12 +84,6 @@ export function AdminBookCreatePage() {
       .getAll('categoryIds')
       .map((value) => Number(value))
       .filter(Boolean);
-    const validPages = pages
-      .map((page) => ({
-        pageNo: Number(page.pageNo) || 1,
-        pageContent: page.pageContent.trim(),
-      }))
-      .filter((page) => page.pageContent);
 
     if (!title) {
       setErrorMessage('도서 제목을 입력해 주세요.');
@@ -128,11 +102,6 @@ export function AdminBookCreatePage() {
 
     if (categoryIds.length === 0) {
       setErrorMessage('카테고리를 1개 이상 선택해 주세요.');
-      return;
-    }
-
-    if (validPages.length === 0) {
-      setErrorMessage('전자책 본문 페이지를 1개 이상 입력해 주세요.');
       return;
     }
 
@@ -158,14 +127,27 @@ export function AdminBookCreatePage() {
       description: String(formData.get('description') ?? '').trim(),
       tableOfContents: String(formData.get('tableOfContents') ?? '').trim() || undefined,
       publisherReview: String(formData.get('publisherReview') ?? '').trim() || undefined,
-      pages: validPages,
     };
 
     setIsSubmitting(true);
 
     try {
       const response = await createAdminBook(payload);
-      setSuccessMessage('도서가 등록되었습니다.');
+
+      if (candidateId) {
+        try {
+          await updateAdminBookRequestCandidateStatus(candidateId, { status: 'APPROVED', approvedBookId: response.bookId });
+          setSuccessMessage('도서가 등록되고 희망도서 후보가 승인 처리되었습니다.');
+        } catch (linkError) {
+          setSuccessMessage(
+            `도서가 등록되었습니다(B-${response.bookId}). 다만 희망도서 후보 승인 연동은 실패했습니다: ` +
+              `${getApiErrorMessage(linkError)} 희망도서 관리 화면에서 승인도서 번호 B-${response.bookId}로 수동 승인해 주세요.`,
+          );
+        }
+      } else {
+        setSuccessMessage('도서가 등록되었습니다.');
+      }
+
       navigate(`/admin/books/${response.bookId}/edit`);
     } catch (error) {
       setErrorMessage(getApiErrorMessage(error));
@@ -188,11 +170,16 @@ export function AdminBookCreatePage() {
             {isSubmitting ? '등록 중' : '등록'}
           </Button>
           <Link className="button button-secondary" to="/admin/books">
-            취소 → A-004
+            취소
           </Link>
         </div>
       </div>
 
+      {candidateId ? (
+        <p className={styles.notice}>
+          희망도서 후보 BR-{candidateId}에서 연계되었습니다. 등록 완료 시 해당 후보가 자동으로 승인 처리됩니다.
+        </p>
+      ) : null}
       {errorMessage ? <p className={styles.error}>{errorMessage}</p> : null}
       {successMessage ? <p className={styles.success}>{successMessage}</p> : null}
 
@@ -207,7 +194,7 @@ export function AdminBookCreatePage() {
             <div className={styles.fieldGrid}>
               <label className={styles.wide}>
                 제목
-                <input name="title" type="text" placeholder="도서 제목" />
+                <input name="title" type="text" placeholder="도서 제목" defaultValue={prefill?.title ?? ''} />
               </label>
               <label>
                 ISBN
@@ -215,11 +202,11 @@ export function AdminBookCreatePage() {
               </label>
               <label>
                 출판사명
-                <input name="publisherName" type="text" placeholder="출판사명" />
+                <input name="publisherName" type="text" placeholder="출판사명" defaultValue={prefill?.publisher ?? ''} />
               </label>
               <label className={styles.wide}>
                 저자
-                <input name="authors" type="text" placeholder="저자명 / 표시 순서" />
+                <input name="authors" type="text" placeholder="저자명 / 표시 순서" defaultValue={prefill?.author ?? ''} />
               </label>
               <label className={styles.wide}>
                 키워드
@@ -297,36 +284,18 @@ export function AdminBookCreatePage() {
 
           <section className={styles.panel}>
             <div className={styles.panelHeader}>
-              <h2>전자책 파일/페이지</h2>
-              <p>파일 업로드 대신 URL과 페이지 본문을 입력합니다.</p>
+              <h2>전자책 콘텐츠</h2>
+              <p>도서를 등록한 뒤 Swagger 또는 Postman에서 EPUB 파일을 등록합니다.</p>
             </div>
 
             <label>
               커버 URL
-              <input name="coverImageUrl" type="url" placeholder="https://cdn.example.com/book-1001.epub" />
+              <input name="coverImageUrl" type="url" placeholder="https://cdn.example.com/book-1001.jpg" />
             </label>
-
-            <div className={styles.pageList}>
-              {pages.map((page, index) => (
-                <div className={styles.pageRow} key={index}>
-                  <label>
-                    페이지 번호
-                    <input value={page.pageNo} type="number" min="1" onChange={(event) => updatePage(index, 'pageNo', event.target.value)} />
-                  </label>
-                  <label>
-                    페이지 본문
-                    <textarea value={page.pageContent} onChange={(event) => updatePage(index, 'pageContent', event.target.value)} placeholder="본문 텍스트를 입력합니다." />
-                  </label>
-                  <Button type="button" variant="secondary" onClick={() => removePage(index)} disabled={pages.length === 1}>
-                    페이지 삭제
-                  </Button>
-                </div>
-              ))}
+            <div className={styles.ruleGrid}>
+              <span>콘텐츠 상태: EPUB 미등록</span>
+              <span>EPUB 등록 전에는 사용자가 본문을 열람할 수 없습니다.</span>
             </div>
-
-            <Button type="button" variant="secondary" onClick={addPage}>
-              페이지 추가
-            </Button>
           </section>
         </div>
 
@@ -340,7 +309,7 @@ export function AdminBookCreatePage() {
             <span>ISBN 중복 없음</span>
             <span>유료 도서 가격 0원 초과</span>
             <span>무료 도서 가격 0원</span>
-            <span>전자책 본문 최소 1페이지</span>
+            <span>EPUB 등록 후 열람 가능</span>
             <span>카테고리 1개 이상 선택</span>
             <span>감사 로그는 서버에서 기록</span>
           </div>

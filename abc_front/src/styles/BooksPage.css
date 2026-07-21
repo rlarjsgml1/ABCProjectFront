@@ -335,11 +335,19 @@
   padding: 0 var(--space-4);
   color: var(--color-text);
   background: var(--color-surface);
-  font-weight: 900;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.books-view-tabs button:hover,
+.books-view-tabs button:focus-visible,
+.books-view-tabs button.is-active {
+  border-color: var(--books-green);
+  box-shadow: 0 12px 22px rgba(15, 23, 42, 0.14);
+  transform: translateY(-1px);
 }
 
 .books-view-tabs button.is-active {
-  border-color: var(--books-green);
   color: #ffffff;
   background: var(--books-green);
 }
@@ -385,6 +393,7 @@
   min-width: 0;
   color: var(--color-text);
   text-align: center;
+  text-decoration: none;
 }
 
 .books-card span,
@@ -541,13 +550,13 @@
 
 @media (max-width: 1100px) {
   .books-recommend-viewport {
-    height: 330px;
+    height: 352px;
   }
 
   .books-recommend-card {
-    --card-step: clamp(104px, 17vw, 150px);
-    --card-base-width: clamp(84px, 12vw, 112px);
-    --card-featured-width: clamp(128px, 19vw, 158px);
+    --card-step: clamp(118px, 18vw, 170px);
+    --card-base-width: clamp(98px, 13vw, 126px);
+    --card-featured-width: clamp(145px, 20vw, 178px);
   }
 
   .books-grid {
@@ -609,13 +618,13 @@
   }
 
   .books-recommend-viewport {
-    height: 282px;
+    height: 312px;
   }
 
   .books-recommend-card {
-    --card-step: clamp(90px, 31vw, 135px);
-    --card-base-width: clamp(84px, 28vw, 108px);
-    --card-featured-width: clamp(128px, 43vw, 158px);
+    --card-step: clamp(100px, 32vw, 145px);
+    --card-base-width: clamp(90px, 29vw, 116px);
+    --card-featured-width: clamp(138px, 44vw, 170px);
   }
 
   .books-section-more-grid {

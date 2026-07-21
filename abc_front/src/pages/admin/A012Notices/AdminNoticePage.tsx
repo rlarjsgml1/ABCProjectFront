@@ -32,29 +32,6 @@ type NoticeFormState = { title: string; content: string; status: AdminNoticeStat
 
 const emptyForm: NoticeFormState = { title: '', content: '', status: 'ACTIVE', notifyYn: true };
 
-const fallbackNotices: AdminNoticeItem[] = [
-  { noticeId: 118, title: '7월 정기 서버 점검 안내', content: '7월 20일 새벽 2시~4시 서버 점검이 진행됩니다.', status: 'ACTIVE', createdAt: '2026-07-11' },
-  { noticeId: 117, title: '여름 독서왕 이벤트 오픈', content: '여름 독서왕 이벤트가 시작되었습니다. 많은 참여 바랍니다.', status: 'ACTIVE', createdAt: '2026-07-05', updatedAt: '2026-07-06' },
-  { noticeId: 116, title: '앱 리뉴얼 사전 안내 (종료)', content: '앱 리뉴얼 관련 안내는 종료되었습니다.', status: 'HIDDEN', createdAt: '2026-06-20', updatedAt: '2026-07-01' },
-];
-
-function buildFallbackNoticePage(query: { status?: AdminNoticeStatus; page?: number; size?: number }): AdminNoticePageData {
-  const filtered = fallbackNotices.filter((notice) => (query.status ? notice.status === query.status : true));
-
-  const page = query.page ?? 0;
-  const size = query.size ?? PAGE_SIZE;
-  const start = page * size;
-
-  return {
-    content: filtered.slice(start, start + size),
-    page,
-    size,
-    totalElements: filtered.length,
-    totalPages: Math.max(Math.ceil(filtered.length / size), 1),
-    last: start + size >= filtered.length,
-  };
-}
-
 function toApiPage(uiPage: number) {
   return Math.max(uiPage - 1, 0);
 }
@@ -97,8 +74,7 @@ export function AdminNoticePage() {
         if (!ignore) setNoticesPage(data);
       } catch (error) {
         if (!ignore) {
-          setNoticesPage(buildFallbackNoticePage(query));
-          setErrorMessage(`${getApiErrorMessage(error)} 화면 확인을 위해 임시 공지 목록을 표시합니다.`);
+          setErrorMessage(getApiErrorMessage(error));
         }
       } finally {
         if (!ignore) setIsLoading(false);
@@ -161,7 +137,16 @@ export function AdminNoticePage() {
 
     try {
       const saved = await persistNotice(form, targetId);
-      setStatusMessage(targetId ? '공지가 수정되었습니다.' : '공지가 등록되었습니다.');
+      if (targetId) {
+        setStatusMessage('공지가 수정되었습니다.');
+      } else {
+        const notifyCreatedCount = 'notifyCreatedCount' in saved ? saved.notifyCreatedCount : undefined;
+        setStatusMessage(
+          typeof notifyCreatedCount === 'number'
+            ? `공지가 등록되었습니다. (알림 발송 대상 ${notifyCreatedCount.toLocaleString('ko-KR')}명)`
+            : '공지가 등록되었습니다.',
+        );
+      }
       setNoticesPage((current) => {
         if (!current) return current;
         if (targetId) {
@@ -170,18 +155,7 @@ export function AdminNoticePage() {
         return { ...current, content: [saved, ...current.content], totalElements: current.totalElements + 1 };
       });
     } catch (error) {
-      setStatusMessage(`${getApiErrorMessage(error)} 화면에는 임시로 반영했습니다.`);
-      setNoticesPage((current) => {
-        if (!current) return current;
-        if (targetId) {
-          return {
-            ...current,
-            content: current.content.map((notice) => (notice.noticeId === targetId ? { ...notice, title: form.title, content: form.content, status: form.status, updatedAt: new Date().toISOString() } : notice)),
-          };
-        }
-        const draft: AdminNoticeItem = { noticeId: Date.now(), title: form.title, content: form.content, status: form.status, createdAt: new Date().toISOString() };
-        return { ...current, content: [draft, ...current.content], totalElements: current.totalElements + 1 };
-      });
+      setStatusMessage(getApiErrorMessage(error));
     } finally {
       setIsSaving(false);
       setIsCreating(false);
@@ -198,10 +172,7 @@ export function AdminNoticePage() {
       setNoticesPage((current) => (current ? { ...current, content: current.content.map((item) => (item.noticeId === notice.noticeId ? saved : item)) } : current));
       setStatusMessage('공지를 숨김 처리했습니다.');
     } catch (error) {
-      setNoticesPage((current) =>
-        current ? { ...current, content: current.content.map((item) => (item.noticeId === notice.noticeId ? { ...item, status: 'HIDDEN' as const } : item)) } : current,
-      );
-      setStatusMessage(`${getApiErrorMessage(error)} 화면에는 임시로 반영했습니다.`);
+      setStatusMessage(getApiErrorMessage(error));
     }
   }
 
@@ -216,9 +187,6 @@ export function AdminNoticePage() {
         <div>
           <span>공지</span>
           <h1 id="admin-notices-title">공지 관리</h1>
-        </div>
-        <div className={styles.apiStrip}>
-          <span className={styles.apiPill}>GET/POST/PUT /admin/notices · controller 미구현 → mock/fallback</span>
         </div>
       </div>
 

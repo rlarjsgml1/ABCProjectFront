@@ -1,17 +1,23 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, KeyboardEvent as ReactKeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { changeAdminBookStatus, getAdminBook, updateAdminBook } from '../../../api/adminBookApi';
+import {
+  changeAdminBookStatus,
+  getAdminBook,
+  updateAdminBook,
+  uploadAdminBookEpub,
+} from '../../../api/adminBookApi';
 import { getCategories } from '../../../api/bookApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
 import type {
   AdminBookDetail,
-  AdminBookPageRequest,
   AdminBookRentalType,
   AdminBookStatus,
   Category,
 } from '../../../types/api';
 import styles from '../../../styles/AdminBookFormPage.module.css';
+
+const MAX_EPUB_FILE_SIZE = 50 * 1024 * 1024;
 
 const fallbackCategories: Category[] = [
   { categoryId: 1, name: '소설' },
@@ -39,7 +45,6 @@ const fallbackBook: AdminBookDetail = {
   description: '데이터베이스의 기본 개념과 실무 활용을 함께 익힐 수 있는 도서입니다.',
   tableOfContents: '1장 데이터 모델\n2장 SQL 기초',
   publisherReview: '학습자를 위한 구성과 실무 예제를 담았습니다.',
-  pages: [{ pageNo: 1, pageContent: '샘플 본문입니다.' }],
 };
 
 function flattenCategories(categories: Category[]): Category[] {
@@ -71,7 +76,6 @@ function normalizeBook(book: AdminBookDetail): AdminBookDetail {
     categoryIds,
     publisherName: book.publisherName || book.publisher || fallbackBook.publisherName,
     keywords: book.keywords?.length ? book.keywords : fallbackBook.keywords,
-    pages: book.pages?.length ? book.pages : fallbackBook.pages,
     defaultRentalDays: book.defaultRentalDays || fallbackBook.defaultRentalDays,
     description: book.description || fallbackBook.description,
   };
@@ -82,7 +86,6 @@ export function AdminBookEditPage() {
   const numericBookId = Number(bookId);
   const [categories, setCategories] = useState<Category[]>(fallbackCategories);
   const [book, setBook] = useState<AdminBookDetail | null>(null);
-  const [pages, setPages] = useState<AdminBookPageRequest[]>(fallbackBook.pages ?? []);
   const [rentalType, setRentalType] = useState<AdminBookRentalType>('PAID');
   const [statusValue, setStatusValue] = useState<AdminBookStatus>('AVAILABLE');
   const [statusReason, setStatusReason] = useState('');
@@ -93,8 +96,38 @@ export function AdminBookEditPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isChangingStatus, setIsChangingStatus] = useState(false);
+  const [epubFile, setEpubFile] = useState<File | null>(null);
+  const [epubErrorMessage, setEpubErrorMessage] = useState('');
+  const [epubSuccessMessage, setEpubSuccessMessage] = useState('');
+  const [isUploadingEpub, setIsUploadingEpub] = useState(false);
+  const [isEpubConfirmOpen, setIsEpubConfirmOpen] = useState(false);
+  const epubDialogRef = useRef<HTMLDivElement>(null);
+  const epubFileInputRef = useRef<HTMLInputElement>(null);
+  const wasEpubConfirmOpenRef = useRef(false);
 
   const selectedCategoryIds = useMemo(() => new Set(book?.categoryIds ?? []), [book]);
+
+  useEffect(() => {
+    let frameId: number | undefined;
+
+    if (isEpubConfirmOpen) {
+      wasEpubConfirmOpenRef.current = true;
+      frameId = window.requestAnimationFrame(() => {
+        epubDialogRef.current?.querySelector<HTMLButtonElement>('button:not([disabled])')?.focus();
+      });
+    } else if (wasEpubConfirmOpenRef.current) {
+      wasEpubConfirmOpenRef.current = false;
+      frameId = window.requestAnimationFrame(() => {
+        epubFileInputRef.current?.focus();
+      });
+    }
+
+    return () => {
+      if (frameId !== undefined) {
+        window.cancelAnimationFrame(frameId);
+      }
+    };
+  }, [isEpubConfirmOpen]);
 
   useEffect(() => {
     let ignore = false;
@@ -131,7 +164,6 @@ export function AdminBookEditPage() {
         if (!ignore) {
           const normalizedBook = normalizeBook(data);
           setBook(normalizedBook);
-          setPages(normalizedBook.pages ?? fallbackBook.pages ?? []);
           setRentalType(normalizedBook.rentalType);
           setStatusValue(normalizedBook.status);
         }
@@ -139,7 +171,6 @@ export function AdminBookEditPage() {
         if (!ignore) {
           const normalizedBook = normalizeBook({ ...fallbackBook, bookId: numericBookId || fallbackBook.bookId });
           setBook(normalizedBook);
-          setPages(normalizedBook.pages ?? fallbackBook.pages ?? []);
           setRentalType(normalizedBook.rentalType);
           setStatusValue(normalizedBook.status);
           setErrorMessage('서버 데이터 연결 전까지 임시 도서 정보가 표시됩니다.');
@@ -163,33 +194,6 @@ export function AdminBookEditPage() {
     };
   }, [numericBookId]);
 
-  function addPage() {
-    setPages((current) => [...current, { pageNo: current.length + 1, pageContent: '' }]);
-  }
-
-  function updatePage(index: number, field: keyof AdminBookPageRequest, value: string) {
-    setPages((current) =>
-      current.map((page, pageIndex) =>
-        pageIndex === index
-          ? {
-              ...page,
-              [field]: field === 'pageNo' ? Number(value) || 1 : value,
-            }
-          : page,
-      ),
-    );
-  }
-
-  function removePage(index: number) {
-    setPages((current) => {
-      if (current.length === 1) {
-        return current;
-      }
-
-      return current.filter((_, pageIndex) => pageIndex !== index);
-    });
-  }
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage('');
@@ -208,12 +212,6 @@ export function AdminBookEditPage() {
       .getAll('categoryIds')
       .map((value) => Number(value))
       .filter(Boolean);
-    const validPages = pages
-      .map((page) => ({
-        pageNo: Number(page.pageNo) || 1,
-        pageContent: page.pageContent.trim(),
-      }))
-      .filter((page) => page.pageContent);
 
     if (!title) {
       setErrorMessage('도서 제목을 입력해 주세요.');
@@ -232,11 +230,6 @@ export function AdminBookEditPage() {
 
     if (categoryIds.length === 0) {
       setErrorMessage('카테고리를 1개 이상 선택해 주세요.');
-      return;
-    }
-
-    if (validPages.length === 0) {
-      setErrorMessage('전자책 본문 페이지를 1개 이상 입력해 주세요.');
       return;
     }
 
@@ -262,7 +255,6 @@ export function AdminBookEditPage() {
       description: String(formData.get('description') ?? '').trim(),
       tableOfContents: String(formData.get('tableOfContents') ?? '').trim() || undefined,
       publisherReview: String(formData.get('publisherReview') ?? '').trim() || undefined,
-      pages: validPages,
     };
 
     setIsSubmitting(true);
@@ -271,7 +263,6 @@ export function AdminBookEditPage() {
       await updateAdminBook(numericBookId, payload);
       const updatedBook = normalizeBook({ ...(book ?? fallbackBook), ...payload, bookId: numericBookId });
       setBook(updatedBook);
-      setPages(updatedBook.pages ?? []);
       setStatusValue(updatedBook.status);
       setSuccessMessage('도서 정보가 수정되었습니다.');
     } catch (error) {
@@ -312,6 +303,90 @@ export function AdminBookEditPage() {
     }
   }
 
+  function prepareEpubUpload() {
+    setEpubErrorMessage('');
+    setEpubSuccessMessage('');
+
+    if (!numericBookId) {
+      setEpubErrorMessage('EPUB을 등록할 도서 번호를 확인할 수 없습니다.');
+      return;
+    }
+
+    if (!epubFile) {
+      setEpubErrorMessage('업로드할 EPUB 파일을 선택해 주세요.');
+      return;
+    }
+
+    if (!epubFile.name.toLowerCase().endsWith('.epub')) {
+      setEpubErrorMessage('.epub 확장자 파일만 업로드할 수 있습니다.');
+      return;
+    }
+
+    if (epubFile.size > MAX_EPUB_FILE_SIZE) {
+      setEpubErrorMessage('EPUB 파일은 50MB 이하만 업로드할 수 있습니다.');
+      return;
+    }
+
+    setIsEpubConfirmOpen(true);
+  }
+
+  async function handleEpubUpload() {
+    if (!numericBookId || !epubFile) {
+      setIsEpubConfirmOpen(false);
+      setEpubErrorMessage('업로드할 도서와 EPUB 파일을 다시 확인해 주세요.');
+      return;
+    }
+
+    setIsUploadingEpub(true);
+
+    try {
+      const response = await uploadAdminBookEpub(numericBookId, epubFile);
+      setEpubSuccessMessage(`${response.fileName} 업로드 완료 (EPUB version ${response.epubVersion})`);
+      setEpubFile(null);
+    } catch (error) {
+      setEpubErrorMessage(getApiErrorMessage(error));
+    } finally {
+      setIsUploadingEpub(false);
+      setIsEpubConfirmOpen(false);
+    }
+  }
+
+  function handleEpubDialogKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      if (!isUploadingEpub) {
+        setIsEpubConfirmOpen(false);
+      }
+      return;
+    }
+
+    if (event.key !== 'Tab') {
+      return;
+    }
+
+    const dialog = epubDialogRef.current;
+    const focusableElements = dialog
+      ? Array.from(dialog.querySelectorAll<HTMLElement>('button:not([disabled])'))
+      : [];
+
+    if (focusableElements.length === 0) {
+      event.preventDefault();
+      return;
+    }
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+    const activeElement = document.activeElement;
+
+    if (event.shiftKey && (activeElement === firstElement || !dialog?.contains(activeElement))) {
+      event.preventDefault();
+      lastElement.focus();
+    } else if (!event.shiftKey && activeElement === lastElement) {
+      event.preventDefault();
+      firstElement.focus();
+    }
+  }
+
   if (isLoading || !book) {
     return (
       <section className={`page-section ${styles.page}`}>
@@ -343,7 +418,7 @@ export function AdminBookEditPage() {
             상태 변경
           </Button>
           <Link className="button button-secondary" to="/admin/books">
-            취소 → A-004
+            취소
           </Link>
         </div>
       </div>
@@ -468,8 +543,8 @@ export function AdminBookEditPage() {
 
           <section className={styles.panel}>
             <div className={styles.panelHeader}>
-              <h2>전자책 파일/페이지</h2>
-              <p>파일 URL, 본문, 페이지 데이터를 수정합니다.</p>
+              <h2>전자책 콘텐츠</h2>
+              <p>도서 정보 저장과 별도로 EPUB 본문을 등록합니다. 새 파일을 올리면 EPUB version이 증가합니다.</p>
             </div>
 
             <label>
@@ -477,32 +552,39 @@ export function AdminBookEditPage() {
               <input
                 name="coverImageUrl"
                 type="url"
-                placeholder="https://cdn.example.com/book-1001.epub"
+                placeholder="https://cdn.example.com/book-1001.jpg"
                 defaultValue={book.coverImageUrl ?? ''}
               />
             </label>
 
-            <div className={styles.pageList}>
-              {pages.map((page, index) => (
-                <div className={styles.pageRow} key={index}>
-                  <label>
-                    페이지 번호
-                    <input value={page.pageNo} type="number" min="1" onChange={(event) => updatePage(index, 'pageNo', event.target.value)} />
-                  </label>
-                  <label>
-                    페이지 본문
-                    <textarea value={page.pageContent} onChange={(event) => updatePage(index, 'pageContent', event.target.value)} placeholder="본문 텍스트를 입력합니다." />
-                  </label>
-                  <Button type="button" variant="secondary" onClick={() => removePage(index)} disabled={pages.length === 1}>
-                    페이지 삭제
-                  </Button>
-                </div>
-              ))}
+            <div className={styles.epubUpload}>
+              <strong>대상 도서 ID: {numericBookId}</strong>
+              <p className={styles.epubWarning}>
+                기존 EPUB을 교체하면 이 도서를 이용 중인 사용자의 읽기 진행률이 초기화되고 기존 북마크가 삭제됩니다.
+              </p>
+              <label>
+                EPUB 파일
+                <input
+                  ref={epubFileInputRef}
+                  key={epubFile?.name ?? 'empty-epub-file'}
+                  type="file"
+                  accept=".epub,application/epub+zip"
+                  onChange={(event) => {
+                    setEpubFile(event.target.files?.[0] ?? null);
+                    setEpubErrorMessage('');
+                    setEpubSuccessMessage('');
+                  }}
+                />
+              </label>
+              <div className={styles.epubUploadActions}>
+                <span>{epubFile ? `${epubFile.name} (${(epubFile.size / 1024 / 1024).toFixed(1)}MB)` : '50MB 이하 .epub 파일'}</span>
+                <Button type="button" onClick={prepareEpubUpload} disabled={isUploadingEpub || !epubFile}>
+                  {isUploadingEpub ? 'EPUB 업로드 중' : 'EPUB 업로드'}
+                </Button>
+              </div>
+              {epubErrorMessage ? <p className={styles.uploadError} role="alert">{epubErrorMessage}</p> : null}
+              {epubSuccessMessage ? <p className={styles.uploadSuccess} role="status" aria-live="polite">{epubSuccessMessage}</p> : null}
             </div>
-
-            <Button type="button" variant="secondary" onClick={addPage}>
-              페이지 추가
-            </Button>
           </section>
         </div>
 
@@ -516,12 +598,56 @@ export function AdminBookEditPage() {
             <span>ISBN 중복 없음</span>
             <span>유료 도서 가격 0원 초과</span>
             <span>무료 도서 가격 0원</span>
-            <span>전자책 본문 최소 1페이지</span>
+            <span>EPUB 등록 후 열람 가능</span>
             <span>카테고리 1개 이상 선택</span>
             <span>수정 활동 로그 기록</span>
           </div>
         </section>
       </form>
+
+      {isEpubConfirmOpen ? (
+        <div
+          className={styles.modalBackdrop}
+          role="presentation"
+          onMouseDown={() => {
+            if (!isUploadingEpub) {
+              setIsEpubConfirmOpen(false);
+            }
+          }}
+        >
+          <div
+            ref={epubDialogRef}
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-busy={isUploadingEpub}
+            aria-labelledby="epub-upload-modal-title"
+            aria-describedby="epub-upload-modal-description"
+            onKeyDown={handleEpubDialogKeyDown}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className={styles.modalHeader}>
+              <h2 id="epub-upload-modal-title">EPUB 파일 업로드 확인</h2>
+              <p id="epub-upload-modal-description">
+                도서 ID {numericBookId}에 {epubFile?.name} 파일을 등록합니다.
+              </p>
+            </div>
+
+            <p className={styles.epubWarning}>
+              기존 콘텐츠가 있다면 사용자 읽기 진행률이 초기화되고 기존 북마크가 삭제됩니다. 이 작업을 계속하시겠습니까?
+            </p>
+
+            <div className={styles.modalActions}>
+              <Button type="button" variant="secondary" onClick={() => setIsEpubConfirmOpen(false)} disabled={isUploadingEpub}>
+                취소
+              </Button>
+              <Button type="button" variant="danger" onClick={handleEpubUpload} disabled={isUploadingEpub}>
+                {isUploadingEpub ? '업로드 중' : '영향을 확인하고 업로드'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {isStatusModalOpen ? (
         <div className={styles.modalBackdrop} role="presentation" onMouseDown={() => setIsStatusModalOpen(false)}>

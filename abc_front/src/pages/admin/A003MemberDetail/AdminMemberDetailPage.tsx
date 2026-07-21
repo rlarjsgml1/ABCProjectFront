@@ -283,7 +283,7 @@ export function AdminMemberDetailPage() {
       setStatusMessage('회원 상태가 변경되었습니다.');
       setIsStatusModalOpen(false);
       await loadMember();
-    } catch (error) {
+    } catch {
       setMember((current) =>
         current
           ? {
@@ -340,7 +340,7 @@ export function AdminMemberDetailPage() {
       setStatusMessage('회원 포인트가 조정되었습니다.');
       setIsPointModalOpen(false);
       await loadMember();
-    } catch (error) {
+    } catch {
       setMember((current) =>
         current
           ? {

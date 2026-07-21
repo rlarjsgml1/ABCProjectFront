@@ -33,7 +33,6 @@ function buildTrendPoints(periodType: ReadingStatisticsPeriodType): ReadingTrend
       label,
       rentalCount: readBookCount + 2 + (index % 3),
       readBookCount,
-      readPageCount: readBookCount * 168 + index * 24,
     };
   });
 }
@@ -43,11 +42,10 @@ function getSummaryFromTrend(trendPoints: ReadingTrendPoint[]) {
     (summary, point) => ({
       rentalCount: summary.rentalCount + point.rentalCount,
       readBookCount: summary.readBookCount + point.readBookCount,
-      readPageCount: summary.readPageCount + point.readPageCount,
       reviewCount: summary.reviewCount + Math.max(0, Math.round(point.readBookCount * 0.6)),
       favoriteCount: summary.favoriteCount + Math.max(0, Math.round(point.rentalCount * 0.4)),
     }),
-    { rentalCount: 0, readBookCount: 0, readPageCount: 0, reviewCount: 0, favoriteCount: 0 },
+    { rentalCount: 0, readBookCount: 0, reviewCount: 0, favoriteCount: 0 },
   );
 }
 
@@ -60,7 +58,6 @@ function mapReadingStatistics(raw: RawReadingStatisticsResponse, baseDate?: stri
     summary: {
       rentalCount: raw.rentalCount,
       readBookCount: raw.readBookCount,
-      readPageCount: raw.readPageCount,
       reviewCount: raw.reviewCount,
       favoriteCount: raw.favoriteCount,
     },
@@ -75,7 +72,6 @@ function mapReadingStatistics(raw: RawReadingStatisticsResponse, baseDate?: stri
       periodEndDate: point.periodEndDate,
       rentalCount: 0,
       readBookCount: point.count,
-      readPageCount: 0,
     })),
     generatedAt: raw.updatedAt,
   };

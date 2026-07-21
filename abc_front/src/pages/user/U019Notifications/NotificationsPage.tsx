@@ -2,13 +2,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  getFallbackNotificationPage,
   getMyNotifications,
   getNotificationTargetPath,
   getNotificationTypeLabel,
   markNotificationRead,
 } from '../../../api/notificationsApi';
-import { getFallbackNoticeDetail, getNoticeDetail } from '../../../api/noticeApi';
+import { getNoticeDetail } from '../../../api/noticeApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { Modal } from '../../../components/common/Modal';
 import { Pagination } from '../../../components/common/Pagination';
@@ -57,9 +56,14 @@ export function NotificationsPage() {
   const currentPage = Number(searchParams.get('page') ?? '0');
   const [readFilter, setReadFilter] = useState<'ALL' | 'UNREAD'>('ALL');
   const [typeFilter, setTypeFilter] = useState<NotificationType | ''>('');
-  const [notificationsPage, setNotificationsPage] = useState<NotificationPage>(() =>
-    getFallbackNotificationPage({ page: 0, size: PAGE_SIZE }),
-  );
+  const [notificationsPage, setNotificationsPage] = useState<NotificationPage>({
+    content: [],
+    page: 0,
+    size: PAGE_SIZE,
+    totalElements: 0,
+    totalPages: 0,
+    last: true,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedNotice, setSelectedNotice] = useState<NoticeDetail | null>(null);
@@ -85,8 +89,7 @@ export function NotificationsPage() {
         }
       } catch (error) {
         if (!ignore) {
-          setNotificationsPage(getFallbackNotificationPage(query));
-          setErrorMessage(`${getApiErrorMessage(error)} 서버 연결 전까지 임시 알림이 표시됩니다.`);
+          setErrorMessage(getApiErrorMessage(error));
         }
       } finally {
         if (!ignore) {
@@ -129,11 +132,11 @@ export function NotificationsPage() {
 
   async function handleNotificationClick(notification: NotificationItem) {
     if (!notification.readYn) {
-      markAsReadLocally(notification.notificationId);
       try {
         await markNotificationRead(notification.notificationId);
-      } catch {
-        // 백엔드 API(API-NOTI-002)가 아직 없는 동안에는 화면에서만 읽음 처리하고 넘어간다.
+        markAsReadLocally(notification.notificationId);
+      } catch (error) {
+        setErrorMessage(getApiErrorMessage(error));
       }
     }
 
@@ -146,8 +149,8 @@ export function NotificationsPage() {
       try {
         const detail = await getNoticeDetail(noticeId);
         setSelectedNotice(detail);
-      } catch {
-        setSelectedNotice(getFallbackNoticeDetail(noticeId));
+      } catch (error) {
+        setErrorMessage(getApiErrorMessage(error));
       }
 
       return;
@@ -246,7 +249,6 @@ export function NotificationsPage() {
             {
               key: 'createdAt',
               header: '일시',
-              align: 'right',
               render: (notification) => formatDateTime(notification.createdAt),
             },
           ]}

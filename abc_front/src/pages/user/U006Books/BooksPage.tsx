@@ -95,6 +95,10 @@ function formatRentalType(book: BookCard) {
   return '유료';
 }
 
+function formatAuthors(book: BookCard) {
+  return book.authors?.length ? book.authors.join(', ') : book.publisherName || '작가 미상';
+}
+
 function getSectionKey(section: string | null): SectionKey | null {
   if (section === 'recommend' || section === 'latest' || section === 'best') {
     return section;
@@ -384,7 +388,7 @@ export function BooksPage() {
                 >
                   {book.coverImageUrl ? <img src={book.coverImageUrl} alt="" /> : <span>책 표지</span>}
                   <strong>{book.title}</strong>
-                  <small>{book.authors.join(', ') || formatRentalType(book)}</small>
+                  <small>{formatAuthors(book)}</small>
                 </Link>
                 );
               })}
@@ -502,7 +506,7 @@ export function BooksPage() {
               <Link className="books-card" to={`/books/${book.bookId}`} key={book.bookId}>
                 {book.coverImageUrl ? <img src={book.coverImageUrl} alt="" /> : <span />}
                 <strong>{book.title}</strong>
-                <small>{formatRentalType(book)}</small>
+                <small>{formatAuthors(book)}</small>
               </Link>
             ))}
           </div>

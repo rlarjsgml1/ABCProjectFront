@@ -73,8 +73,7 @@ function isOwnedState(state: string | null | undefined) {
 }
 
 function getReadPath(rental: MyRentalItem) {
-  const targetPage = rental.currentPage > 0 ? rental.currentPage : 1;
-  return `/rentals/${rental.rentalId}/read?page=${targetPage}`;
+  return `/rentals/${rental.rentalId}/read`;
 }
 
 function getReviewPreview(content: string, isExpanded: boolean) {

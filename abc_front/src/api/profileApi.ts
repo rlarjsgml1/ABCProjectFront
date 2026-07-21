@@ -7,6 +7,7 @@ import type {
   UserPasswordChangeRequest,
   UserProfile,
   UserProfileUpdateRequest,
+  UserWithdrawalRequest,
 } from '../types/api';
 
 // apiClient의 baseURL에 /api/v1이 포함되어 있으므로 API 명세의 하위 경로만 사용한다.
@@ -25,8 +26,8 @@ export async function changeMyPassword(payload: UserPasswordChangeRequest) {
   return response.data;
 }
 
-export async function withdrawMyAccount() {
-  const response = await apiClient.delete<ApiResponse<void>>('/me');
+export async function withdrawMyAccount(payload: UserWithdrawalRequest) {
+  const response = await apiClient.delete<ApiResponse<void>>('/me', { data: payload });
   return response.data;
 }
 
@@ -40,4 +41,14 @@ export function getApiErrorMessage(error: unknown) {
   }
 
   return '요청을 처리하지 못했습니다.';
+}
+
+// 백엔드 ErrorResponse.code(예: BOOK_REQUEST_ALREADY_EXISTS)를 구조적으로 읽기 위한 헬퍼.
+// 메시지 문자열 포함 여부로 에러를 판별하던 기존 방식을 대체한다.
+export function getApiErrorCode(error: unknown): string | undefined {
+  if (isAxiosError<ErrorResponse>(error)) {
+    return error.response?.data.code;
+  }
+
+  return undefined;
 }
