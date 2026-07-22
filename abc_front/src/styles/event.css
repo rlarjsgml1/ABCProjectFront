@@ -98,7 +98,7 @@
 }
 
 .event-card:focus-visible {
-  outline: 3px solid rgba(0, 61, 45, 0.32);
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 32%, transparent);
   outline-offset: 6px;
 }
 

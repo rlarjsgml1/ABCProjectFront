@@ -1,7 +1,17 @@
 :root {
-  --color-primary: #2563eb;
-  --color-primary-dark: #1d4ed8;
-  --color-primary-soft: #dbeafe;
+  /* primitive — 브랜드 원색 팔레트 (옵션 A: 딥그린 + 앰버) */
+  --green-900: #003d2d;
+  --green-700: #00684d;
+  --green-100: #e3f5ee;
+  --amber-500: #e3a008;
+  --amber-100: #fdf0d5;
+
+  /* semantic — 용도별 토큰. 컴포넌트는 반드시 이쪽만 참조한다 */
+  --color-primary: var(--green-900);
+  --color-primary-dark: var(--green-700);
+  --color-primary-soft: var(--green-100);
+  --color-accent: var(--amber-500);
+  --color-accent-soft: var(--amber-100);
   --color-danger: #dc2626;
   --color-danger-soft: #fee2e2;
   --color-success: #15803d;
@@ -11,7 +21,7 @@
   --color-text: #111827;
   --color-muted: #6b7280;
   --color-border: #e5e7eb;
-  --color-background: #f8fafc;
+  --color-background: #f8fbf9;
   --color-surface: #ffffff;
   --color-surface-muted: #f1f5f9;
   --space-1: 4px;
