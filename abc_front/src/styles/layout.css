@@ -1924,7 +1924,7 @@ a.admin-dashboard-kpi-card:focus-visible {
 }
 
 .mypage-overview {
-  --mypage-banner-bg: var(--color-surface-muted);
+  --mypage-banner-bg: linear-gradient(160deg, color-mix(in srgb, var(--color-primary) 6%, #ffffff) 0%, #fbfdfc 62%);
   --mypage-widget-bg: var(--color-surface);
   --mypage-widget-surface: var(--color-primary-soft);
   --mypage-widget-text: var(--color-text);
@@ -2188,7 +2188,7 @@ a.count-card:focus-visible {
   width: var(--space-4);
   height: var(--space-4);
   border-radius: 50%;
-  color: var(--mypage-banner-bg);
+  color: var(--color-surface);
   background: var(--mypage-widget-text);
   font-size: 0.7rem;
   font-weight: 800;

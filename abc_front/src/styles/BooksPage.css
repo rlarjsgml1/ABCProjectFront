@@ -29,7 +29,9 @@
   height: var(--books-banner-height);
   margin: var(--space-8) auto 0;
   padding: clamp(var(--space-8), 4vw, 72px);
-  background: #f8fafc;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 10%, transparent);
+  border-radius: 28px;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--color-primary) 7%, #ffffff) 0%, #ffffff 62%);
   user-select: none;
   overflow: hidden;
   box-sizing: border-box;
@@ -59,7 +61,7 @@
   aspect-ratio: 4 / 5.2;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: #969191;
+  background: var(--color-primary-soft);
   object-fit: cover;
   box-shadow: var(--shadow-sm);
 }
@@ -77,8 +79,8 @@
   grid-template-rows: auto minmax(0, 1fr) auto;
   gap: clamp(var(--space-3), 1.6vw, var(--space-5));
   align-content: stretch;
-  height: clamp(420px, 29vw, 520px);
-  padding: clamp(var(--space-6), 3vw, 52px);
+  height: clamp(450px, 31vw, 560px);
+  padding: clamp(var(--space-6), 3vw, 44px);
 }
 
 .books-recommend-heading {
@@ -94,9 +96,20 @@
 }
 
 .books-recommend-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   color: var(--color-text);
-  font-size: 1.55rem;
+  font-size: 1.45rem;
   font-weight: 900;
+}
+
+.books-recommend-heading h2::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
 }
 
 .books-recommend-heading p {
@@ -173,9 +186,9 @@
 }
 
 .books-recommend-card {
-  --card-step: clamp(108px, 11vw, 166px);
-  --card-base-width: clamp(84px, 7.8vw, 112px);
-  --card-featured-width: clamp(120px, 10.5vw, 150px);
+  --card-step: clamp(132px, 13.5vw, 205px);
+  --card-base-width: clamp(104px, 9.8vw, 140px);
+  --card-featured-width: clamp(150px, 13.5vw, 192px);
   position: absolute;
   top: 45%;
   left: 50%;
@@ -233,8 +246,8 @@
   width: 100%;
   aspect-ratio: 4 / 5.5;
   border-radius: var(--radius-lg);
-  color: var(--color-text);
-  background: #969191;
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
   object-fit: cover;
   font-weight: 800;
   box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
@@ -244,6 +257,13 @@
   z-index: 3;
   width: var(--card-featured-width);
   transform: translate(calc(-50% + (var(--book-offset) * var(--card-step))), -50%) scale(1.02);
+}
+
+.books-recommend-card.is-featured span,
+.books-recommend-card.is-featured img {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
+  outline-offset: 3px;
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.18);
 }
 
 .books-recommend-card strong,
@@ -451,7 +471,7 @@
   width: min(100%, 170px);
   aspect-ratio: 4 / 5.5;
   border-radius: var(--radius-lg);
-  background: #969191;
+  background: var(--color-primary-soft);
   object-fit: cover;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
@@ -598,7 +618,7 @@
   width: min(100%, 205px);
   aspect-ratio: 4 / 5.5;
   border-radius: var(--radius-lg);
-  background: #969191;
+  background: var(--color-primary-soft);
   object-fit: cover;
 }
 
