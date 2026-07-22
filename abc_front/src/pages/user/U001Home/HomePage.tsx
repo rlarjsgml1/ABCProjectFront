@@ -144,16 +144,18 @@ export function HomePage() {
   const [newBooks, setNewBooks] = useState<BookItem[]>(fallbackNewBooks);
   const [bestBooks, setBestBooks] = useState<BookItem[]>(fallbackBestBooks);
   const [latestNotice, setLatestNotice] = useState<NoticeItem | null>(null);
-  const [collectionSection, setCollectionSection] = useState<{ collectionId: number; title: string; books: BookItem[] } | null>(null);
+  const [collectionSections, setCollectionSections] = useState<{ collectionId: number; title: string; books: BookItem[] }[]>([]);
+  // 배너 3층 폴백: ① 노출 중인 컬렉션 → ② 표지 있는 신간/베스트 → ③ 하드코딩 기본 배너
+  const [banners, setBanners] = useState<BannerItem[]>(bannerItems);
   const memberName = localStorage.getItem('memberName');
 
   useEffect(() => {
     const timerId = window.setInterval(() => {
-      setBannerState(([currentIndex]) => [(currentIndex + 1) % bannerItems.length, 1]);
+      setBannerState(([currentIndex]) => [(currentIndex + 1) % banners.length, 1]);
     }, 5000);
 
     return () => window.clearInterval(timerId);
-  }, []);
+  }, [banners.length]);
 
   useEffect(() => {
     let ignore = false;
@@ -187,15 +189,56 @@ export function HomePage() {
 
       if (collectionsResult.status === 'fulfilled') {
         // 정렬 1순위가 startDate라서 기간이 없는 시리즈보다 이벤트가 항상 앞에 온다.
-        // 앞선 컬렉션에 도서가 하나도 없으면 건너뛰고, 실제로 보여줄 도서가 있는 첫 컬렉션을 찾는다.
-        const collectionWithBooks = collectionsResult.value.content.find((collection) => collection.previewBooks.length > 0);
-        if (collectionWithBooks) {
-          setCollectionSection({
-            collectionId: collectionWithBooks.collectionId,
-            title: collectionWithBooks.collectionName,
-            books: toCollectionBookItems(collectionWithBooks.previewBooks),
+        // 도서가 매핑된 노출 컬렉션은 전부 홈 섹션으로 보여준다.
+        setCollectionSections(
+          collectionsResult.value.content
+            .filter((collection) => collection.previewBooks.length > 0)
+            .map((collection) => ({
+              collectionId: collection.collectionId,
+              title: collection.collectionName,
+              books: toCollectionBookItems(collection.previewBooks),
+            })),
+        );
+      }
+
+      // 히어로 배너 구성 — 1층: 노출 중인 컬렉션 전부 (표지가 없으면 아이콘형 플레이스홀더로 표시)
+      const dynamicBanners: BannerItem[] = [];
+
+      if (collectionsResult.status === 'fulfilled') {
+        for (const collection of collectionsResult.value.content) {
+          const coverBook = collection.previewBooks.find((book) => book.coverImageUrl);
+          dynamicBanners.push({
+            badge: collection.collectionType === 'EVENT' ? 'EVENT' : 'SERIES',
+            title: collection.collectionName,
+            description: collection.description || '지금 ABC에서 준비한 컬렉션을 만나보세요.',
+            coverTitle: coverBook?.title ?? collection.collectionName,
+            imageUrl: coverBook?.coverImageUrl,
           });
         }
+      }
+
+      // 2층: 컬렉션이 없으면 표지 있는 신간/베스트 상위 도서로 채운다
+      if (!dynamicBanners.length) {
+        const candidates = [
+          ...(latestResult.status === 'fulfilled' ? latestResult.value.map((book) => ({ book, badge: 'NEW' })) : []),
+          ...(bestResult.status === 'fulfilled' ? bestResult.value.map((book) => ({ book, badge: 'BEST' })) : []),
+        ].filter(({ book }) => book.coverImageUrl);
+
+        for (const { book, badge } of candidates.slice(0, 3)) {
+          dynamicBanners.push({
+            badge,
+            title: book.title,
+            description: book.authors?.join(', ') || book.publisherName || 'ABC가 고른 오늘의 책',
+            coverTitle: book.title,
+            imageUrl: book.coverImageUrl,
+          });
+        }
+      }
+
+      // 3층: 그래도 없으면 기본 배너(bannerItems) 유지
+      if (dynamicBanners.length) {
+        setBanners(dynamicBanners);
+        setBannerState([0, 1]);
       }
     }
 
@@ -253,22 +296,22 @@ export function HomePage() {
       },
     ];
 
-    if (collectionSection) {
+    for (const collection of collectionSections) {
       sections.push({
-        title: collectionSection.title,
-        moreTo: `/books?section=collection&collectionId=${collectionSection.collectionId}&source=home`,
-        books: collectionSection.books,
+        title: collection.title,
+        moreTo: `/books?section=collection&collectionId=${collection.collectionId}&source=home`,
+        books: collection.books,
       });
     }
 
     return sections;
-  }, [bestBooks, collectionSection, memberName, newBooks, recommendedBooks]);
+  }, [bestBooks, collectionSections, memberName, newBooks, recommendedBooks]);
 
   function moveBanner(direction: 1 | -1) {
-    setBannerState(([currentIndex]) => [(currentIndex + direction + bannerItems.length) % bannerItems.length, direction]);
+    setBannerState(([currentIndex]) => [(currentIndex + direction + banners.length) % banners.length, direction]);
   }
 
-  const activeBanner = bannerItems[activeBannerIndex];
+  const activeBanner = banners[activeBannerIndex] ?? banners[0];
 
   return (
     <div className="home-page">
@@ -313,7 +356,7 @@ export function HomePage() {
         </button>
 
         <div className="home-hero-dots" role="tablist" aria-label="배너 슬라이드 이동">
-          {bannerItems.map((banner, index) => (
+          {banners.map((banner, index) => (
             <button
               key={banner.title}
               type="button"
