@@ -30,6 +30,12 @@ a {
   text-decoration: none;
 }
 
+/* 키보드 내비게이션 전용 포커스 링 — 마우스 클릭에는 나타나지 않는다 */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 button,
 input,
 select,
