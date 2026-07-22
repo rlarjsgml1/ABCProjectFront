@@ -455,7 +455,7 @@
 .admin-main {
   flex: 1;
   padding: var(--space-8);
-  background: var(--color-background);
+  background: var(--color-surface);
 }
 
 @media (max-width: 900px) {
