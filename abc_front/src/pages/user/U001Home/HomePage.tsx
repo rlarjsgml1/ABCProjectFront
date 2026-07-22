@@ -24,7 +24,16 @@ type BookSection = {
   ranked?: boolean;
 };
 
-const bannerItems = [
+type BannerItem = {
+  badge: string;
+  title: string;
+  description: string;
+  coverTitle: string;
+  /** 운영 배너 이미지 URL. 값을 넣으면 플레이스홀더 대신 실제 이미지가 표시된다. */
+  imageUrl?: string;
+};
+
+const bannerItems: BannerItem[] = [
   {
     badge: 'EVENT',
     title: 'ABC에서 만나는 이번 주 특별 도서',
@@ -52,34 +61,41 @@ const quickMenuItems = [
   { to: '/books', icon: '📚', label: '카테고리', description: '분야별 도서 보기' },
 ];
 
-const fallbackRecommendedBooks: BookItem[] = [
-  { id: 1, title: '바람의 문장', author: '김하늘', tone: '#eda0a4' },
-  { id: 2, title: '작은 도서관', author: '이서윤', tone: '#e8989d' },
-  { id: 3, title: '기억의 지도', author: '박도현', tone: '#eea5a8' },
-  { id: 4, title: '느린 오후', author: '정유진', tone: '#e9939b' },
-  { id: 5, title: '여름의 끝', author: '한지우', tone: '#efa7aa' },
-];
+// 표지 없는 책의 폴백 톤 — 브랜드 그린 소프트 2종 + 중성 그레이 1종만 사용한다
+const fallbackCoverTones = ['#e3f5ee', '#d9ede4', '#eef1f4'];
 
-const fallbackNewBooks: BookItem[] = [
-  { id: 11, title: '오늘의 문법', author: '차민서', tone: '#e4eda4' },
-  { id: 12, title: '초록빛 밤', author: '윤나래', tone: '#e7efa6' },
-  { id: 13, title: '생활의 발견', author: '오지훈', tone: '#e2eba0' },
-  { id: 14, title: '코드 산책', author: '문서연', tone: '#e9f1aa' },
-  { id: 15, title: '달빛 기록', author: '백도윤', tone: '#e5eda3' },
-];
+function withFallbackTones(books: Omit<BookItem, 'tone'>[]): BookItem[] {
+  return books.map((book, index) => ({ ...book, tone: fallbackCoverTones[index % fallbackCoverTones.length] }));
+}
 
-const fallbackBestBooks: BookItem[] = [
-  { id: 21, title: '가장 긴 하루', author: '서민준', tone: '#e34d9c' },
-  { id: 22, title: '기획자의 생각', author: '강유리', tone: '#df4597' },
-  { id: 23, title: '마음의 온도', author: '임하린', tone: '#e0529f' },
-  { id: 24, title: '도시와 사람', author: '최현우', tone: '#dd4293' },
-  { id: 25, title: '일상의 기술', author: '신아영', tone: '#e457a2' },
-  { id: 26, title: '새벽 독서', author: '권지호', tone: '#dc4997' },
-  { id: 27, title: '설명의 힘', author: '류다은', tone: '#e24f9c' },
-  { id: 28, title: '기억 수집가', author: '남도겸', tone: '#df4796' },
-  { id: 29, title: '계절의 이름', author: '홍예린', tone: '#e454a0' },
-  { id: 30, title: '책상 위 우주', author: '송이준', tone: '#dd4594' },
-];
+const fallbackRecommendedBooks: BookItem[] = withFallbackTones([
+  { id: 1, title: '바람의 문장', author: '김하늘' },
+  { id: 2, title: '작은 도서관', author: '이서윤' },
+  { id: 3, title: '기억의 지도', author: '박도현' },
+  { id: 4, title: '느린 오후', author: '정유진' },
+  { id: 5, title: '여름의 끝', author: '한지우' },
+]);
+
+const fallbackNewBooks: BookItem[] = withFallbackTones([
+  { id: 11, title: '오늘의 문법', author: '차민서' },
+  { id: 12, title: '초록빛 밤', author: '윤나래' },
+  { id: 13, title: '생활의 발견', author: '오지훈' },
+  { id: 14, title: '코드 산책', author: '문서연' },
+  { id: 15, title: '달빛 기록', author: '백도윤' },
+]);
+
+const fallbackBestBooks: BookItem[] = withFallbackTones([
+  { id: 21, title: '가장 긴 하루', author: '서민준' },
+  { id: 22, title: '기획자의 생각', author: '강유리' },
+  { id: 23, title: '마음의 온도', author: '임하린' },
+  { id: 24, title: '도시와 사람', author: '최현우' },
+  { id: 25, title: '일상의 기술', author: '신아영' },
+  { id: 26, title: '새벽 독서', author: '권지호' },
+  { id: 27, title: '설명의 힘', author: '류다은' },
+  { id: 28, title: '기억 수집가', author: '남도겸' },
+  { id: 29, title: '계절의 이름', author: '홍예린' },
+  { id: 30, title: '책상 위 우주', author: '송이준' },
+]);
 
 const heroSlideVariants: Variants = {
   enter: (direction: number) => ({ x: direction > 0 ? '100%' : '-100%', opacity: 0 }),
@@ -276,10 +292,14 @@ export function HomePage() {
                   <p>{activeBanner.description}</p>
                 </div>
                 <div className="home-hero-book" aria-hidden="true">
-                  <div className="home-hero-face">
-                    <strong>{activeBanner.coverTitle}</strong>
-                    <small>ABC Book</small>
-                  </div>
+                  {activeBanner.imageUrl ? (
+                    <img className="home-hero-face home-hero-face-image" src={activeBanner.imageUrl} alt="" />
+                  ) : (
+                    <div className="home-hero-face">
+                      <span className="home-hero-face-icon">📖</span>
+                      <strong>{activeBanner.coverTitle}</strong>
+                    </div>
+                  )}
                 </div>
               </motion.article>
             </AnimatePresence>
