@@ -18,60 +18,6 @@ function formatAmount(amount: number) {
   return `${amount.toLocaleString('ko-KR')}P`;
 }
 
-const fallbackPayments: AdminPaymentItem[] = [
-  {
-    paymentId: 5510,
-    memberName: '이서연',
-    bookTitle: '불편한 편의점',
-    rentalId: 8821,
-    paymentMethod: '카드',
-    grossAmount: 2000,
-    couponDiscount: 300,
-    couponName: '신규가입 10% 쿠폰',
-    pointDiscount: 200,
-    amount: 1500,
-    paymentStatus: 'PAID',
-    paidAt: '2026-07-10',
-  },
-  {
-    paymentId: 5509,
-    memberName: '최다인',
-    bookTitle: '돈의 심리학',
-    rentalId: 8819,
-    paymentMethod: '카드',
-    grossAmount: 1800,
-    couponDiscount: 0,
-    pointDiscount: 0,
-    amount: 1800,
-    paymentStatus: 'PAID',
-    paidAt: '2026-07-13',
-  },
-];
-
-function buildFallbackPaymentPage(query: { q?: string; startDate?: string; endDate?: string; page?: number; size?: number }): AdminPaymentPage {
-  const keyword = query.q?.trim().toLowerCase();
-  const filtered = fallbackPayments.filter((payment) => {
-    const matchesKeyword = keyword ? [payment.memberName, payment.bookTitle].join(' ').toLowerCase().includes(keyword) : true;
-    const matchesStart = query.startDate ? payment.paidAt >= query.startDate : true;
-    const matchesEnd = query.endDate ? payment.paidAt <= query.endDate : true;
-
-    return matchesKeyword && matchesStart && matchesEnd;
-  });
-
-  const page = query.page ?? 0;
-  const size = query.size ?? PAGE_SIZE;
-  const start = page * size;
-
-  return {
-    content: filtered.slice(start, start + size),
-    page,
-    size,
-    totalElements: filtered.length,
-    totalPages: Math.max(Math.ceil(filtered.length / size), 1),
-    last: start + size >= filtered.length,
-  };
-}
-
 function toApiPage(uiPage: number) {
   return Math.max(uiPage - 1, 0);
 }
@@ -113,8 +59,8 @@ export function AdminPaymentListPage() {
         if (!ignore) setPaymentsPage(data);
       } catch (error) {
         if (!ignore) {
-          setPaymentsPage(buildFallbackPaymentPage(query));
-          setErrorMessage(`${getApiErrorMessage(error)} 화면 확인을 위해 임시 결제 목록을 표시합니다.`);
+          setPaymentsPage(null);
+          setErrorMessage(getApiErrorMessage(error));
         }
       } finally {
         if (!ignore) setIsLoading(false);
@@ -164,7 +110,7 @@ export function AdminPaymentListPage() {
           <h1 id="admin-payments-title">결제 관리</h1>
         </div>
         <div className={styles.apiStrip}>
-          <span className={styles.apiPill}>GET /admin/payments · controller 미구현 → mock/fallback</span>
+          <span className={styles.apiPill}>GET /admin/payments · controller 미구현</span>
         </div>
       </div>
 
@@ -220,6 +166,10 @@ export function AdminPaymentListPage() {
               {isLoading ? (
                 <tr>
                   <td colSpan={8}>결제 목록을 불러오는 중입니다.</td>
+                </tr>
+              ) : errorMessage ? (
+                <tr>
+                  <td colSpan={8}>결제 목록을 불러오지 못했습니다.</td>
                 </tr>
               ) : payments.length > 0 ? (
                 payments.map((payment) => (
