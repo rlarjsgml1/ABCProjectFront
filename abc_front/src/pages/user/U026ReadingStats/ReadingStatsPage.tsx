@@ -35,7 +35,7 @@ function formatTree(value: number) {
 }
 
 function ReadingStatisticsTooltip({ active, label, payload }: TooltipContentProps) {
-  if (!active || !payload.length) {
+  if (!active || !payload?.length) {
     return null;
   }
 
@@ -112,7 +112,6 @@ export function ReadingStatsPage() {
           <div>
             <h2 id="reading-stats-title">나의 독서 통계</h2>
           </div>
-          <span>독서 흐름과 환경 기여 지표</span>
         </div>
 
         <div className="reading-statistics-controls" aria-label="통계 조회 조건">

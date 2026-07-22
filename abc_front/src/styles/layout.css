@@ -1084,6 +1084,7 @@ a.admin-dashboard-kpi-card:focus-visible {
 .mypage-main {
   display: grid;
   gap: var(--space-6);
+  scroll-margin-top: calc(var(--space-8) + 88px);
 }
 
 /* 도서 표지 이미지 공통 스타일 (즐겨찾기, 도서 목록/상세 등에서 재사용) */
@@ -2182,18 +2183,37 @@ a.count-card:focus-visible {
 
 .reading-stats {
   display: grid;
-  gap: var(--space-6);
   min-height: 220px;
   border-radius: var(--mypage-widget-radius);
   padding: var(--space-4) var(--space-6) var(--space-6);
   background: var(--mypage-widget-bg);
+  transition: outline-color 0.2s ease;
+}
+
+.reading-stats:hover,
+.reading-stats:focus-within {
+  outline: 3px solid var(--mypage-widget-text);
+  outline-offset: var(--space-1);
+}
+
+.reading-stats-link {
+  display: grid;
+  gap: var(--space-6);
+  min-height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.reading-stats-link:focus-visible {
+  border-radius: var(--radius-md);
+  outline: none;
 }
 
 .reading-stats .section-heading-row {
   align-items: center;
 }
 
-.reading-stats .section-heading-row a {
+.reading-stats .section-heading-row span {
   color: var(--mypage-widget-text);
   font-size: 1.5rem;
   font-weight: 800;

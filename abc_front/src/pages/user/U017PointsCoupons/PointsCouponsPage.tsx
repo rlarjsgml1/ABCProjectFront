@@ -1,5 +1,6 @@
 // 포인트/쿠폰(U017) 화면 — 보유 포인트·쿠폰 내역을 탭으로 나눠 필터링 및 정렬하여 조회한다
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { getMyCoupons, getMyPoints } from '../../../api/pointsCouponsApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
@@ -119,6 +120,10 @@ function getCouponSortValue(value: string): CouponSort {
   return value === 'EXPIRING_SOON' ? 'EXPIRING_SOON' : 'RECENT_ISSUED';
 }
 
+function getActiveTab(value: string | null): ActiveTab {
+  return value === 'coupons' ? 'coupons' : 'points';
+}
+
 function getAvailableCouponCount(couponsPage: CouponHistoryPage | null, fallback: number | undefined) {
   if (!couponsPage) {
     return fallback ?? 0;
@@ -146,7 +151,8 @@ function getExpiringThisMonthCount(couponsPage: CouponHistoryPage | null) {
 
 export function PointsCouponsPage() {
   const { profile } = useMyProfile();
-  const [activeTab, setActiveTab] = useState<ActiveTab>('points');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = getActiveTab(searchParams.get('tab'));
   const [pointType, setPointType] = useState('');
   const [pointSummary, setPointSummary] = useState<PointSummary | null>(null);
   const [isPointsLoading, setIsPointsLoading] = useState(true);
@@ -240,6 +246,12 @@ export function PointsCouponsPage() {
   const availableCouponCount = getAvailableCouponCount(couponsPage, profile?.couponCount);
   const expiringThisMonthCount = getExpiringThisMonthCount(couponsPage);
 
+  function handleTabChange(tab: ActiveTab) {
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.set('tab', tab);
+    setSearchParams(nextSearchParams, { replace: true });
+  }
+
   return (
     <MyPageLayout titleId="points-coupons-title">
       <section className="page-section points-coupons-panel">
@@ -257,7 +269,7 @@ export function PointsCouponsPage() {
             role="tab"
             aria-selected={activeTab === 'points'}
             aria-controls="points-panel"
-            onClick={() => setActiveTab('points')}
+            onClick={() => handleTabChange('points')}
           >
             포인트
           </button>
@@ -267,7 +279,7 @@ export function PointsCouponsPage() {
             role="tab"
             aria-selected={activeTab === 'coupons'}
             aria-controls="coupons-panel"
-            onClick={() => setActiveTab('coupons')}
+            onClick={() => handleTabChange('coupons')}
           >
             쿠폰
           </button>

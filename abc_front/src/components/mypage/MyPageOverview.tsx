@@ -1,6 +1,6 @@
 // 마이페이지 상단 요약 대시보드 — 프로필, 회원등급, 독서통계, 출석/챌린지 현황을 표시
 import { useState, type CSSProperties } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, type To } from 'react-router-dom';
 import type { UserProfile } from '../../types/api';
 import { CountUpValue } from '../common/CountUpValue';
 
@@ -33,7 +33,7 @@ type TopStat = {
   value: string | number;
   numericValue?: number;
   suffix?: string;
-  to?: string;
+  to?: To;
 };
 
 const emptyProfile: UserProfile = {
@@ -111,13 +111,24 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
   const grade = displayProfile.gradeName ?? displayProfile.membershipGrade ?? '새싹';
   const gradeDetails = getMembershipGradeDetails(displayProfile, grade);
   const topStats: TopStat[] = [
-    { label: '포인트', value: formatPoint(displayProfile.point), numericValue: displayProfile.point ?? 0, suffix: 'p', to: '/me/points-coupons' },
-    { label: '쿠폰', value: valueOrDash(displayProfile.couponCount), numericValue: displayProfile.couponCount, to: '/me/points-coupons' },
+    {
+      label: '포인트',
+      value: formatPoint(displayProfile.point),
+      numericValue: displayProfile.point ?? 0,
+      suffix: 'p',
+      to: { pathname: '/me/points-coupons', search: '?tab=points' },
+    },
+    {
+      label: '쿠폰',
+      value: valueOrDash(displayProfile.couponCount),
+      numericValue: displayProfile.couponCount,
+      to: { pathname: '/me/points-coupons', search: '?tab=coupons' },
+    },
   ];
   const bottomStats: TopStat[] = [
     { label: '대여', value: valueOrDash(displayProfile.rentalCount), numericValue: displayProfile.rentalCount, to: '/me/rentals' },
-    { label: '완독', value: valueOrDash(displayProfile.completedBookCount), numericValue: displayProfile.completedBookCount },
-    { label: '즐겨찾기', value: valueOrDash(displayProfile.favoriteCount), numericValue: displayProfile.favoriteCount },
+    { label: '완독', value: valueOrDash(displayProfile.completedBookCount), numericValue: displayProfile.completedBookCount, to: '/me/rentals' },
+    { label: '즐겨찾기', value: valueOrDash(displayProfile.favoriteCount), numericValue: displayProfile.favoriteCount, to: '/me/favorites' },
   ];
   const readingBars = [
     { label: '리뷰', value: valueOrDash(displayProfile.reviewCount), percent: getPercent(displayProfile.reviewCount, 44) },
@@ -200,16 +211,16 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
         </section>
 
         <section className="mypage-grid" aria-label="알림과 활동 요약">
-          <article className="alert-panel overview-widget">
+          <Link className="alert-panel overview-widget overview-widget-link" to="/me/rentals" aria-label="대여 현황 페이지로 이동">
             <div className="overview-widget-title">
               <span className="overview-alert-icon" aria-hidden="true">
                 !
               </span>
-              <h2>반납 알림</h2>
+              <h2>대여 현황</h2>
             </div>
             <p className="overview-widget-surface">대여 {valueOrDash(displayProfile.rentalCount)}권 확인</p>
-          </article>
-          <article className="alert-panel overview-widget" aria-label="일반 알림">
+          </Link>
+          <Link className="alert-panel overview-widget overview-widget-link" to="/me/notifications" aria-label="알림 내역 페이지로 이동">
             <div className="overview-widget-title">
               <span className="overview-alert-icon" aria-hidden="true">
                 !
@@ -217,7 +228,7 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
               <h2>알림</h2>
             </div>
             <p className="overview-widget-surface">새 알림 {valueOrDash(displayProfile.unreadNotificationCount)}건</p>
-          </article>
+          </Link>
           <Link className="activity-card overview-widget overview-widget-link" to="/me/attendance" aria-label="출석체크 페이지로 이동">
             <h2>출석체크</h2>
             <div className="overview-stamp-row" aria-label={`출석 스탬프 ${attendanceCount}개`}>
@@ -247,22 +258,22 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
         </section>
 
         <section className="reading-stats" aria-label="독서 통계">
-          <div className="section-heading-row">
-            <h2>나의 독서통계</h2>
-            <Link to="/me/statistics" aria-label="나의 독서통계 상세 보기">
-              ›
-            </Link>
-          </div>
-          <div className="mini-bar-list" role="img" aria-label={`나의 독서통계 막대그래프: ${readingStatsSummary}`}>
-            {readingBars.map((item) => (
-              <span
-                className="mini-bar-fill"
-                key={item.label}
-                aria-hidden="true"
-                style={getBarStyle(item.percent)}
-              />
-            ))}
-          </div>
+          <Link className="reading-stats-link" to="/me/statistics" aria-label="나의 독서통계 상세 보기">
+            <div className="section-heading-row">
+              <h2>나의 독서통계</h2>
+              <span aria-hidden="true">›</span>
+            </div>
+            <div className="mini-bar-list" role="img" aria-label={`나의 독서통계 막대그래프: ${readingStatsSummary}`}>
+              {readingBars.map((item) => (
+                <span
+                  className="mini-bar-fill"
+                  key={item.label}
+                  aria-hidden="true"
+                  style={getBarStyle(item.percent)}
+                />
+              ))}
+            </div>
+          </Link>
         </section>
       </div>
 
