@@ -1510,6 +1510,21 @@ a.admin-dashboard-kpi-card:focus-visible {
   border-radius: var(--radius-lg);
   background: var(--color-surface);
   box-shadow: var(--shadow-sm);
+  transition: opacity 0.15s ease;
+}
+
+.viewer-content.is-turning {
+  opacity: 0.55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viewer-content {
+    transition: none;
+  }
+
+  .viewer-content.is-turning {
+    opacity: 1;
+  }
 }
 
 .epub-renderer-host {
