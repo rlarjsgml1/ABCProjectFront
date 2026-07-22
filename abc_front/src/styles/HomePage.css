@@ -1,13 +1,13 @@
 .home-page {
   --home-green: var(--color-primary);
   --home-green-bright: var(--color-primary-dark);
-  --home-muted-surface: #f1f1f1;
+  --home-muted-surface: #f5f7f6;
   --home-page-gutter: var(--space-8);
   --home-content-width: min(1440px, calc(100% - (var(--home-page-gutter) * 2)));
   --home-banner-width: var(--home-content-width);
   --home-banner-height: clamp(360px, 25vw, 460px);
   display: grid;
-  gap: var(--space-8);
+  gap: var(--space-6);
   overflow-x: clip;
   max-width: 100%;
   width: 100%;
@@ -52,7 +52,7 @@
   grid-template-columns: minmax(0, 1fr) minmax(150px, 210px);
   align-items: center;
   gap: clamp(var(--space-6), 3vw, 48px);
-  padding: clamp(42px, 4.2vw, 72px);
+  padding: clamp(36px, 3.5vw, 56px);
   overflow: hidden;
   box-sizing: border-box;
   color: var(--color-text);
@@ -212,7 +212,7 @@
 .home-quick-menu {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(var(--space-6), 4vw, 72px);
+  gap: clamp(var(--space-4), 2.5vw, var(--space-10));
   width: min(960px, calc(100% - (var(--home-page-gutter) * 2)));
   margin: var(--space-2) auto 0;
   border: 0;
@@ -310,7 +310,7 @@
 
 .home-category-section,
 .home-book-section {
-  padding: var(--space-8) 0;
+  padding: var(--space-6) 0;
   overflow: hidden;
 }
 
@@ -336,13 +336,13 @@
   width: var(--home-banner-width);
   max-width: 100%;
   margin-right: auto;
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-6);
   margin-left: auto;
 }
 
 .home-section-heading h2 {
   margin: 0;
-  font-size: clamp(1.45rem, 2vw, 2rem);
+  font-size: clamp(1.25rem, 1.5vw, var(--font-size-xl));
   line-height: 1.2;
 }
 
@@ -414,7 +414,7 @@
 .home-book-row,
 .home-best-grid {
   display: grid;
-  gap: clamp(var(--space-6), 4vw, 64px);
+  gap: clamp(var(--space-4), 1.5vw, var(--space-6));
   width: var(--home-banner-width);
   max-width: 100%;
   margin-right: auto;
@@ -428,7 +428,7 @@
 
 .home-best-grid {
   grid-template-columns: repeat(5, minmax(96px, 1fr));
-  row-gap: var(--space-8);
+  row-gap: var(--space-6);
 }
 
 .home-book-card {
@@ -443,7 +443,7 @@
 
 .home-book-cover {
   display: block;
-  width: min(100%, 190px);
+  width: min(100%, 168px);
   aspect-ratio: 5 / 7;
   border: 1px solid var(--color-border);
   border-radius: 4px;
