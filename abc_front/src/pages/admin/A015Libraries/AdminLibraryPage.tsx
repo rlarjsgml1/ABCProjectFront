@@ -34,36 +34,6 @@ const holdingStatusOptions: Array<{ value: AdminLibraryHoldingStatus; label: str
   { value: 'UNAVAILABLE', label: '미보유' },
 ];
 
-const fallbackLibraries: AdminLibrarySummary[] = [
-  {
-    libraryId: 1,
-    libraryName: 'ABC 강남점',
-    address: '서울특별시 강남구 테헤란로 123',
-    latitude: 37.5006,
-    longitude: 127.0364,
-    status: 'ACTIVE',
-    bookCount: 128,
-  },
-  {
-    libraryId: 2,
-    libraryName: 'ABC 홍대점',
-    address: '서울특별시 마포구 양화로 45',
-    latitude: null,
-    longitude: null,
-    status: 'ACTIVE',
-    bookCount: 64,
-  },
-  {
-    libraryId: 3,
-    libraryName: 'ABC 부산점',
-    address: '부산광역시 해운대구 센텀중앙로 90',
-    latitude: 35.1691,
-    longitude: 129.1305,
-    status: 'INACTIVE',
-    bookCount: 12,
-  },
-];
-
 type LibraryForm = {
   libraryName: string;
   address: string;
@@ -93,32 +63,6 @@ function getOptionLabel<T extends string>(options: Array<{ value: T; label: stri
 
 function formatCoordinate(value: number | null | undefined) {
   return typeof value === 'number' ? value.toFixed(4) : '미등록';
-}
-
-function buildFallbackLibraryPage(query: AdminLibraryListQuery): PageResponse<AdminLibrarySummary> {
-  const keyword = query.q?.trim().toLowerCase();
-
-  const filtered = fallbackLibraries.filter((library) => {
-    const matchesKeyword = keyword
-      ? [library.libraryName, library.address].join(' ').toLowerCase().includes(keyword)
-      : true;
-    const matchesStatus = query.status ? library.status === query.status : true;
-
-    return matchesKeyword && matchesStatus;
-  });
-
-  const page = query.page ?? 0;
-  const size = query.size ?? PAGE_SIZE;
-  const start = page * size;
-
-  return {
-    content: filtered.slice(start, start + size),
-    page,
-    size,
-    totalElements: filtered.length,
-    totalPages: Math.max(Math.ceil(filtered.length / size), 1),
-    last: start + size >= filtered.length,
-  };
 }
 
 function getInitialForm(library: AdminLibrarySummary): LibraryForm {
@@ -178,8 +122,8 @@ export function AdminLibraryPage() {
         }
       } catch (error) {
         if (!ignore) {
-          setLibrariesPage(buildFallbackLibraryPage(query));
-          setErrorMessage(`${getApiErrorMessage(error)} 화면 확인을 위해 임시 도서관 목록을 표시합니다.`);
+          setLibrariesPage(null);
+          setErrorMessage(getApiErrorMessage(error));
         }
       } finally {
         if (!ignore) {
@@ -449,6 +393,10 @@ export function AdminLibraryPage() {
               {isLoading ? (
                 <tr>
                   <td colSpan={8}>도서관 목록을 불러오는 중입니다.</td>
+                </tr>
+              ) : errorMessage ? (
+                <tr>
+                  <td colSpan={8}>도서관 목록을 불러오지 못했습니다.</td>
                 </tr>
               ) : libraries.length > 0 ? (
                 libraries.map((library) => (

@@ -727,26 +727,6 @@ export type Category = {
   children?: Category[];
 };
 
-export type AdminCategoryStatus = 'ACTIVE' | 'HIDDEN' | 'INACTIVE';
-
-export type AdminCategoryItem = Category & {
-  bookCount?: number;
-  status?: AdminCategoryStatus;
-  children?: AdminCategoryItem[];
-};
-
-export type AdminCategorySaveRequest = {
-  parentCategoryId?: number | null;
-  name: string;
-  displayOrder: number;
-  status: AdminCategoryStatus;
-};
-
-export type AdminCategorySaveResponse = {
-  categoryId: number;
-  updatedAt?: string;
-};
-
 export type AdminCollectionType = 'SERIES' | 'EVENT';
 
 export type AdminCollectionStatus = 'ACTIVE' | 'HIDDEN' | 'ENDED';

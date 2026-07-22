@@ -30,69 +30,6 @@ function formatDate(value: string | undefined) {
   return value.slice(0, 10);
 }
 
-const fallbackRentals: AdminRentalItem[] = [
-  {
-    rentalId: 8821,
-    memberId: 1042,
-    memberName: '이서연',
-    bookId: 2041,
-    bookTitle: '불편한 편의점',
-    status: 'READING',
-    createdAt: '2026-07-10',
-    firstReadAt: '2026-07-10',
-    progressPercent: 62,
-    paymentSummary: '유료 대여 · 1,500P',
-  },
-  {
-    rentalId: 8820,
-    memberId: 1077,
-    memberName: '박준혁',
-    bookId: 2040,
-    bookTitle: '아몬드',
-    status: 'OWNED',
-    createdAt: '2026-07-08',
-    firstReadAt: '2026-07-08',
-    endedAt: '2026-07-12',
-    progressPercent: 100,
-    paymentSummary: '무료 대여',
-  },
-  {
-    rentalId: 8819,
-    memberId: 1090,
-    memberName: '최다인',
-    bookId: 2039,
-    bookTitle: '돈의 심리학',
-    status: 'READY',
-    createdAt: '2026-07-13',
-    progressPercent: 0,
-    paymentSummary: '유료 대여 · 1,800P',
-  },
-];
-
-function buildFallbackRentalPage(query: { q?: string; memberId?: number; status?: AdminRentalStatus; page?: number; size?: number }): AdminRentalPage {
-  const keyword = query.q?.trim().toLowerCase();
-  const filtered = fallbackRentals.filter((rental) => {
-    const matchesMember = query.memberId ? rental.memberId === query.memberId : true;
-    const matchesStatus = query.status ? rental.status === query.status : true;
-    const matchesKeyword = keyword ? [rental.memberName, rental.bookTitle].join(' ').toLowerCase().includes(keyword) : true;
-
-    return matchesMember && matchesStatus && matchesKeyword;
-  });
-
-  const page = query.page ?? 0;
-  const size = query.size ?? PAGE_SIZE;
-  const start = page * size;
-
-  return {
-    content: filtered.slice(start, start + size),
-    page,
-    size,
-    totalElements: filtered.length,
-    totalPages: Math.max(Math.ceil(filtered.length / size), 1),
-    last: start + size >= filtered.length,
-  };
-}
-
 function toApiPage(uiPage: number) {
   return Math.max(uiPage - 1, 0);
 }
@@ -133,8 +70,8 @@ export function AdminRentalListPage() {
         if (!ignore) setRentalsPage(data);
       } catch (error) {
         if (!ignore) {
-          setRentalsPage(buildFallbackRentalPage(query));
-          setErrorMessage(`${getApiErrorMessage(error)} 화면 확인을 위해 임시 대여 목록을 표시합니다.`);
+          setRentalsPage(null);
+          setErrorMessage(getApiErrorMessage(error));
         }
       } finally {
         if (!ignore) setIsLoading(false);
@@ -180,7 +117,7 @@ export function AdminRentalListPage() {
           <h1 id="admin-rentals-title">대여 현황 관리</h1>
         </div>
         <div className={styles.apiStrip}>
-          <span className={styles.apiPill}>GET /admin/rentals · controller 미구현 → mock/fallback</span>
+          <span className={styles.apiPill}>GET /admin/rentals · controller 미구현</span>
         </div>
       </div>
 
@@ -241,6 +178,10 @@ export function AdminRentalListPage() {
               {isLoading ? (
                 <tr>
                   <td colSpan={7}>대여 목록을 불러오는 중입니다.</td>
+                </tr>
+              ) : errorMessage ? (
+                <tr>
+                  <td colSpan={7}>대여 목록을 불러오지 못했습니다.</td>
                 </tr>
               ) : rentals.length > 0 ? (
                 rentals.map((rental) => (

@@ -17,7 +17,6 @@ const adminPages: AdminPage[] = [
   { path: '/admin/books/new', label: '도서 등록' },
   { path: '/admin/books/:bookId/edit', label: '도서 수정' },
   { path: '/admin/book-isbn-temps', label: '외부 도서 등록' },
-  { path: '/admin/categories', label: '카테고리 관리' },
   { path: '/admin/rentals', label: '대여 현황 관리' },
   { path: '/admin/payments', label: '결제 관리' },
   { path: '/admin/reports', label: '신고 관리' },
