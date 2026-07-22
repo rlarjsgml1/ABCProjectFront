@@ -57,9 +57,11 @@
   display: block;
   width: min(100%, 260px);
   aspect-ratio: 4 / 5.2;
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: #969191;
   object-fit: cover;
+  box-shadow: var(--shadow-sm);
 }
 
 .books-featured-card strong {
