@@ -233,19 +233,19 @@ export function HomePage() {
   const bookSections: BookSection[] = useMemo(() => {
     const sections: BookSection[] = [
       {
-        title: memberName ? `${memberName}님을 위한 ABC 추천 도서` : 'ABC 추천 도서',
+        title: memberName ? `${memberName}님을 위한 추천` : '오늘의 추천',
         moreTo: '/books?section=recommend&source=home',
         books: recommendedBooks,
         kind: 'recommend',
       },
       {
-        title: 'NEW 신간',
+        title: '새로 들어왔어요',
         moreTo: '/books?section=latest&source=home',
         books: newBooks,
         kind: 'latest',
       },
       {
-        title: 'BEST 작품',
+        title: 'ABC 랭킹',
         moreTo: '/books?section=best&source=home',
         books: bestBooks,
         kind: 'best',
@@ -365,7 +365,7 @@ export function HomePage() {
                   </p>
                 ) : null}
               </div>
-              <Link to={section.moreTo}>더보기 &gt;</Link>
+              <Link className="home-section-more" to={section.moreTo}>더보기</Link>
             </div>
 
             <motion.div
@@ -375,7 +375,7 @@ export function HomePage() {
               whileInView={prefersReducedMotion ? undefined : 'visible'}
               viewport={{ once: true, amount: 0.15 }}
             >
-              {section.books.map((book, index) => (
+              {section.books.map((book) => (
                 <motion.div variants={sectionCardVariants} key={book.id}>
                   <Link className="home-book-card" to={`/books/${book.id}`}>
                     {book.coverImageUrl ? (
@@ -383,7 +383,7 @@ export function HomePage() {
                     ) : (
                       <span className="home-book-cover" style={{ backgroundColor: book.tone }} />
                     )}
-                    <strong>{section.ranked ? `${index + 1}. ${book.title}` : book.title}</strong>
+                    <strong>{book.title}</strong>
                     <small>{book.author}</small>
                   </Link>
                 </motion.div>
