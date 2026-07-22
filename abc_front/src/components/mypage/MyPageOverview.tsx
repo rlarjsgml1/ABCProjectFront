@@ -3,6 +3,7 @@ import { useState, type CSSProperties } from 'react';
 import { Link, type To } from 'react-router-dom';
 import type { UserProfile } from '../../types/api';
 import { CountUpValue } from '../common/CountUpValue';
+import { GradeBadgeIcon } from './GradeBadgeIcon';
 
 type MyPageOverviewProps = {
   profile: UserProfile | null;
@@ -45,7 +46,7 @@ const emptyProfile: UserProfile = {
   birthDate: '-',
   role: '-',
   status: '-',
-  point: 0,
+  pointBalance: 0,
   couponCount: 0,
   rentalCount: 0,
   completedBookCount: 0,
@@ -91,15 +92,15 @@ function getGradeProgressStyle(percent: number): GradeProgressStyle {
 }
 
 function getMembershipGradeDetails(profile: UserProfile, currentGradeName: string): MembershipGradeDetails {
-  const remainingPercent = getClampedPercent(profile.nextGradeRemainingPercent, 73);
-  const progressPercent = getClampedPercent(profile.gradeProgressPercent, 100 - remainingPercent);
+  const progressPercent = getClampedPercent(profile.grade?.progressRate, 27);
+  const remainingPercent = 100 - progressPercent;
 
   return {
     currentGradeName,
-    nextGradeName: profile.nextGradeName ?? '나무',
+    nextGradeName: profile.grade?.nextGradeName ?? '최고 등급',
     remainingPercent,
     progressPercent,
-    currentPaymentAmount: profile.currentPaymentAmount ?? 27000,
+    currentPaymentAmount: profile.grade?.currentPaymentAmount ?? 27000,
     benefitText: profile.gradeBenefitText ?? `${currentGradeName} 등급 혜택 기본 대여 기간 +1일 적용중`,
     remainingDays: profile.remainingGradePeriodDays ?? 13,
   };
@@ -108,13 +109,13 @@ function getMembershipGradeDetails(profile: UserProfile, currentGradeName: strin
 export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPageOverviewProps) {
   const [isGradeModalOpen, setIsGradeModalOpen] = useState(false);
   const displayProfile = profile ?? emptyProfile;
-  const grade = displayProfile.gradeName ?? displayProfile.membershipGrade ?? '새싹';
+  const grade = displayProfile.grade?.gradeName ?? '씨앗';
   const gradeDetails = getMembershipGradeDetails(displayProfile, grade);
   const topStats: TopStat[] = [
     {
       label: '포인트',
-      value: formatPoint(displayProfile.point),
-      numericValue: displayProfile.point ?? 0,
+      value: formatPoint(displayProfile.pointBalance),
+      numericValue: displayProfile.pointBalance ?? 0,
       suffix: 'p',
       to: { pathname: '/me/points-coupons', search: '?tab=points' },
     },
@@ -132,7 +133,7 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
   ];
   const readingBars = [
     { label: '리뷰', value: valueOrDash(displayProfile.reviewCount), percent: getPercent(displayProfile.reviewCount, 44) },
-    { label: '포인트', value: formatPoint(displayProfile.point), percent: getPercent(displayProfile.point, 72) },
+    { label: '포인트', value: formatPoint(displayProfile.pointBalance), percent: getPercent(displayProfile.pointBalance, 72) },
     { label: '쿠폰', value: valueOrDash(displayProfile.couponCount), percent: getPercent(displayProfile.couponCount, 68) },
     { label: '대여', value: valueOrDash(displayProfile.rentalCount), percent: getPercent(displayProfile.rentalCount, 88) },
     { label: '완독', value: valueOrDash(displayProfile.completedBookCount), percent: getPercent(displayProfile.completedBookCount, 76) },
@@ -156,8 +157,8 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
 
       <div className="mypage-dashboard-banner">
         <section className="profile-summary-card" aria-label="회원 요약">
-          <div className="profile-avatar" aria-hidden="true">
-            {displayProfile.name.slice(0, 1)}
+          <div className="profile-avatar" data-grade-level={displayProfile.grade?.gradeLevel ?? 1} aria-hidden="true">
+            <GradeBadgeIcon gradeLevel={displayProfile.grade?.gradeLevel} gradeName={grade} size={48} />
           </div>
           <div className="profile-summary-stack">
             <div className="profile-chip-row">
@@ -172,7 +173,7 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
                 aria-expanded={isGradeModalOpen}
                 onClick={() => setIsGradeModalOpen(true)}
               >
-                <span aria-hidden="true">◆</span>
+                <GradeBadgeIcon gradeLevel={displayProfile.grade?.gradeLevel} gradeName={grade} size={16} />
                 <strong>회원등급</strong>
                 <small>{grade}</small>
               </button>
@@ -290,7 +291,10 @@ export function MyPageOverview({ profile, isLoading, errorMessage = '' }: MyPage
             <div className="membership-modal-header">
               <div>
                 <p className="eyebrow">MEMBERSHIP GRADE</p>
-                <h2 id="membership-modal-title">회원등급 안내</h2>
+                <h2 id="membership-modal-title">
+                  <GradeBadgeIcon gradeLevel={displayProfile.grade?.gradeLevel} gradeName={grade} size={22} />
+                  회원등급 안내
+                </h2>
               </div>
               <button
                 className="membership-modal-close"

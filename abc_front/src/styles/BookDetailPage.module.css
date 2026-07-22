@@ -349,10 +349,19 @@
 }
 
 .reviewProfile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 48px;
   aspect-ratio: 1;
   border-radius: var(--radius-lg);
   background: var(--color-border);
+  color: var(--color-muted);
+}
+
+.reviewProfile svg {
+  width: 26px;
+  height: 26px;
 }
 
 .reviewContent {

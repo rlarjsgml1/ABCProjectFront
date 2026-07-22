@@ -892,6 +892,18 @@ export type FavoriteBookItem = BookCard & {
 export type FavoriteBooksPage = PageResponse<FavoriteBookItem>;
 
 // DB 테이블명이 아니라 API-ME-001 응답 DTO 기준으로 front에서 쓰는 회원 정보 필드다.
+// 백엔드 MemberGradeSummaryResponse와 동일한 중첩 구조. 최고 등급(도토리)에서는 nextGradeId/nextGradeName이 null이다.
+export type MembershipGradeSummary = {
+  gradeId: number;
+  gradeName: string;
+  gradeLevel: number;
+  nextGradeId?: number;
+  nextGradeName?: string;
+  currentPaymentAmount: number;
+  targetPaymentAmount?: number;
+  progressRate: number;
+};
+
 export type UserProfile = {
   loginId: string;
   name: string;
@@ -901,15 +913,10 @@ export type UserProfile = {
   birthDate: string;
   role: string;
   status: string;
-  gradeName?: string;
-  membershipGrade?: string;
-  nextGradeName?: string;
-  nextGradeRemainingPercent?: number;
-  gradeProgressPercent?: number;
-  currentPaymentAmount?: number;
+  grade?: MembershipGradeSummary;
   gradeBenefitText?: string;
   remainingGradePeriodDays?: number;
-  point?: number;
+  pointBalance?: number;
   couponCount?: number;
   rentalCount?: number;
   completedBookCount?: number;
@@ -918,12 +925,11 @@ export type UserProfile = {
   reviewCount?: number;
 };
 
-// API-ME-002에서 수정 가능한 필드만 포함한다. loginId, birthDate, role, status는 수정하지 않는다.
+// API-ME-002에서 수정 가능한 필드만 포함한다. loginId, birthDate, role, status, gender는 수정하지 않는다(백엔드가 gender를 null만 허용).
 export type UserProfileUpdateRequest = {
   name: string;
   email: string;
   phone: string;
-  gender: string;
 };
 
 // API-ME-003 비밀번호 변경 요청 DTO다.

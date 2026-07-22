@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { changeAdminMemberStatus, getAdminMembers } from '../../../api/adminMemberApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
+import { GradeBadgeIcon } from '../../../components/mypage/GradeBadgeIcon';
 import type { AdminMemberListQuery, AdminMemberRole, AdminMemberStatus, AdminMemberStatusChangeRequest, AdminMemberSummary, AdminSanctionType, PageResponse } from '../../../types/api';
 import styles from '../../../styles/AdminMemberListPage.module.css';
 
@@ -25,7 +26,7 @@ const gradeOptions = [
   { value: '1', label: '씨앗' },
   { value: '2', label: '새싹' },
   { value: '3', label: '나무' },
-  { value: '4', label: '숲' },
+  { value: '4', label: '도토리' },
 ];
 
 // 백엔드는 sanctionType=RENTAL_BAN/REVIEW_BAN일 때 회원 status가 JOINED로 유지되어야 한다고 요구한다.
@@ -336,7 +337,15 @@ export function AdminMemberListPage() {
                       </td>
                       <td>{member.maskedEmail}</td>
                       <td>
-                        {getOptionLabel(roleOptions, member.role)} / {member.gradeName ?? '-'}
+                        {getOptionLabel(roleOptions, member.role)} /{' '}
+                        {member.gradeName ? (
+                          <span className={styles.memberGrade}>
+                            <GradeBadgeIcon gradeName={member.gradeName} size={14} />
+                            {member.gradeName}
+                          </span>
+                        ) : (
+                          '-'
+                        )}
                       </td>
                       <td>-</td>
                       <td>

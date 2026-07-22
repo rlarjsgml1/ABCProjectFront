@@ -7,6 +7,8 @@ import { searchBooks } from '../../api/bookApi';
 import { NOTIFICATIONS_UPDATED_EVENT, getMyNotifications } from '../../api/notificationsApi';
 import type { BookCard } from '../../types/api';
 import abcLogo from '../../assets/abc-logo.png';
+import { GradeBadgeIcon } from '../mypage/GradeBadgeIcon';
+import { useMyProfile } from '../../context/MyProfileContext';
 import { addRecentSearch, clearRecentSearches, getRecentSearches, removeRecentSearch } from '../../utils/recentSearches';
 
 const authStorageKeys = ['accessToken', 'memberRole', 'memberId', 'loginId', 'memberName'];
@@ -33,6 +35,7 @@ type SuggestionStatus = 'idle' | 'loading' | 'success' | 'empty' | 'error';
 export function Header() {
     const navigate = useNavigate();
     const location = useLocation();
+    const { profile } = useMyProfile();
     const [keyword, setKeyword] = useState('');
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -392,11 +395,20 @@ export function Header() {
                         </Link>
                     ) : null}
 
-                    <Link className="abc-profile-button" to={isLoggedIn ? '/me' : '/login'} aria-label="마이페이지">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" strokeWidth="2" />
-                            <path d="M5.5 19c.9-3.4 3.2-5.1 6.5-5.1s5.6 1.7 6.5 5.1" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
-                        </svg>
+                    <Link
+                        className="abc-profile-button"
+                        to={isLoggedIn ? '/me' : '/login'}
+                        aria-label="마이페이지"
+                        data-grade-level={isLoggedIn ? profile?.grade?.gradeLevel : undefined}
+                    >
+                        {isLoggedIn && profile?.grade ? (
+                            <GradeBadgeIcon gradeLevel={profile.grade.gradeLevel} gradeName={profile.grade.gradeName} size={20} />
+                        ) : (
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" strokeWidth="2" />
+                                <path d="M5.5 19c.9-3.4 3.2-5.1 6.5-5.1s5.6 1.7 6.5 5.1" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+                            </svg>
+                        )}
                     </Link>
                 </div>
             </div>
