@@ -1912,7 +1912,7 @@ a.admin-dashboard-kpi-card:focus-visible {
   --mypage-widget-gap: var(--space-3);
   --mypage-widget-height: 100px;
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-6);
   border: 0;
   border-radius: var(--mypage-banner-radius);
   padding: var(--space-6);
@@ -2072,7 +2072,7 @@ a.count-card:hover,
 a.count-card:focus-visible {
   color: inherit;
   text-decoration: none;
-  outline: 2px solid var(--mypage-widget-text);
+  outline: 2px solid var(--color-primary);
   outline-offset: var(--space-1);
 }
 
@@ -2085,6 +2085,7 @@ a.count-card:focus-visible {
 
 .count-card strong {
   display: block;
+  color: var(--color-primary);
   font-size: 1.45rem;
 }
 
@@ -2105,6 +2106,7 @@ a.count-card:focus-visible {
 .overview-widget {
   min-height: var(--mypage-widget-height);
   align-content: space-between;
+  border: 1px solid var(--color-border);
   border-radius: var(--mypage-widget-radius);
   padding: var(--space-4);
   background: var(--mypage-widget-bg);
@@ -2119,7 +2121,7 @@ a.count-card:focus-visible {
 .overview-widget-link:focus-visible {
   color: inherit;
   text-decoration: none;
-  outline: 2px solid var(--mypage-widget-text);
+  outline: 2px solid var(--color-primary);
   outline-offset: var(--space-1);
 }
 
@@ -2151,7 +2153,7 @@ a.count-card:focus-visible {
   margin: 0;
   border-radius: var(--radius-md);
   padding: var(--space-3);
-  color: var(--mypage-widget-muted);
+  color: var(--color-primary);
   background: var(--mypage-widget-surface);
   font-size: 0.82rem;
   font-weight: 800;
@@ -2173,7 +2175,7 @@ a.count-card:focus-visible {
 }
 
 .overview-stamp.is-active {
-  background: var(--mypage-widget-text);
+  background: var(--color-primary);
 }
 
 .overview-trophy {
@@ -2183,7 +2185,7 @@ a.count-card:focus-visible {
 }
 
 .overview-trophy.is-active {
-  color: var(--mypage-widget-text);
+  color: var(--color-accent);
 }
 
 .section-heading-row {
