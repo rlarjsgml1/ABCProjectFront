@@ -384,14 +384,21 @@ export function BooksPage() {
 
           {!isLoading && !bookPage.content.length ? <EmptyState title={sectionConfig.emptyTitle} description="다른 도서 목록을 확인해보세요." /> : null}
 
-          <div className="books-section-more-grid" aria-label={`${sectionConfig.title} 목록`}>
-            {bookPage.content.map((book) => (
-              <Link className="books-section-more-card" to={`/books/${book.bookId}`} key={book.bookId}>
-                {book.coverImageUrl ? <img src={book.coverImageUrl} alt="" /> : <span />}
-                <strong>{book.title}</strong>
-                <small>{book.authors.join(', ') || book.publisherName || formatRentalType(book)}</small>
-              </Link>
-            ))}
+          <div
+            className={`books-section-more-grid${sectionKey === 'best' ? ' is-ranked' : ''}`}
+            aria-label={`${sectionConfig.title} 목록`}
+          >
+            {bookPage.content.map((book, index) => {
+              const rank = currentPage * SECTION_PAGE_SIZE + index + 1;
+              return (
+                <Link className="books-section-more-card" to={`/books/${book.bookId}`} key={book.bookId}>
+                  {sectionKey === 'best' ? <b className={`books-more-rank${rank <= 3 ? ' is-top' : ''}`}>{rank}</b> : null}
+                  {book.coverImageUrl ? <img src={book.coverImageUrl} alt="" /> : <span />}
+                  <strong>{book.title}</strong>
+                  <small>{book.authors.join(', ') || book.publisherName || formatRentalType(book)}</small>
+                </Link>
+              );
+            })}
           </div>
 
           <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={movePage} />
