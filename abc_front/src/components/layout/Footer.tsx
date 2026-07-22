@@ -9,8 +9,8 @@ export function Footer() {
                     <Link className="abc-footer-logo" to="/">
                         <img src={abcLogo} alt="ABC" />
                     </Link>
-                    <p>서울특별시 강남구 테헤란로 123 ABC타워 8층</p>
-                    <p>대표: 홍길동</p>
+                    <p>서울특별시 마포구 양화로 122 LAB7빌딩 3층, 4층</p>
+                    <p>대표: 김재민</p>
                     <p>사업자등록번호: 123-45-67890 / 통신판매업신고: 2026-서울강남-0123</p>
                     <p>이메일: support@abcbook.com</p>
                 </section>
@@ -31,7 +31,7 @@ export function Footer() {
                 </nav>
 
                 <section className="abc-footer-contact" aria-label="고객센터">
-                    <strong>1234-5678</strong>
+                    <strong>02-2231-6412</strong>
                     <p>오전 9시 - 오후 6시(토요일, 공휴일 휴무)</p>
                     <div className="abc-footer-contact-links">
                         <Link to="/support">1:1문의하기</Link>

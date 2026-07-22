@@ -53,7 +53,7 @@
   gap: clamp(var(--space-6), 4vw, var(--space-10));
   width: min(1440px, 100%);
   margin: 0 auto;
-  padding: clamp(var(--space-6), 4vw, var(--space-10)) var(--space-8);
+  padding: var(--space-6) var(--space-8) clamp(var(--space-6), 4vw, var(--space-10));
 }
 
 .abc-footer-brand,
@@ -71,7 +71,9 @@
 
 .abc-footer-logo {
   display: inline-flex;
-  margin-bottom: var(--space-5);
+  align-items: center;
+  min-height: 44px;
+  margin-bottom: var(--space-3);
 }
 
 .abc-footer-logo img {
@@ -97,11 +99,14 @@
 }
 
 .abc-footer-column {
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 .abc-footer-column h2 {
-  margin: 0 0 var(--space-1);
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  margin: 0 0 var(--space-3);
   color: #202020;
   font-size: 0.95rem;
   font-weight: 800;
@@ -122,14 +127,18 @@
 
 .abc-footer-contact {
   justify-content: flex-start;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 .abc-footer-contact strong {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  margin-bottom: var(--space-3);
   color: #202020;
-  font-size: clamp(1.25rem, 1.6vw, 1.5rem);
-  font-weight: 900;
-  line-height: 1;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
 .abc-footer-contact-links {
@@ -173,7 +182,7 @@
   }
 
   .abc-footer-logo {
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-3);
   }
 }
 
