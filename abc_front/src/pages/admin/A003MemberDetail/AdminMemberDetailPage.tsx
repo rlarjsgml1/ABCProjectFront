@@ -13,6 +13,7 @@ import {
 } from '../../../api/adminMemberApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
+import { GradeBadgeIcon } from '../../../components/mypage/GradeBadgeIcon';
 import type {
   AdminMemberDetail,
   AdminMemberPaymentHistory,
@@ -387,7 +388,17 @@ export function AdminMemberDetailPage() {
           rows={[
             ['역할', roleLabels[member.profile.role] ?? member.profile.role],
             ['상태', getOptionLabel(statusOptions, member.profile.status)],
-            ['등급', member.profile.gradeName ?? '-'],
+            [
+              '등급',
+              member.profile.gradeName ? (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <GradeBadgeIcon gradeName={member.profile.gradeName} size={14} />
+                  {member.profile.gradeName}
+                </span>
+              ) : (
+                '-'
+              ),
+            ],
             ['포인트', formatPoint(member.usageSummary.pointBalance)],
             ['제재 이력 요약', `${sanctionCount}건`],
             ['현재 유효 제재', getSanctionText(member)],

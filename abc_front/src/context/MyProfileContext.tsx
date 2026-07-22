@@ -1,5 +1,6 @@
 // 내 프로필 정보를 조회하고 하위 컴포넌트에 공유하는 Context/Provider
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { AUTH_CHANGED_EVENT } from '../api/authApi';
 import { getApiErrorMessage, getMyProfile } from '../api/profileApi';
 import type { UserProfile } from '../types/api';
 
@@ -22,6 +23,13 @@ export function MyProfileProvider({ children }: { children: ReactNode }) {
     let ignore = false;
 
     async function loadProfile() {
+      if (!localStorage.getItem('accessToken')) {
+        setProfile(null);
+        setErrorMessage('');
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
 
       try {
@@ -52,6 +60,11 @@ export function MyProfileProvider({ children }: { children: ReactNode }) {
   function refetchProfile() {
     setReloadToken((token) => token + 1);
   }
+
+  useEffect(() => {
+    window.addEventListener(AUTH_CHANGED_EVENT, refetchProfile);
+    return () => window.removeEventListener(AUTH_CHANGED_EVENT, refetchProfile);
+  }, []);
 
   return (
     <MyProfileContext.Provider value={{ profile, isLoading, errorMessage, refetchProfile }}>

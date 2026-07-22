@@ -16,6 +16,12 @@ import type {
 
 const authStorageKeys = ['accessToken', 'memberRole', 'memberId', 'loginId', 'memberName'];
 
+const genderLabels: Record<string, string> = {
+  MALE: '남성',
+  FEMALE: '여성',
+  NONE: '선택 안 함',
+};
+
 const emptyProfile: UserProfile = {
   loginId: '-',
   name: '',
@@ -52,10 +58,6 @@ function validateProfileForm(form: UserProfileUpdateRequest) {
     return '연락처를 입력하세요.';
   }
 
-  if (!form.gender) {
-    return '성별을 선택하세요.';
-  }
-
   return '';
 }
 
@@ -88,7 +90,7 @@ function validateWithdrawalForm(form: UserWithdrawalRequest) {
 export function ProfileEditPage() {
   const navigate = useNavigate();
   const { profile, isLoading, refetchProfile } = useMyProfile();
-  const [form, setForm] = useState<UserProfileUpdateRequest>({ name: '', email: '', phone: '', gender: '' });
+  const [form, setForm] = useState<UserProfileUpdateRequest>({ name: '', email: '', phone: '' });
   const [passwordForm, setPasswordForm] = useState<UserPasswordChangeRequest>(initialPasswordForm);
   const [withdrawalForm, setWithdrawalForm] = useState<UserWithdrawalRequest>(initialWithdrawalForm);
   const [isSaving, setIsSaving] = useState(false);
@@ -103,7 +105,7 @@ export function ProfileEditPage() {
 
   useEffect(() => {
     if (profile) {
-      setForm({ name: profile.name, email: profile.email, phone: profile.phone, gender: profile.gender });
+      setForm({ name: profile.name, email: profile.email, phone: profile.phone });
     }
   }, [profile]);
 
@@ -127,7 +129,6 @@ export function ProfileEditPage() {
         name: updatedProfile.name,
         email: updatedProfile.email,
         phone: updatedProfile.phone,
-        gender: updatedProfile.gender,
       });
       refetchProfile();
       setProfileMessage('회원정보가 저장되었습니다.');
@@ -217,7 +218,7 @@ export function ProfileEditPage() {
         </section>
 
         <div className="notice-panel" role="note">
-          아이디, 생년월일, 권한, 상태는 수정할 수 없습니다. 이름, 이메일, 연락처, 성별만 변경됩니다.
+          아이디, 생년월일, 권한, 상태, 성별은 수정할 수 없습니다. 이름, 이메일, 연락처만 변경됩니다.
         </div>
 
         <form className="page-section profile-edit-form" onSubmit={handleProfileSubmit}>
@@ -268,16 +269,8 @@ export function ProfileEditPage() {
             </label>
             <label>
               성별
-              <select
-                name="gender"
-                value={form.gender}
-                onChange={(event) => setForm((current) => ({ ...current, gender: event.target.value }))}
-              >
-                <option value="">선택</option>
-                <option value="MALE">남성</option>
-                <option value="FEMALE">여성</option>
-                <option value="NONE">선택 안 함</option>
-              </select>
+              <input type="text" value={genderLabels[displayProfile.gender] ?? displayProfile.gender} readOnly disabled />
+              <span className="field-hint">성별은 가입 후 변경할 수 없습니다.</span>
             </label>
           </div>
           {profileError ? <div className="status-banner status-banner-error">{profileError}</div> : null}

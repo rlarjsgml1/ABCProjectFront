@@ -2008,6 +2008,27 @@ a.admin-dashboard-kpi-card:focus-visible {
   font-weight: 800;
 }
 
+/* 회원 등급(씨앗/새싹/나무/도토리)별 아바타 톤 */
+.profile-avatar[data-grade-level="1"] {
+  color: var(--color-warning);
+  background: var(--color-warning-soft);
+}
+
+.profile-avatar[data-grade-level="2"] {
+  color: var(--color-primary-dark);
+  background: var(--color-primary-soft);
+}
+
+.profile-avatar[data-grade-level="3"] {
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.profile-avatar[data-grade-level="4"] {
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
 .profile-summary-stack {
   display: grid;
   gap: var(--space-2);
@@ -2310,6 +2331,12 @@ a.count-card:focus-visible {
 .membership-modal-header p,
 .membership-modal-body p {
   margin: 0;
+}
+
+.membership-modal-header h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .membership-modal-close {
@@ -3717,6 +3744,27 @@ a.count-card:focus-visible {
 .abc-profile-button svg {
   width: 25px;
   height: 25px;
+}
+
+/* 회원 등급(씨앗/새싹/나무/도토리)별 헤더 프로필 버튼 톤 — 마이페이지 아바타(.profile-avatar)와 배경/아이콘 색을 완전히 동일하게 맞춘다 */
+.abc-profile-button[data-grade-level="1"] {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.abc-profile-button[data-grade-level="2"] {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+}
+
+.abc-profile-button[data-grade-level="3"] {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.abc-profile-button[data-grade-level="4"] {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
 }
 
 .abc-notification-button {

@@ -229,7 +229,7 @@ export function PointsCouponsPage() {
     };
   }, [couponStatus]);
 
-  const pointBalance = pointSummary?.pointBalance ?? profile?.point;
+  const pointBalance = pointSummary?.pointBalance ?? profile?.pointBalance;
   const pointItems = pointSummary?.history.content ?? [];
   const couponItems = useMemo(() => {
     const items = couponStatus === 'COMPLETED_OR_EXPIRED'

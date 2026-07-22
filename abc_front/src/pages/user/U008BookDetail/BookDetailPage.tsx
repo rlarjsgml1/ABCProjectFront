@@ -700,7 +700,12 @@ export function BookDetailPage() {
                 return (
                   <article className={styles.reviewRow} key={review.reviewId}>
                     <div className={styles.reviewTopLine}>
-                      <div className={styles.reviewProfile} aria-hidden="true" />
+                      <div className={styles.reviewProfile} aria-hidden="true">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" strokeWidth="2" />
+                          <path d="M5.5 19c.9-3.4 3.2-5.1 6.5-5.1s5.6 1.7 6.5 5.1" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+                        </svg>
+                      </div>
                       <strong>{review.memberName}</strong>
                       <span className={styles.stars} aria-label={`별점 ${review.ratingScore}점`}>
                         {formatStars(review.ratingScore)}
