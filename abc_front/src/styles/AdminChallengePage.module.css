@@ -437,7 +437,7 @@
   gap: var(--space-3);
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1024px) {
   .filterPanel,
   .formGrid {
     grid-template-columns: 1fr;
@@ -461,7 +461,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .tableHeader,
   .modalHeader {
     display: grid;

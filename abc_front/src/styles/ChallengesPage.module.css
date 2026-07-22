@@ -272,7 +272,7 @@
   min-width: 96px;
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1024px) {
   .layout {
     grid-template-columns: 1fr;
   }
@@ -282,7 +282,7 @@
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 768px) {
   .card {
     grid-template-columns: 1fr;
   }

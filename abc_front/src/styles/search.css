@@ -41,7 +41,7 @@
   cursor: not-allowed;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .search-request-panel {
     min-height: 420px;
   }

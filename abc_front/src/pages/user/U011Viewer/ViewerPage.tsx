@@ -120,6 +120,22 @@ export function ViewerPage() {
   const [flow, setFlow] = useState<EpubFlow>('PAGE');
   const [scrubPercent, setScrubPercent] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [isTurning, setIsTurning] = useState(false);
+  const turnTimerRef = useRef<number | null>(null);
+
+  // epub.js가 iframe 내부를 직접 그리므로 넘김 모션은 컨테이너를 잠깐 페이드하는 방식만 가능하다
+  const turnPage = useCallback((direction: 'prev' | 'next') => {
+    setIsTurning(true);
+    if (turnTimerRef.current) window.clearTimeout(turnTimerRef.current);
+    turnTimerRef.current = window.setTimeout(() => setIsTurning(false), 180);
+    void (direction === 'prev' ? rendererRef.current?.prev() : rendererRef.current?.next());
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (turnTimerRef.current) window.clearTimeout(turnTimerRef.current);
+    };
+  }, []);
 
   const initialLocator = useMemo(() => toInitialLocator(session), [session]);
   const currentBookmark = bookmarks.find(
@@ -283,15 +299,15 @@ export function ViewerPage() {
       if (target?.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(target?.tagName ?? '')) return;
       if (event.key === 'ArrowLeft') {
         event.preventDefault();
-        void rendererRef.current?.prev();
+        turnPage('prev');
       } else if (event.key === 'ArrowRight') {
         event.preventDefault();
-        void rendererRef.current?.next();
+        turnPage('next');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [phase]);
+  }, [phase, turnPage]);
 
   async function handleBookmarkToggle() {
     if (!currentLocator) return;
@@ -372,7 +388,7 @@ export function ViewerPage() {
       {saveErrorMessage ? <div className="status-banner status-banner-error viewer-save-error">{saveErrorMessage}</div> : null}
 
       <div className="viewer-body">
-        <main className="viewer-content">
+        <main className={`viewer-content${isTurning ? ' is-turning' : ''}`}>
           {epubData && session && !errorMessage ? (
             <EpubRenderer
               ref={rendererRef}
@@ -477,8 +493,8 @@ export function ViewerPage() {
         />
       </div>
 
-      <button type="button" className="viewer-edge-nav viewer-edge-nav-prev" aria-label="이전 화면" disabled={!isReady || isAtStart} onClick={() => void rendererRef.current?.prev()}>‹</button>
-      <button type="button" className="viewer-edge-nav viewer-edge-nav-next" aria-label="다음 화면" disabled={!isReady || isAtEnd} onClick={() => void rendererRef.current?.next()}>›</button>
+      <button type="button" className="viewer-edge-nav viewer-edge-nav-prev" aria-label="이전 화면" disabled={!isReady || isAtStart} onClick={() => turnPage('prev')}>‹</button>
+      <button type="button" className="viewer-edge-nav viewer-edge-nav-next" aria-label="다음 화면" disabled={!isReady || isAtEnd} onClick={() => turnPage('next')}>›</button>
 
       <Modal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} title="보기 설정" titleId="viewer-settings-title" className="viewer-settings-modal" closeLabel="설정 닫기">
         <div className="viewer-settings-body">

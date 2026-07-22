@@ -207,7 +207,7 @@
   margin-top: clamp(var(--space-8), 6vw, 80px);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .event-page {
     padding-right: var(--space-6);
     padding-left: var(--space-6);
@@ -223,7 +223,7 @@
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 768px) {
   .event-banner {
     grid-template-columns: minmax(0, 1fr) 96px;
     min-height: 150px;
