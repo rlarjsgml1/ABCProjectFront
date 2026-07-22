@@ -645,7 +645,7 @@
   }
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1280px) {
   .couponCreatePanel {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -655,7 +655,7 @@
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .filterPanel,
   .memberFilterPanel,
   .couponCreatePanel {
@@ -667,7 +667,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .tabs,
   .formGrid {
     grid-template-columns: 1fr;

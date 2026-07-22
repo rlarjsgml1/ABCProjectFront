@@ -589,7 +589,7 @@
   gap: var(--space-3);
 }
 
-@media (max-width: 1440px) {
+@media (max-width: 1536px) {
   .table {
     min-width: 980px;
     table-layout: auto;
@@ -600,7 +600,7 @@
   }
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1280px) {
   .filterPanel {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -611,7 +611,7 @@
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .filterPanel,
   .sanctionFields {
     grid-template-columns: 1fr;

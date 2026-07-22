@@ -151,7 +151,7 @@
   text-transform: uppercase;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1280px) {
   .abc-footer-inner {
     grid-template-columns: 1fr 1fr;
   }
@@ -162,7 +162,7 @@
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 768px) {
   .abc-footer-inner,
   .abc-footer-links {
     grid-template-columns: 1fr;
@@ -458,7 +458,7 @@
   background: var(--color-surface);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .admin-shell {
     height: auto;
     grid-template-columns: 1fr;
@@ -679,7 +679,7 @@ a.admin-dashboard-kpi-card:focus-visible {
   border-bottom: 0;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1280px) {
   .admin-dashboard-kpi-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -3284,7 +3284,7 @@ a.count-card:focus-visible {
   line-height: 1;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1024px) {
   .mypage-content-shell,
   .mypage-grid,
   .profile-form-grid,
@@ -3307,7 +3307,7 @@ a.count-card:focus-visible {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .mypage-hero,
   .section-heading-row,
   .form-action-row,
@@ -3754,7 +3754,7 @@ a.count-card:focus-visible {
   color: var(--abc-header-ink);
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1024px) {
   .abc-header-top {
     flex-wrap: wrap;
   }
@@ -3783,7 +3783,7 @@ a.count-card:focus-visible {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .attendance-calendar-header,
   .attendance-legend {
     grid-auto-flow: row;

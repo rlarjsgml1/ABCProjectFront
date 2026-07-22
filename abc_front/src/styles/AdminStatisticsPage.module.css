@@ -109,13 +109,13 @@
   font-weight: 900;
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1280px) {
   .chartGrid {
     grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .ecoRow {
     grid-template-columns: 1fr;
   }
