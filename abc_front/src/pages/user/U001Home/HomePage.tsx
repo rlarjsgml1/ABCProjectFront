@@ -55,7 +55,7 @@ const bannerItems: BannerItem[] = [
 ];
 
 const quickMenuItems = [
-  { to: '/me/attendance', icon: 'D-1', label: '출석체크', description: '매일 읽고 혜택 받기' },
+  { to: '/me/attendance', icon: '✔️', label: '출석체크', description: '매일 읽고 혜택 받기' },
   { to: '/events', icon: '🎁', label: '이벤트', description: '진행 중인 혜택 보기' },
   { to: '/me/challenges', icon: '🏆', label: '챌린지', description: '독서 미션 확인하기' },
   { to: '/books', icon: '📚', label: '카테고리', description: '분야별 도서 보기' },
