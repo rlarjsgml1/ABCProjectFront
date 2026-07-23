@@ -151,10 +151,11 @@ export function Header() {
 
     const isActiveNav = (to: string) => {
         const searchParams = new URLSearchParams(location.search);
-        const isHomeMorePage = location.pathname === '/books' && searchParams.get('source') === 'home';
+        const currentSection = searchParams.get('section');
 
-        if (to === '/') return location.pathname === '/' || isHomeMorePage;
-        if (to === '/books') return !isHomeMorePage && ((location.pathname === '/books' && searchParams.get('section') !== 'best') || location.pathname === '/search');
+        if (to === '/') return location.pathname === '/';
+        if (to === '/books') return (location.pathname === '/books' && currentSection !== 'best') || location.pathname === '/search';
+        if (to === '/books?section=best') return location.pathname === '/books' && currentSection === 'best';
         return `${location.pathname}${location.search}` === to;
     };
 
