@@ -19,6 +19,7 @@ import type {
   AdminLibraryUpdateRequest,
   PageResponse,
 } from '../../../types/api';
+import { districtsByRegion, regionOptions } from '../../user/U024Libraries/libraryRegions';
 import listStyles from '../../../styles/AdminOpsListPage.module.css';
 import styles from '../../../styles/AdminLibraryPage.module.css';
 
@@ -40,7 +41,13 @@ type LibraryForm = {
   latitude: string;
   longitude: string;
   status: AdminLibraryStatus;
+  regionCode: string;
+  dtlRegionCode: string;
 };
+
+function getRegionLabel(regionCode: string | undefined) {
+  return regionOptions.find((option) => option.value === regionCode)?.label ?? '-';
+}
 
 type BookChange = AdminLibraryBookMapping & { title: string };
 
@@ -72,11 +79,13 @@ function getInitialForm(library: AdminLibrarySummary): LibraryForm {
     latitude: typeof library.latitude === 'number' ? String(library.latitude) : '',
     longitude: typeof library.longitude === 'number' ? String(library.longitude) : '',
     status: library.status,
+    regionCode: library.regionCode ?? '',
+    dtlRegionCode: library.dtlRegionCode ?? '',
   };
 }
 
 function getEmptyForm(): LibraryForm {
-  return { libraryName: '', address: '', latitude: '', longitude: '', status: 'ACTIVE' };
+  return { libraryName: '', address: '', latitude: '', longitude: '', status: 'ACTIVE', regionCode: '', dtlRegionCode: '' };
 }
 
 export function AdminLibraryPage() {
@@ -230,6 +239,10 @@ export function AdminLibraryPage() {
     setBookChanges((current) => current.filter((item) => item.bookId !== bookId));
   }
 
+  function handleFormRegionChange(nextRegionCode: string) {
+    setForm((current) => (current ? { ...current, regionCode: nextRegionCode, dtlRegionCode: '' } : current));
+  }
+
   function updateLocalLibrary(libraryId: number, nextLibrary: AdminLibrarySummary) {
     setLibrariesPage((current) =>
       current
@@ -265,6 +278,11 @@ export function AdminLibraryPage() {
       return;
     }
 
+    if (!form.regionCode) {
+      setModalError('지역(시/도)을 선택해 주세요. 선택하지 않으면 사용자 도서관 검색에서 이 도서관을 찾을 수 없습니다.');
+      return;
+    }
+
     const latitude = form.latitude.trim() ? Number(form.latitude) : null;
     const longitude = form.longitude.trim() ? Number(form.longitude) : null;
 
@@ -284,6 +302,8 @@ export function AdminLibraryPage() {
       latitude,
       longitude,
       status: form.status,
+      regionCode: form.regionCode,
+      dtlRegionCode: form.dtlRegionCode || undefined,
     };
 
     if (isCreating) {
@@ -327,6 +347,7 @@ export function AdminLibraryPage() {
   const libraries = librariesPage?.content ?? [];
   const shownPage = toUiPage(librariesPage?.page);
   const totalPages = Math.max(librariesPage?.totalPages ?? 1, 1);
+  const formDistrictOptions = form ? districtsByRegion[form.regionCode] ?? [] : [];
 
   return (
     <section className={`page-section ${listStyles.page}`}>
@@ -382,6 +403,7 @@ export function AdminLibraryPage() {
                 <th>도서관번호</th>
                 <th>도서관명</th>
                 <th>주소</th>
+                <th>지역</th>
                 <th>위도</th>
                 <th>경도</th>
                 <th>보유 도서 수</th>
@@ -392,11 +414,11 @@ export function AdminLibraryPage() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={8}>도서관 목록을 불러오는 중입니다.</td>
+                  <td colSpan={9}>도서관 목록을 불러오는 중입니다.</td>
                 </tr>
               ) : errorMessage ? (
                 <tr>
-                  <td colSpan={8}>도서관 목록을 불러오지 못했습니다.</td>
+                  <td colSpan={9}>도서관 목록을 불러오지 못했습니다.</td>
                 </tr>
               ) : libraries.length > 0 ? (
                 libraries.map((library) => (
@@ -404,6 +426,7 @@ export function AdminLibraryPage() {
                     <td>L-{library.libraryId}</td>
                     <td>{library.libraryName}</td>
                     <td>{library.address}</td>
+                    <td>{getRegionLabel(library.regionCode)}</td>
                     <td>{formatCoordinate(library.latitude)}</td>
                     <td>{formatCoordinate(library.longitude)}</td>
                     <td>{library.bookCount.toLocaleString('ko-KR')}권</td>
@@ -423,7 +446,7 @@ export function AdminLibraryPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={8}>표시할 도서관이 없습니다.</td>
+                  <td colSpan={9}>표시할 도서관이 없습니다.</td>
                 </tr>
               )}
             </tbody>
@@ -478,6 +501,34 @@ export function AdminLibraryPage() {
                   value={form.address}
                   onChange={(event) => setForm((current) => (current ? { ...current, address: event.target.value } : current))}
                 />
+              </label>
+
+              <label>
+                지역(시/도)
+                <select value={form.regionCode} onChange={(event) => handleFormRegionChange(event.target.value)}>
+                  <option value="">선택하세요</option>
+                  {regionOptions.map((option) => (
+                    <option value={option.value} key={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                구/군
+                <select
+                  value={form.dtlRegionCode}
+                  disabled={!form.regionCode || formDistrictOptions.length === 0}
+                  onChange={(event) => setForm((current) => (current ? { ...current, dtlRegionCode: event.target.value } : current))}
+                >
+                  <option value="">선택 안 함</option>
+                  {formDistrictOptions.map((option) => (
+                    <option value={option.value} key={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </label>
 
               <label>
