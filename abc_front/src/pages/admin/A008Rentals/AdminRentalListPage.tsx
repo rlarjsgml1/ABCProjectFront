@@ -30,6 +30,15 @@ function formatDate(value: string | undefined) {
   return value.slice(0, 10);
 }
 
+function formatProgress(progression: number | undefined) {
+  return `${Math.round((progression ?? 0) * 100)}%`;
+}
+
+function formatPaymentSummary(payment: AdminRentalItem['payment']) {
+  if (!payment) return '무료 대여';
+  return `${payment.paymentMethod} · ${payment.amount.toLocaleString('ko-KR')}원 (${formatDate(payment.paidAt)})`;
+}
+
 function toApiPage(uiPage: number) {
   return Math.max(uiPage - 1, 0);
 }
@@ -116,9 +125,6 @@ export function AdminRentalListPage() {
           <span>대여</span>
           <h1 id="admin-rentals-title">대여 현황 관리</h1>
         </div>
-        <div className={styles.apiStrip}>
-          <span className={styles.apiPill}>GET /admin/rentals · controller 미구현</span>
-        </div>
       </div>
 
       <form className={styles.filterPanel} onSubmit={handleSearch}>
@@ -198,15 +204,15 @@ export function AdminRentalListPage() {
                       </Link>
                     </td>
                     <td>
-                      <span className={`${styles.pill} ${statusPillClass[rental.status]}`}>{getLabel(statusOptions, rental.status)}</span>
+                      <span className={`${styles.pill} ${statusPillClass[rental.rentalStatus]}`}>{getLabel(statusOptions, rental.rentalStatus)}</span>
                     </td>
                     <td>
                       {formatDate(rental.createdAt)}
                       <span className={styles.cellSub}>
-                        첫 읽기 {formatDate(rental.firstReadAt)} · 종료 {formatDate(rental.endedAt)}
+                        첫 읽기 {formatDate(rental.rentalStartAt)} · 종료 {formatDate(rental.rentalEndAt)}
                       </span>
                     </td>
-                    <td>{rental.progressPercent}%</td>
+                    <td>{formatProgress(rental.progression)}</td>
                     <td>
                       <div className={styles.rowActions}>
                         <button type="button" onClick={() => setDetailRental(rental)}>
@@ -267,12 +273,12 @@ export function AdminRentalListPage() {
               <div>
                 <dt>기간</dt>
                 <dd>
-                  {formatDate(detailRental.createdAt)} 시작 · 첫 읽기 {formatDate(detailRental.firstReadAt)} · 종료 {formatDate(detailRental.endedAt)}
+                  {formatDate(detailRental.createdAt)} 시작 · 첫 읽기 {formatDate(detailRental.rentalStartAt)} · 종료 {formatDate(detailRental.rentalEndAt)}
                 </dd>
               </div>
               <div>
                 <dt>결제 연결</dt>
-                <dd>{detailRental.paymentSummary ?? '-'} (읽기 전용)</dd>
+                <dd>{formatPaymentSummary(detailRental.payment)} (읽기 전용)</dd>
               </div>
             </dl>
           </div>

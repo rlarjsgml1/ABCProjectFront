@@ -1094,45 +1094,35 @@ export type ReportHistoryItem = {
 
 export type ReportHistoryPage = PageResponse<ReportHistoryItem>;
 
-export type AdminReportTargetInfo = {
-  targetId: number;
-  title?: string;
-  authorName?: string;
-  reviewContent?: string;
-  reviewStatus?: string;
-  bookTitle?: string;
-};
-
-export type AdminReportReporter = {
-  memberId: number;
-  loginId: string;
-  name: string;
-};
-
+// AdminReportSummaryResponse.java 기준 — 백엔드는 중첩 없이 평면 구조로 내려준다.
+// reviewId/reviewContent는 targetType=REVIEW일 때만, bookId/bookTitle은 항상 채워진다.
 export type AdminReportItem = {
   reportId: number;
   targetType: ReportTargetType;
-  reporter: AdminReportReporter;
-  targetInfo: AdminReportTargetInfo;
+  reporterId: number;
+  reporterName: string;
+  bookId?: number;
+  bookTitle?: string;
+  reviewId?: number;
+  reviewContent?: string;
   reportType: string;
   content: string;
   status: ReportStatus;
-  managerName?: string;
-  createdAt: string;
-  processedAt?: string;
   processResult?: string;
+  processedAt?: string;
+  createdAt: string;
 };
 
+// 백엔드 GET /admin/reports는 검색어(q) 파라미터를 지원하지 않는다.
 export type AdminReportListQuery = {
   targetType?: ReportTargetType;
   status?: ReportStatus;
-  q?: string;
   page?: number;
   size?: number;
 };
 
+// 백엔드는 제재 유형을 요청으로 받지 않는다 — 이 API가 허용하는 제재는 ACCOUNT_SUSPENSION 하나뿐이라 서버에서 고정한다.
 export type AdminReportSanctionRequest = {
-  sanctionType: AdminSanctionType;
   startedAt: string;
   endedAt?: string;
   reason: string;
@@ -1150,8 +1140,10 @@ export type AdminReportStatusUpdateResponse = {
   targetType: ReportTargetType;
   status: ReportStatus;
   processResult?: string;
-  hideReviewYn?: boolean;
   processedAt?: string;
+  reviewStatus?: string;
+  sanctionHistoryId?: number;
+  memberStatus?: string;
 };
 
 export type AdminReportPage = PageResponse<AdminReportItem>;
@@ -1470,7 +1462,7 @@ export type AdminDashboardResponse = {
   recentBookRequests: AdminRecentBookRequest[];
 };
 
-// API-ADMIN-RENTAL-001 (A-008 대여 현황 관리). controller 미구현 — mock/fallback 사용. 조회 전용.
+// API-ADMIN-RENTAL-001 (A-008 대여 현황 관리). AdminRentalSummaryResponse.java 기준, 조회 전용.
 export type AdminRentalStatus = 'READY' | 'READING' | 'OWNED';
 
 export type AdminRentalListQuery = {
@@ -1481,43 +1473,52 @@ export type AdminRentalListQuery = {
   size?: number;
 };
 
+export type AdminRentalPaymentSummary = {
+  paymentId: number;
+  amount: number;
+  paymentMethod: string;
+  paidAt: string;
+};
+
+// progression은 0~1 비율이다(백엔드 컬럼 scale 5, 0.98 이상을 완독으로 판정) — 화면 표시 시 100을 곱해야 한다.
 export type AdminRentalItem = {
   rentalId: number;
   memberId: number;
   memberName: string;
   bookId: number;
   bookTitle: string;
-  status: AdminRentalStatus;
+  rentalStatus: AdminRentalStatus;
   createdAt: string;
-  firstReadAt?: string;
-  endedAt?: string;
-  progressPercent: number;
-  paymentSummary?: string;
+  rentalStartAt?: string;
+  rentalEndAt?: string;
+  progression?: number;
+  payment?: AdminRentalPaymentSummary;
 };
 
 export type AdminRentalPage = PageResponse<AdminRentalItem>;
 
-// API-ADMIN-PAYMENT-001 (A-009 결제 관리). controller 미구현 — mock/fallback 사용. 조회 전용.
+// API-ADMIN-PAYMENT-001 (A-009 결제 관리). AdminPaymentSummaryResponse.java 기준, 조회 전용(PAID만 반환).
 export type AdminPaymentListQuery = {
   q?: string;
-  startDate?: string;
-  endDate?: string;
+  from?: string;
+  to?: string;
   page?: number;
   size?: number;
 };
 
+// 백엔드에 couponName은 없다(쿠폰 할인액만 내려옴). paymentStatus도 없음 — 이 API는 PAID만 반환하므로 화면에서 고정 표시한다.
 export type AdminPaymentItem = {
   paymentId: number;
+  memberId: number;
   memberName: string;
-  bookTitle: string;
   rentalId: number;
+  bookId: number;
+  bookTitle: string;
   paymentMethod: string;
-  grossAmount: number;
-  couponDiscount: number;
-  couponName?: string;
-  pointDiscount: number;
+  originalAmount: number;
+  couponDiscountAmount: number;
+  pointUsedAmount: number;
   amount: number;
-  paymentStatus: 'PAID';
   paidAt: string;
 };
 
