@@ -1,5 +1,5 @@
 // 책 보유 도서관 위치(U024) 화면 — 정보나루 종이책 소장 도서관 검색. region(시/도)은 API 필수값이라 사용자가 먼저 선택해야 조회된다.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getBookDetail } from '../../../api/bookApi';
 import { getBookLibraries } from '../../../api/libraryApi';
@@ -7,7 +7,7 @@ import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
 import { EmptyState } from '../../../components/common/EmptyState';
 import { NaverMap, type MapMarkerItem } from '../../../components/common/NaverMap';
-import type { LibrarySearchResponse } from '../../../types/api';
+import type { LibraryResultItem, LibrarySearchResponse } from '../../../types/api';
 import { districtsByRegion, regionOptions } from './libraryRegions';
 import styles from '../../../styles/BookLibrariesPage.module.css';
 
@@ -29,6 +29,32 @@ export function BookLibrariesPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [bookSummary, setBookSummary] = useState<{ title: string; author?: string; coverImageUrl?: string } | null>(null);
+  const [isMapFullscreen, setIsMapFullscreen] = useState(false);
+  const [selectedLibraryCode, setSelectedLibraryCode] = useState<string | null>(null);
+  const itemRefs = useRef<Map<string, HTMLLIElement>>(new Map());
+
+  useEffect(() => {
+    if (!selectedLibraryCode) return;
+    itemRefs.current.get(selectedLibraryCode)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [selectedLibraryCode]);
+
+  useEffect(() => {
+    if (!isMapFullscreen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setIsMapFullscreen(false);
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMapFullscreen]);
 
   // 지역 검색 전에도 책 표지를 보여주기 위해 상세 API를 별도로 가볍게 조회한다. 실패해도 화면 동작에는 영향 없다.
   useEffect(() => {
@@ -71,6 +97,7 @@ export function BookLibrariesPage() {
     async function loadLibraries() {
       setIsLoading(true);
       setErrorMessage('');
+      setSelectedLibraryCode(null);
 
       try {
         const data = await getBookLibraries(Number(bookId), {
@@ -125,8 +152,80 @@ export function BookLibrariesPage() {
       latitude: library.latitude as number,
       longitude: library.longitude as number,
       title: library.libraryName,
-      description: library.address,
+      address: library.address,
+      operationTime: library.operationTime,
+      closedDays: library.closedDays,
+      homepageUrl: library.homepageUrl,
     }));
+
+  function renderLibraryCard(library: LibraryResultItem, interactive: boolean) {
+    const distance = formatDistance(library.distanceKm);
+    const isSelected = interactive && selectedLibraryCode === library.libraryCode;
+
+    return (
+      <li
+        key={library.libraryCode}
+        ref={interactive ? (el) => {
+          if (el) itemRefs.current.set(library.libraryCode, el);
+          else itemRefs.current.delete(library.libraryCode);
+        } : undefined}
+        className={`${styles.libraryItem} ${isSelected ? styles.libraryItemSelected : ''}`}
+        onClick={interactive ? () => setSelectedLibraryCode(library.libraryCode) : undefined}
+        role={interactive ? 'button' : undefined}
+        tabIndex={interactive ? 0 : undefined}
+      >
+        <span className={styles.libraryIcon} aria-hidden="true">🏛</span>
+        <div className={styles.libraryBody}>
+          <div className={styles.libraryTitleRow}>
+            <strong>{library.libraryName}</strong>
+            {distance ? <span className={styles.distanceChip}>{distance}</span> : null}
+          </div>
+          <p className={styles.libraryAddress}>{library.address}</p>
+          {library.operationTime || library.closedDays ? (
+            <p className={styles.libraryMeta}>
+              {library.operationTime ? `운영 ${library.operationTime}` : ''}
+              {library.operationTime && library.closedDays ? ' · ' : ''}
+              {library.closedDays ? `휴관 ${library.closedDays}` : ''}
+            </p>
+          ) : null}
+          {library.homepageUrl ? (
+            <a className={styles.homeLink} href={library.homepageUrl} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()}>
+              홈페이지 ↗
+            </a>
+          ) : null}
+        </div>
+        <span className={`${styles.statusBadge} ${library.holding ? styles.statusAvailable : styles.statusUnavailable}`}>
+          {library.holding ? '소장' : '미소장'}
+          {library.holding && library.loanAvailable === false ? ' · 대출중' : ''}
+        </span>
+      </li>
+    );
+  }
+
+  const paginationNode =
+    totalPages > 1 ? (
+      <div className={styles.pagination}>
+        <Button type="button" variant="secondary" disabled={shownPage <= 1} onClick={() => setPage((current) => current - 1)}>
+          이전
+        </Button>
+        <span>
+          {shownPage} / {totalPages}
+        </span>
+        <Button type="button" variant="secondary" disabled={shownPage >= totalPages} onClick={() => setPage((current) => current + 1)}>
+          다음
+        </Button>
+      </div>
+    ) : null;
+
+  const libraryListNode =
+    libraries.length > 0 ? (
+      <>
+        <ul className={styles.libraryList} aria-label="보유 도서관 목록">
+          {libraries.map((library) => renderLibraryCard(library, false))}
+        </ul>
+        {paginationNode}
+      </>
+    ) : null;
 
   return (
     <section className={`page-section ${styles.page}`} aria-labelledby="book-libraries-title">
@@ -219,59 +318,57 @@ export function BookLibrariesPage() {
         <EmptyState title="선택하신 지역에서 이 책을 보유한 도서관을 찾지 못했습니다." description="다른 지역을 선택해 보세요." />
       ) : null}
 
-      {region && !isLoading && !errorMessage && mapMarkers.length > 0 ? <NaverMap markers={mapMarkers} /> : null}
+      {region && !isLoading && !errorMessage && mapMarkers.length > 0 ? (
+        <div
+          className={styles.mapPreviewWrap}
+          role="button"
+          tabIndex={0}
+          aria-label="지도를 전체화면으로 보기"
+          onClick={() => setIsMapFullscreen(true)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              setIsMapFullscreen(true);
+            }
+          }}
+        >
+          <NaverMap markers={mapMarkers} userLocation={coords} />
+          <span className={styles.mapExpandHint}>⤢ 전체화면으로 보기</span>
+        </div>
+      ) : null}
 
-      {region && !isLoading && !errorMessage && libraries.length > 0 ? (
-        <>
-          <ul className={styles.libraryList} aria-label="보유 도서관 목록">
-            {libraries.map((library) => {
-              const distance = formatDistance(library.distanceKm);
+      {region && !isLoading && !errorMessage ? libraryListNode : null}
 
-              return (
-                <li className={styles.libraryItem} key={library.libraryCode}>
-                  <span className={styles.libraryIcon} aria-hidden="true">🏛</span>
-                  <div className={styles.libraryBody}>
-                    <div className={styles.libraryTitleRow}>
-                      <strong>{library.libraryName}</strong>
-                      {distance ? <span className={styles.distanceChip}>{distance}</span> : null}
-                    </div>
-                    <p className={styles.libraryAddress}>{library.address}</p>
-                    {library.operationTime || library.closedDays ? (
-                      <p className={styles.libraryMeta}>
-                        {library.operationTime ? `운영 ${library.operationTime}` : ''}
-                        {library.operationTime && library.closedDays ? ' · ' : ''}
-                        {library.closedDays ? `휴관 ${library.closedDays}` : ''}
-                      </p>
-                    ) : null}
-                    {library.homepageUrl ? (
-                      <a className={styles.homeLink} href={library.homepageUrl} target="_blank" rel="noreferrer">
-                        홈페이지 ↗
-                      </a>
-                    ) : null}
-                  </div>
-                  <span className={`${styles.statusBadge} ${library.holding ? styles.statusAvailable : styles.statusUnavailable}`}>
-                    {library.holding ? '소장' : '미소장'}
-                    {library.holding && library.loanAvailable === false ? ' · 대출중' : ''}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-
-          {totalPages > 1 ? (
-            <div className={styles.pagination}>
-              <Button type="button" variant="secondary" disabled={shownPage <= 1} onClick={() => setPage((current) => current - 1)}>
-                이전
-              </Button>
-              <span>
-                {shownPage} / {totalPages}
-              </span>
-              <Button type="button" variant="secondary" disabled={shownPage >= totalPages} onClick={() => setPage((current) => current + 1)}>
-                다음
-              </Button>
+      {isMapFullscreen ? (
+        <div className={styles.mapFullscreen} role="dialog" aria-modal="true" aria-label="도서관 지도 전체화면">
+          <div className={styles.mapFullscreenBar}>
+            <strong>{result?.title ?? bookSummary?.title ?? '도서'} 보유 도서관</strong>
+            <button type="button" className={styles.mapFullscreenClose} aria-label="전체화면 닫기" onClick={() => setIsMapFullscreen(false)}>
+              ✕
+            </button>
+          </div>
+          <div className={styles.mapFullscreenBody}>
+            <div className={styles.mapFullscreenSidebar}>
+              {libraries.length > 0 ? (
+                <ul className={styles.libraryList} aria-label="보유 도서관 목록">
+                  {libraries.map((library) => renderLibraryCard(library, true))}
+                </ul>
+              ) : (
+                <EmptyState title="표시할 도서관이 없습니다." />
+              )}
+              {paginationNode}
             </div>
-          ) : null}
-        </>
+            <div className={styles.mapFullscreenMapArea}>
+              <NaverMap
+                markers={mapMarkers}
+                userLocation={coords}
+                height="100%"
+                selectedId={selectedLibraryCode}
+                onMarkerClick={(id) => setSelectedLibraryCode(String(id))}
+              />
+            </div>
+          </div>
+        </div>
       ) : null}
     </section>
   );

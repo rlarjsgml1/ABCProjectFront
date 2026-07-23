@@ -162,6 +162,98 @@
   gap: var(--space-4);
 }
 
+/* 지도 미리보기 — 클릭하면 전체화면으로 확장. 지도 자체 조작(드래그·마커 클릭)보다 확장을 우선한다 */
+.mapPreviewWrap {
+  position: relative;
+  cursor: pointer;
+  border-radius: 12px;
+}
+
+.mapPreviewWrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.mapExpandHint {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 2;
+  border-radius: 8px;
+  padding: 6px 10px;
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 0.8rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+  pointer-events: none;
+}
+
+.mapFullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: var(--color-surface);
+}
+
+.mapFullscreenBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mapFullscreenClose {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  color: var(--color-text);
+  background: var(--color-surface-muted);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+/* 전체화면 — 왼쪽 목록 사이드바 + 오른쪽 지도, 동시에 표시 */
+.mapFullscreenBody {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  min-height: 0;
+}
+
+.mapFullscreenSidebar {
+  display: grid;
+  align-content: start;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  overflow-y: auto;
+  border-right: 1px solid var(--color-border);
+}
+
+.mapFullscreenMapArea {
+  min-width: 0;
+}
+
+@media (max-width: 860px) {
+  .mapFullscreenBody {
+    grid-template-columns: 1fr;
+    grid-template-rows: 45vh 1fr;
+  }
+
+  .mapFullscreenSidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+}
+
 .libraryList {
   display: grid;
   gap: var(--space-4);
@@ -184,6 +276,12 @@
 
 .libraryItem:hover {
   border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+  box-shadow: var(--shadow-md);
+}
+
+.libraryItemSelected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
   box-shadow: var(--shadow-md);
 }
 
