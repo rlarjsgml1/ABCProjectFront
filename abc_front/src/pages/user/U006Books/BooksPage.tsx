@@ -11,6 +11,7 @@ import '../../../styles/BooksPage.css';
 
 const PAGE_SIZE = 15;
 const SECTION_PAGE_SIZE = 16;
+const RANKING_PAGE_SIZE = 15;
 const viewOptions = [
   { label: '3개씩 보기', value: '3', columns: 3 },
   { label: '5개씩 보기', value: '5', columns: 5 },
@@ -66,6 +67,8 @@ type SectionKey = StaticSectionKey | 'collection';
 
 type SectionConfig = {
   title: string;
+  description: string;
+  eyebrow: string;
   count: number;
   query: BookListQuery;
   emptyTitle: string;
@@ -74,19 +77,25 @@ type SectionConfig = {
 const sectionConfigs: Record<StaticSectionKey, SectionConfig> = {
   recommend: {
     title: '추천 도서',
+    description: 'ABC가 지금 읽기 좋은 책을 골라드려요.',
+    eyebrow: 'FOR YOU',
     count: 16,
     query: { section: 'recommend', sort: 'popular' },
     emptyTitle: '추천 도서가 없습니다.',
   },
   latest: {
     title: '새로 나온 작품',
+    description: '새롭게 입고된 도서를 빠르게 만나보세요.',
+    eyebrow: 'NEW ARRIVALS',
     count: 16,
     query: { sort: 'latest' },
     emptyTitle: '신간 도서가 없습니다.',
   },
   best: {
     title: '베스트 작품',
-    count: 16,
+    description: '독자들이 가장 많이 찾은 인기 도서입니다.',
+    eyebrow: 'ABC RANKING',
+    count: RANKING_PAGE_SIZE,
     query: { section: 'best', sort: 'popular' },
     emptyTitle: '베스트 도서가 없습니다.',
   },
@@ -142,10 +151,11 @@ export function BooksPage() {
 
   const currentPage = Number(searchParams.get('page') ?? '0');
   const sectionKey = getSectionKey(searchParams.get('section'));
+  const sectionPageSize = sectionKey === 'best' ? RANKING_PAGE_SIZE : SECTION_PAGE_SIZE;
   const collectionId = getCollectionIdParam(searchParams.get('collectionId'));
   const sectionConfig =
     sectionKey === 'collection'
-      ? { title: collectionTitle || '컬렉션 도서', count: SECTION_PAGE_SIZE, query: {} as BookListQuery, emptyTitle: '컬렉션에 도서가 없습니다.' }
+      ? { title: collectionTitle || '컬렉션 도서', description: '선택한 컬렉션에 담긴 도서를 확인해보세요.', eyebrow: 'COLLECTION', count: sectionPageSize, query: {} as BookListQuery, emptyTitle: '컬렉션에 도서가 없습니다.' }
       : sectionKey
         ? sectionConfigs[sectionKey]
         : null;
@@ -267,11 +277,11 @@ export function BooksPage() {
         let data: PageResponse<BookCard>;
 
         if (sectionKey === 'recommend' && isLoggedIn) {
-          const content = await getRecommendedBooks(SECTION_PAGE_SIZE);
+          const content = await getRecommendedBooks(sectionPageSize);
           data = {
             content,
             page: 0,
-            size: SECTION_PAGE_SIZE,
+            size: sectionPageSize,
             totalElements: content.length,
             totalPages: 1,
             last: true,
@@ -288,7 +298,7 @@ export function BooksPage() {
           data = {
             content: detail.books,
             page: 0,
-            size: SECTION_PAGE_SIZE,
+            size: sectionPageSize,
             totalElements: detail.books.length,
             totalPages: 1,
             last: true,
@@ -296,7 +306,7 @@ export function BooksPage() {
         } else {
           const sectionQuery =
             sectionKey === 'recommend' && !isLoggedIn ? sectionConfigs.best.query : sectionKey ? sectionConfigs[sectionKey].query : undefined;
-          data = await getBooks(currentPage, sectionKey ? SECTION_PAGE_SIZE : PAGE_SIZE, sectionQuery ?? query);
+          data = await getBooks(currentPage, sectionKey ? sectionPageSize : PAGE_SIZE, sectionQuery ?? query);
         }
 
         if (!data?.content) {
@@ -308,7 +318,7 @@ export function BooksPage() {
         }
       } catch (error) {
         if (!ignore) {
-          setBookPage(getEmptyBookPage(currentPage, sectionKey ? SECTION_PAGE_SIZE : PAGE_SIZE));
+          setBookPage(getEmptyBookPage(currentPage, sectionKey ? sectionPageSize : PAGE_SIZE));
           setErrorMessage(getApiErrorMessage(error));
         }
       } finally {
@@ -323,7 +333,7 @@ export function BooksPage() {
     return () => {
       ignore = true;
     };
-  }, [collectionId, currentPage, isLoggedIn, query, sectionKey]);
+  }, [collectionId, currentPage, isLoggedIn, query, sectionKey, sectionPageSize]);
 
   const totalPages = Math.max(1, bookPage.totalPages);
 
@@ -366,10 +376,11 @@ export function BooksPage() {
       <div className="books-page">
         <section className="books-section-more-hero" aria-label={sectionConfig.title}>
           <div>
+            <span>{sectionConfig.eyebrow}</span>
             <h1>{sectionConfig.title}</h1>
+            <p>{sectionConfig.description}</p>
           </div>
           <div className="books-section-more-visual" aria-hidden="true">
-            <span />
             <span />
             <span />
             <span />
@@ -389,7 +400,7 @@ export function BooksPage() {
             aria-label={`${sectionConfig.title} 목록`}
           >
             {bookPage.content.map((book, index) => {
-              const rank = currentPage * SECTION_PAGE_SIZE + index + 1;
+              const rank = currentPage * sectionPageSize + index + 1;
               return (
                 <Link className="books-section-more-card" to={`/books/${book.bookId}`} key={book.bookId}>
                   {sectionKey === 'best' ? <b className={`books-more-rank${rank <= 3 ? ' is-top' : ''}`}>{rank}</b> : null}

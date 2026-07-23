@@ -3421,9 +3421,11 @@ a.count-card:focus-visible {
   display: grid;
   grid-template-columns: 44px 1fr;
   align-items: center;
-  flex: 1 1 360px;
-  width: min(42vw, 560px);
-  max-width: 560px;
+  flex: 0 1 300px;
+  width: min(24vw, 300px);
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: calc(var(--space-8) * -1);
   height: 44px;
   border: 1px solid transparent;
   border-radius: 999px;
