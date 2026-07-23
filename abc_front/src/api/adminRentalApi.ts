@@ -1,4 +1,4 @@
-// 관리자용 대여 현황 조회 API 클라이언트 — controller 미구현으로 페이지에서 fallback과 함께 사용. 조회 전용.
+// 관리자용 대여 현황 조회 API 클라이언트. 조회 전용.
 import { apiClient } from './apiClient';
 import type { AdminRentalListQuery, AdminRentalPage, ApiResponse } from '../types/api';
 

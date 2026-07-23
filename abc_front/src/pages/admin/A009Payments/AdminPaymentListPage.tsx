@@ -39,8 +39,8 @@ export function AdminPaymentListPage() {
   const query = useMemo(
     () => ({
       q: searchParams.get('q') || undefined,
-      startDate: searchParams.get('startDate') || undefined,
-      endDate: searchParams.get('endDate') || undefined,
+      from: searchParams.get('startDate') || undefined,
+      to: searchParams.get('endDate') || undefined,
       page: toApiPage(currentPage),
       size: PAGE_SIZE,
     }),
@@ -108,9 +108,6 @@ export function AdminPaymentListPage() {
         <div>
           <span>결제</span>
           <h1 id="admin-payments-title">결제 관리</h1>
-        </div>
-        <div className={styles.apiStrip}>
-          <span className={styles.apiPill}>GET /admin/payments · controller 미구현</span>
         </div>
       </div>
 
@@ -229,15 +226,15 @@ export function AdminPaymentListPage() {
             <dl className={styles.detailList}>
               <div>
                 <dt>할인 전 금액</dt>
-                <dd>{formatAmount(detailPayment.grossAmount)}</dd>
+                <dd>{formatAmount(detailPayment.originalAmount)}</dd>
               </div>
               <div>
                 <dt>쿠폰 할인</dt>
-                <dd>{detailPayment.couponDiscount > 0 ? `-${formatAmount(detailPayment.couponDiscount)} (${detailPayment.couponName ?? '쿠폰'})` : '없음'}</dd>
+                <dd>{detailPayment.couponDiscountAmount > 0 ? `-${formatAmount(detailPayment.couponDiscountAmount)}` : '없음'}</dd>
               </div>
               <div>
                 <dt>포인트 차감</dt>
-                <dd>{detailPayment.pointDiscount > 0 ? `-${formatAmount(detailPayment.pointDiscount)}` : '없음'}</dd>
+                <dd>{detailPayment.pointUsedAmount > 0 ? `-${formatAmount(detailPayment.pointUsedAmount)}` : '없음'}</dd>
               </div>
               <div>
                 <dt>최종 결제 금액</dt>

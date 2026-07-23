@@ -4,7 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { getAdminReports, updateAdminReportStatus } from '../../../api/adminReportApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
-import type { AdminReportItem, AdminReportListQuery, AdminReportPage, AdminReportStatusUpdateRequest, AdminSanctionType, ReportStatus, ReportTargetType } from '../../../types/api';
+import type { AdminReportItem, AdminReportListQuery, AdminReportPage, AdminReportStatusUpdateRequest, ReportStatus, ReportTargetType } from '../../../types/api';
 import styles from '../../../styles/AdminReportListPage.module.css';
 
 const PAGE_SIZE = 10;
@@ -14,7 +14,6 @@ type ProcessForm = {
   processResult: string;
   hideReviewYn: boolean;
   useSanction: boolean;
-  sanctionType: AdminSanctionType;
   startedAt: string;
   endedAt: string;
   sanctionReason: string;
@@ -32,12 +31,23 @@ const statusOptions: Array<{ value: ReportStatus; label: string }> = [
   { value: 'REJECTED', label: '반려' },
 ];
 
-// 실제 백엔드 AdminSanctionType은 ACCOUNT_SUSPENSION/RENTAL_BAN/REVIEW_BAN만 허용한다(2026-07-20 API
-// 연결 작업에서 확인). RENTAL_BAN/REVIEW_BAN은 회원 status를 JOINED로 유지해야 하는데 이 화면은 그
-// 흐름을 지원하지 않아, 기존에 쓰던 계정 정지만 남긴다.
-const sanctionTypeOptions: Array<{ value: AdminSanctionType; label: string }> = [
-  { value: 'ACCOUNT_SUSPENSION', label: '계정 정지' },
-];
+const allowedNextStatusMap: Partial<Record<ReportStatus, ReportStatus[]>> = {
+  WAITING: ['PROCESSING', 'DONE', 'REJECTED'],
+  PROCESSING: ['DONE', 'REJECTED'],
+};
+
+function getAllowedNextStatusOptions(status: ReportStatus) {
+  const allowedStatuses = allowedNextStatusMap[status] ?? [];
+  return statusOptions.filter((option) => allowedStatuses.includes(option.value));
+}
+
+function toStartDateTime(date: string) {
+  return `${date}T00:00:00`;
+}
+
+function toEndDateTime(date: string) {
+  return `${date}T23:59:59`;
+}
 
 function toApiPage(uiPage: number) {
   return Math.max(uiPage - 1, 0);
@@ -65,10 +75,10 @@ function formatDateTime(value: string | undefined) {
 
 function getTargetTitle(report: AdminReportItem) {
   if (report.targetType === 'REVIEW') {
-    return report.targetInfo.bookTitle ? `${report.targetInfo.bookTitle} · 리뷰` : (report.targetInfo.title ?? `리뷰 ${report.targetInfo.targetId}`);
+    return report.bookTitle ? `${report.bookTitle} · 리뷰` : `리뷰 #${report.reviewId ?? '-'}`;
   }
 
-  return report.targetInfo.title ?? `도서 ${report.targetInfo.targetId}`;
+  return report.bookTitle ?? `도서 #${report.bookId ?? '-'}`;
 }
 
 export function AdminReportListPage() {
@@ -87,7 +97,6 @@ export function AdminReportListPage() {
     processResult: '',
     hideReviewYn: false,
     useSanction: false,
-    sanctionType: 'ACCOUNT_SUSPENSION',
     startedAt: '',
     endedAt: '',
     sanctionReason: '',
@@ -95,11 +104,11 @@ export function AdminReportListPage() {
 
   const currentPage = Number(searchParams.get('page') ?? '1') || 1;
 
+  // 백엔드 GET /admin/reports는 검색어(q) 파라미터를 지원하지 않는다 — q는 아래에서 현재 페이지 결과에 클라이언트 필터로만 적용한다.
   const query = useMemo<AdminReportListQuery>(
     () => ({
       targetType: (searchParams.get('targetType') as ReportTargetType | null) || undefined,
       status: (searchParams.get('status') as ReportStatus | null) || undefined,
-      q: searchParams.get('q') || undefined,
       page: toApiPage(currentPage),
       size: PAGE_SIZE,
     }),
@@ -169,15 +178,22 @@ export function AdminReportListPage() {
     setSearchParams({});
   }
 
-  function openProcessModal(report: AdminReportItem, nextStatus: ReportStatus = report.status === 'WAITING' ? 'PROCESSING' : report.status) {
+  function openProcessModal(report: AdminReportItem, nextStatus?: ReportStatus) {
+    const allowedStatusOptions = getAllowedNextStatusOptions(report.status);
+    const initialStatus =
+      nextStatus && allowedStatusOptions.some((option) => option.value === nextStatus)
+        ? nextStatus
+        : allowedStatusOptions[0]?.value;
+
+    if (!initialStatus) return;
+
     setOpenActionMenuId(null);
     setProcessReport(report);
     setProcessForm({
-      status: nextStatus,
+      status: initialStatus,
       processResult: '',
       hideReviewYn: false,
       useSanction: false,
-      sanctionType: 'ACCOUNT_SUSPENSION',
       startedAt: '',
       endedAt: '',
       sanctionReason: '',
@@ -205,8 +221,6 @@ export function AdminReportListPage() {
                 status: payload.status,
                 processResult: payload.processResult,
                 processedAt: new Date().toISOString(),
-                managerName: item.managerName && item.managerName !== '-' ? item.managerName : '운영관리자',
-                targetInfo: payload.hideReviewYn ? { ...item.targetInfo, reviewStatus: 'HIDDEN' } : item.targetInfo,
               }
             : item,
         ),
@@ -219,19 +233,24 @@ export function AdminReportListPage() {
     if (!processReport) return;
 
     const needsResult = processForm.status === 'DONE' || processForm.status === 'REJECTED';
+    const canApplyReviewAction = processReport.targetType === 'REVIEW' && processForm.status === 'DONE';
 
     if (needsResult && !processForm.processResult.trim()) {
       setModalError(processForm.status === 'DONE' ? '처리 결과를 입력해 주세요.' : '반려 사유를 입력해 주세요.');
       return;
     }
 
-    if (processForm.useSanction) {
+    if (canApplyReviewAction && processForm.useSanction) {
       if (!processForm.startedAt || !processForm.sanctionReason.trim()) {
         setModalError('제재 시작일과 제재 사유를 입력해 주세요.');
         return;
       }
 
-      if (processForm.endedAt && new Date(processForm.startedAt).getTime() > new Date(processForm.endedAt).getTime()) {
+      if (
+        processForm.endedAt &&
+        new Date(toEndDateTime(processForm.endedAt)).getTime() <=
+          new Date(toStartDateTime(processForm.startedAt)).getTime()
+      ) {
         setModalError('제재 종료일은 시작일보다 빠를 수 없습니다.');
         return;
       }
@@ -240,12 +259,11 @@ export function AdminReportListPage() {
     const payload: AdminReportStatusUpdateRequest = {
       status: processForm.status,
       processResult: processForm.processResult.trim() || undefined,
-      hideReviewYn: processReport.targetType === 'REVIEW' ? processForm.hideReviewYn : undefined,
-      sanction: processForm.useSanction
+      hideReviewYn: canApplyReviewAction ? processForm.hideReviewYn : undefined,
+      sanction: canApplyReviewAction && processForm.useSanction
         ? {
-            sanctionType: processForm.sanctionType,
-            startedAt: processForm.startedAt,
-            endedAt: processForm.endedAt || undefined,
+            startedAt: toStartDateTime(processForm.startedAt),
+            endedAt: processForm.endedAt ? toEndDateTime(processForm.endedAt) : undefined,
             reason: processForm.sanctionReason.trim(),
           }
         : undefined,
@@ -266,10 +284,19 @@ export function AdminReportListPage() {
     }
   }
 
-  const reports = reportsPage?.content ?? [];
+  const searchKeyword = searchParams.get('q')?.trim().toLowerCase() ?? '';
+  const reports = (reportsPage?.content ?? []).filter((report) =>
+    searchKeyword
+      ? [report.reporterName, report.bookTitle, report.reportType, report.content].some((field) =>
+          field?.toLowerCase().includes(searchKeyword),
+        )
+      : true,
+  );
   const shownPage = toUiPage(reportsPage?.page);
   const totalPages = reportsPage?.totalPages ?? 1;
   const selectedTargetType = searchParams.get('targetType') ?? '';
+  const allowedProcessStatusOptions = processReport ? getAllowedNextStatusOptions(processReport.status) : [];
+  const canApplyReviewAction = processReport?.targetType === 'REVIEW' && processForm.status === 'DONE';
 
   return (
     <section className={`page-section ${styles.page}`} aria-labelledby="admin-reports-title">
@@ -340,7 +367,6 @@ export function AdminReportListPage() {
                   <th>신고 사유</th>
                   <th>상태</th>
                   <th>접수일</th>
-                  <th>담당자</th>
                   <th className={styles.actionColumnHeader}>
                     <span className={styles.visuallyHidden}>액션</span>
                   </th>
@@ -349,11 +375,11 @@ export function AdminReportListPage() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={9}>신고 목록을 불러오는 중입니다.</td>
+                    <td colSpan={8}>신고 목록을 불러오는 중입니다.</td>
                   </tr>
                 ) : errorMessage ? (
                   <tr>
-                    <td colSpan={9}>신고 목록을 불러오지 못했습니다.</td>
+                    <td colSpan={8}>신고 목록을 불러오지 못했습니다.</td>
                   </tr>
                 ) : reports.length > 0 ? (
                   reports.map((report) => {
@@ -365,9 +391,8 @@ export function AdminReportListPage() {
                       <tr key={reportKey} className={selectedReport?.reportId === report.reportId && selectedReport.targetType === report.targetType ? styles.selectedRow : ''}>
                         <td>RP-{report.reportId}</td>
                         <td>
-                          <Link className={styles.memberLink} to={`/admin/members/${report.reporter.memberId}`}>
-                            <strong>{report.reporter.loginId}</strong>
-                            <span>{report.reporter.name}</span>
+                          <Link className={styles.memberLink} to={`/admin/members/${report.reporterId}`}>
+                            {report.reporterName}
                           </Link>
                         </td>
                         <td className={styles.actionColumnCell}>{getOptionLabel(targetTypeOptions, report.targetType)}</td>
@@ -377,7 +402,6 @@ export function AdminReportListPage() {
                           <span className={`${styles.statusBadge} ${styles[`status${report.status}`]}`}>{getOptionLabel(statusOptions, report.status)}</span>
                         </td>
                         <td>{formatDateTime(report.createdAt)}</td>
-                        <td>{report.managerName ?? '-'}</td>
                         <td>
                           <div className={styles.rowActions}>
                             <button
@@ -402,7 +426,7 @@ export function AdminReportListPage() {
                                 >
                                   상세보기
                                 </button>
-                                <button type="button" role="menuitem" onClick={() => openProcessModal(report, report.status === 'WAITING' ? 'PROCESSING' : report.status)} disabled={isActionLocked}>
+                                <button type="button" role="menuitem" onClick={() => openProcessModal(report)} disabled={isActionLocked}>
                                   처리
                                 </button>
                               </div>
@@ -455,9 +479,7 @@ export function AdminReportListPage() {
             <dl className={styles.detailList}>
               <div>
                 <dt>신고자</dt>
-                <dd>
-                  {selectedReport.reporter.name} / {selectedReport.reporter.loginId}
-                </dd>
+                <dd>{selectedReport.reporterName}</dd>
               </div>
               <div>
                 <dt>신고 사유</dt>
@@ -470,7 +492,7 @@ export function AdminReportListPage() {
               {selectedReport.targetType === 'REVIEW' ? (
                 <div>
                   <dt>원본 리뷰</dt>
-                  <dd>{selectedReport.targetInfo.reviewContent ?? '-'}</dd>
+                  <dd>{selectedReport.reviewContent ?? '-'}</dd>
                 </div>
               ) : null}
               <div>
@@ -487,7 +509,7 @@ export function AdminReportListPage() {
                 onClick={() => {
                   const report = selectedReport;
                   setSelectedReport(null);
-                  openProcessModal(report, report.status === 'WAITING' ? 'PROCESSING' : report.status);
+                  openProcessModal(report);
                 }}
                 disabled={selectedReport.status === 'DONE' || selectedReport.status === 'REJECTED'}
               >
@@ -517,14 +539,20 @@ export function AdminReportListPage() {
               처리 상태
               <select
                 value={processForm.status}
-                onChange={(event) =>
+                onChange={(event) => {
+                  const status = event.target.value as ReportStatus;
                   setProcessForm((current) => ({
                     ...current,
-                    status: event.target.value as ReportStatus,
-                  }))
-                }
+                    status,
+                    hideReviewYn: status === 'DONE' ? current.hideReviewYn : false,
+                    useSanction: status === 'DONE' ? current.useSanction : false,
+                    startedAt: status === 'DONE' ? current.startedAt : '',
+                    endedAt: status === 'DONE' ? current.endedAt : '',
+                    sanctionReason: status === 'DONE' ? current.sanctionReason : '',
+                  }));
+                }}
               >
-                {statusOptions.map((option) => (
+                {allowedProcessStatusOptions.map((option) => (
                   <option value={option.value} key={option.value}>
                     {option.label}
                   </option>
@@ -547,7 +575,7 @@ export function AdminReportListPage() {
               />
             </label>
 
-            {processReport.targetType === 'REVIEW' ? (
+            {canApplyReviewAction ? (
               <label className={styles.checkLabel}>
                 <input
                   type="checkbox"
@@ -563,40 +591,25 @@ export function AdminReportListPage() {
               </label>
             ) : null}
 
-            <label className={styles.checkLabel}>
-              <input
-                type="checkbox"
-                checked={processForm.useSanction}
-                onChange={(event) =>
-                  setProcessForm((current) => ({
-                    ...current,
-                    useSanction: event.target.checked,
-                  }))
-                }
-              />
-              회원 제재 함께 등록
-            </label>
+            {canApplyReviewAction ? (
+              <label className={styles.checkLabel}>
+                <input
+                  type="checkbox"
+                  checked={processForm.useSanction}
+                  onChange={(event) =>
+                    setProcessForm((current) => ({
+                      ...current,
+                      useSanction: event.target.checked,
+                    }))
+                  }
+                />
+                회원 제재 함께 등록
+              </label>
+            ) : null}
 
-            {processForm.useSanction ? (
+            {canApplyReviewAction && processForm.useSanction ? (
               <div className={styles.sanctionFields}>
-                <label>
-                  제재 유형
-                  <select
-                    value={processForm.sanctionType}
-                    onChange={(event) =>
-                      setProcessForm((current) => ({
-                        ...current,
-                        sanctionType: event.target.value as AdminSanctionType,
-                      }))
-                    }
-                  >
-                    {sanctionTypeOptions.map((option) => (
-                      <option value={option.value} key={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <p className="field-hint">제재 유형: 계정 정지 (이 API가 지원하는 유일한 제재 유형)</p>
                 <label>
                   시작일
                   <input
