@@ -6,6 +6,7 @@ import { getBookLibraries } from '../../../api/libraryApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
 import { EmptyState } from '../../../components/common/EmptyState';
+import { NaverMap, type MapMarkerItem } from '../../../components/common/NaverMap';
 import type { LibrarySearchResponse } from '../../../types/api';
 import { districtsByRegion, regionOptions } from './libraryRegions';
 import styles from '../../../styles/BookLibrariesPage.module.css';
@@ -117,6 +118,16 @@ export function BookLibrariesPage() {
   const shownPage = (result?.page ?? 0) + 1;
   const totalPages = Math.max(result?.totalPages ?? 1, 1);
 
+  const mapMarkers: MapMarkerItem[] = libraries
+    .filter((library) => typeof library.latitude === 'number' && typeof library.longitude === 'number')
+    .map((library) => ({
+      id: library.libraryCode,
+      latitude: library.latitude as number,
+      longitude: library.longitude as number,
+      title: library.libraryName,
+      description: library.address,
+    }));
+
   return (
     <section className={`page-section ${styles.page}`} aria-labelledby="book-libraries-title">
       <div className={styles.bookHeader}>
@@ -207,6 +218,8 @@ export function BookLibrariesPage() {
       {region && !isLoading && !errorMessage && (result?.libraries.length ?? 0) === 0 ? (
         <EmptyState title="선택하신 지역에서 이 책을 보유한 도서관을 찾지 못했습니다." description="다른 지역을 선택해 보세요." />
       ) : null}
+
+      {region && !isLoading && !errorMessage && mapMarkers.length > 0 ? <NaverMap markers={mapMarkers} /> : null}
 
       {region && !isLoading && !errorMessage && libraries.length > 0 ? (
         <>
