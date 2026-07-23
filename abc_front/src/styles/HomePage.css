@@ -6,12 +6,14 @@
   --home-content-width: min(1440px, calc(100% - (var(--home-page-gutter) * 2)));
   --home-banner-width: var(--home-content-width);
   --home-banner-height: clamp(360px, 25vw, 460px);
+  --page-banner-top-offset: var(--space-2);
   display: grid;
   gap: var(--space-6);
-  overflow-x: clip;
+  overflow-x: visible;
   max-width: 100%;
   width: 100%;
   margin: 0;
+  margin-bottom: calc(var(--space-8) * -1);
   margin-inline: auto;
   color: var(--color-text);
   background: linear-gradient(180deg, #ffffff 0%, #fbfcfd 42%, #ffffff 100%);
@@ -20,7 +22,7 @@
 .home-hero {
   position: relative;
   overflow: hidden;
-  margin: var(--space-8) auto 0;
+  margin: var(--page-banner-top-offset) auto 0;
   width: var(--home-banner-width);
   max-width: 100%;
   min-height: var(--home-banner-height);
@@ -267,15 +269,17 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-3);
-  width: var(--home-banner-width);
-  max-width: 100%;
-  min-height: 58px;
-  margin: 0 auto;
-  border: 1px solid rgba(15, 23, 42, 0.06);
+  width: 100vw;
+  max-width: none;
+  min-height: 46px;
+  margin: 0 calc(50% - 50vw);
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
   border-radius: 0;
-  padding: 0 var(--space-6);
+  padding: 0 var(--space-2);
   color: var(--color-muted);
-  background: #f6f7f8;
+  background: transparent;
   font-weight: 700;
 }
 
@@ -305,7 +309,7 @@
 
 .home-notice-footer {
   margin-top: 0;
-  margin-bottom: var(--space-8);
+  margin-bottom: 0;
 }
 
 .home-category-section,
