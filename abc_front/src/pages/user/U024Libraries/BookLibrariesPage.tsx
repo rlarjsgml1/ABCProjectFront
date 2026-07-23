@@ -1,6 +1,7 @@
 // 책 보유 도서관 위치(U024) 화면 — 정보나루 종이책 소장 도서관 검색. region(시/도)은 API 필수값이라 사용자가 먼저 선택해야 조회된다.
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { getBookDetail } from '../../../api/bookApi';
 import { getBookLibraries } from '../../../api/libraryApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
@@ -26,6 +27,27 @@ export function BookLibrariesPage() {
   const [result, setResult] = useState<LibrarySearchResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [bookSummary, setBookSummary] = useState<{ title: string; author?: string; coverImageUrl?: string } | null>(null);
+
+  // 지역 검색 전에도 책 표지를 보여주기 위해 상세 API를 별도로 가볍게 조회한다. 실패해도 화면 동작에는 영향 없다.
+  useEffect(() => {
+    if (!bookId) return;
+    let ignore = false;
+
+    getBookDetail(Number(bookId))
+      .then((detail) => {
+        if (!ignore) {
+          setBookSummary({ title: detail.title, author: detail.author ?? detail.authors?.join(', '), coverImageUrl: detail.coverImageUrl });
+        }
+      })
+      .catch(() => {
+        // 표지 조회 실패는 화면 진행에 필수가 아니므로 조용히 무시한다.
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [bookId]);
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -97,51 +119,69 @@ export function BookLibrariesPage() {
 
   return (
     <section className={`page-section ${styles.page}`} aria-labelledby="book-libraries-title">
-      <div className="section-heading-row">
-        <div>
-          <h1 id="book-libraries-title">{result?.title ?? '도서'} 보유 도서관</h1>
+      <div className={styles.bookHeader}>
+        <div className={styles.bookCoverFrame}>
+          {(result?.coverImageUrl ?? bookSummary?.coverImageUrl) ? (
+            <img src={result?.coverImageUrl ?? bookSummary?.coverImageUrl} alt="" />
+          ) : (
+            <span className={styles.bookCoverFallback} aria-hidden="true">📖</span>
+          )}
+        </div>
+        <div className={styles.bookHeaderText}>
+          <h1 id="book-libraries-title">{result?.title ?? bookSummary?.title ?? '도서'} 보유 도서관</h1>
+          {bookSummary?.author ? <p className={styles.bookAuthor}>{bookSummary.author}</p> : null}
           <p className="field-hint">종이책을 소장한 전국 공공도서관을 지역별로 검색합니다.</p>
         </div>
-        {bookId ? <Link to={`/books/${bookId}`}>도서 상세로</Link> : null}
+        {bookId ? (
+          <div className={styles.backLinkGroup}>
+            <Link className={styles.backLink} to={`/books/${bookId}`}>
+              ← 도서 상세로
+            </Link>
+            {coords && region ? <span className={styles.geoHint}>📍 내 위치 기준 거리 표시</span> : null}
+          </div>
+        ) : null}
       </div>
 
-      <div className={styles.filterRow}>
-        <label className={styles.regionField}>
-          지역 선택
-          <select value={region} onChange={(event) => handleRegionChange(event.target.value)}>
-            <option value="">지역을 선택하세요</option>
-            {regionOptions.map((option) => (
-              <option value={option.value} key={option.value}>
-                {option.label}
+      <div className={styles.filterBar}>
+        <div className={styles.filterGroup} role="group" aria-label="지역 필터">
+          <label className={styles.filterSelect}>
+            <span className={styles.filterSelectLabel}>지역</span>
+            <select value={region} onChange={(event) => handleRegionChange(event.target.value)}>
+              <option value="" disabled>
+                지역을 선택하세요
               </option>
-            ))}
-          </select>
-        </label>
-
-        {region && districtOptions.length > 0 ? (
-          <label className={styles.regionField}>
-            구/군 선택 (선택)
-            <select value={dtlRegion} onChange={(event) => handleDtlRegionChange(event.target.value)}>
-              <option value="">전체</option>
-              {districtOptions.map((option) => (
+              {regionOptions.map((option) => (
                 <option value={option.value} key={option.value}>
                   {option.label}
                 </option>
               ))}
             </select>
           </label>
-        ) : null}
+
+          {region && districtOptions.length > 0 ? (
+            <label className={styles.filterSelect}>
+              <span className={styles.filterSelectLabel}>구/군</span>
+              <select value={dtlRegion} onChange={(event) => handleDtlRegionChange(event.target.value)}>
+                <option value="">전체</option>
+                {districtOptions.map((option) => (
+                  <option value={option.value} key={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+        </div>
 
         {region ? (
-          <label className={styles.regionField}>
-            도서관명 검색
-            <input
-              type="search"
-              placeholder="도서관 이름으로 찾기"
-              value={nameKeyword}
-              onChange={(event) => setNameKeyword(event.target.value)}
-            />
-          </label>
+          <input
+            className={styles.searchInput}
+            type="search"
+            aria-label="도서관명 검색"
+            placeholder="도서관 이름으로 찾기"
+            value={nameKeyword}
+            onChange={(event) => setNameKeyword(event.target.value)}
+          />
         ) : null}
       </div>
 
@@ -176,17 +216,23 @@ export function BookLibrariesPage() {
 
               return (
                 <li className={styles.libraryItem} key={library.libraryCode}>
-                  <div>
-                    <strong>{library.libraryName}</strong>
-                    <p>
-                      {library.address}
-                      {distance ? ` · ${distance}` : ''}
-                      {library.operationTime ? ` · ${library.operationTime}` : ''}
-                      {library.closedDays ? ` · 휴관 ${library.closedDays}` : ''}
-                    </p>
+                  <span className={styles.libraryIcon} aria-hidden="true">🏛</span>
+                  <div className={styles.libraryBody}>
+                    <div className={styles.libraryTitleRow}>
+                      <strong>{library.libraryName}</strong>
+                      {distance ? <span className={styles.distanceChip}>{distance}</span> : null}
+                    </div>
+                    <p className={styles.libraryAddress}>{library.address}</p>
+                    {library.operationTime || library.closedDays ? (
+                      <p className={styles.libraryMeta}>
+                        {library.operationTime ? `운영 ${library.operationTime}` : ''}
+                        {library.operationTime && library.closedDays ? ' · ' : ''}
+                        {library.closedDays ? `휴관 ${library.closedDays}` : ''}
+                      </p>
+                    ) : null}
                     {library.homepageUrl ? (
-                      <a href={library.homepageUrl} target="_blank" rel="noreferrer">
-                        홈페이지
+                      <a className={styles.homeLink} href={library.homepageUrl} target="_blank" rel="noreferrer">
+                        홈페이지 ↗
                       </a>
                     ) : null}
                   </div>
