@@ -3,6 +3,27 @@
   gap: var(--space-6);
 }
 
+.filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.regionField {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 280px;
+  font-weight: 700;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
 .libraryList {
   display: grid;
   gap: var(--space-3);

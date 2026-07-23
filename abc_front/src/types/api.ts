@@ -706,16 +706,44 @@ export type BookRecommendationResponse = {
   books: BookCard[];
 };
 
-// API-LIBRARY-001 (U-024 책 보유 도서관 위치). 필드명은 LibrarySummaryResponse.java 기준.
-export type LibrarySummaryItem = {
-  bookId: number;
-  title: string;
-  coverImageUrl?: string;
+// API-LIBRARY-001 (U-024 책 보유 도서관 위치). GET /books/{bookId}/libraries.
+// region은 필수(2자리 지역코드). 필드명은 LibrarySearchResponse.java 기준 — 정보나루 종이책 소장 도서관 검색 결과다.
+export type LibrarySearchQuery = {
+  region: string;
+  dtlRegion?: string;
+  page?: number;
+  size?: number;
+  latitude?: number;
+  longitude?: number;
+};
+
+export type LibraryResultItem = {
+  libraryCode: string;
   libraryName: string;
   address: string;
   latitude?: number;
   longitude?: number;
-  holdingStatus: string;
+  distanceKm?: number;
+  homepageUrl?: string;
+  closedDays?: string;
+  operationTime?: string;
+  holding: boolean;
+  loanAvailable?: boolean;
+};
+
+export type LibrarySearchResponse = {
+  bookId: number;
+  title: string;
+  coverImageUrl?: string;
+  region: string;
+  source: string;
+  stale: boolean;
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  libraries: LibraryResultItem[];
+  warnings: string[];
 };
 
 export type Category = {
