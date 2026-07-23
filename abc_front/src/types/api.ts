@@ -378,14 +378,20 @@ export type AdminLibrarySummary = {
   longitude?: number | null;
   status: AdminLibraryStatus;
   bookCount: number;
+  regionCode?: string;
+  dtlRegionCode?: string;
 };
 
+// regionCode/dtlRegionCode는 U-024 도서관 검색(GET /books/{bookId}/libraries)이 필터링에 쓰는 값과 동일하다.
+// 이걸 비워두고 등록하면 그 도서관은 지역 검색에서 영원히 안 잡힌다.
 export type AdminLibraryUpdateRequest = {
   libraryName: string;
   address: string;
   latitude?: number | null;
   longitude?: number | null;
   status: AdminLibraryStatus;
+  regionCode: string;
+  dtlRegionCode?: string;
 };
 
 export type AdminLibraryUpdateResponse = {
