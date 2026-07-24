@@ -19,6 +19,14 @@ const rentalStatusLabels: Record<RentalStatus, string> = {
   OWNED: '소장',
 };
 
+function getRentalStatusLabel(item: MyRentalItem) {
+  if (item.completedYn) {
+    return '완독';
+  }
+
+  return rentalStatusLabels[item.rentalStatus];
+}
+
 function formatProgress(progressRate: number) {
   return `${Math.min(100, Math.max(0, Math.round(progressRate)))}%`;
 }
@@ -193,7 +201,7 @@ export function MyRentalsPage() {
             { key: 'title', header: '책 제목', render: (item) => <Link to={`/books/${item.bookId}`}>{item.title}</Link> },
             { key: 'author', header: '저자', render: (item) => item.author ?? '-' },
             { key: 'rentalEndAt', header: '반납 예정일', render: (item) => formatDate(item.rentalEndAt) },
-            { key: 'rentalStatus', header: '상태', render: (item) => rentalStatusLabels[item.rentalStatus] },
+            { key: 'rentalStatus', header: '상태', render: (item) => getRentalStatusLabel(item) },
           ]}
           rows={rentals}
           rowKey={(item) => item.rentalId}

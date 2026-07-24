@@ -27,46 +27,9 @@
   text-align: center;
 }
 
-.rewardLink {
-  border: 1px solid #bfdbfe;
-  color: #1d4ed8;
-  background: #dbeafe;
-  box-shadow: none;
-}
-
-.rewardLink:hover {
-  border-color: #93c5fd;
-  color: #1e40af;
-  background: #bfdbfe;
-}
-
 .content {
   display: grid;
   gap: var(--space-6);
-}
-
-.tabs {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-2);
-  border-radius: var(--radius-md);
-  padding: var(--space-2);
-  background: var(--color-border);
-}
-
-.tab {
-  border: 0;
-  border-radius: 6px;
-  padding: var(--space-4);
-  color: var(--color-text);
-  background: transparent;
-  cursor: pointer;
-  font-weight: 800;
-}
-
-.activeTab {
-  background: var(--color-surface);
-  box-shadow: var(--shadow-sm);
 }
 
 .notice,
@@ -114,8 +77,8 @@
   border-radius: var(--radius-md);
   display: grid;
   place-items: center;
-  color: var(--color-text);
-  background: #d1d5db;
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
   font-weight: 800;
 }
 

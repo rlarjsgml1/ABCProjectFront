@@ -3774,13 +3774,19 @@ a.count-card:focus-visible {
   width: var(--abc-header-control);
   height: var(--abc-header-control);
   border-radius: 50%;
-  background: var(--abc-header-muted);
-  color: var(--abc-header-surface);
+  /* 브랜드 앰버 토큰보다 밝은 바나나 옐로우를 원해서 지정한 값 — 토큰 아님 */
+  background: #ffde59;
+  color: var(--abc-header-brand);
   box-shadow: 3px 4px 9px rgba(0, 0, 0, 0.3);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   text-decoration: none;
+}
+
+.abc-notification-button:hover,
+.abc-notification-button:focus-visible {
+  filter: brightness(0.92);
 }
 
 .abc-notification-button svg {

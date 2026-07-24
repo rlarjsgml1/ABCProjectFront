@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { claimChallengeReward, getMyChallenges } from '../../../api/challengesApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
+import { Button } from '../../../components/common/Button';
 import { MyPageLayout } from '../../../components/mypage/MyPageLayout';
 import type { ChallengeItem, ChallengeListResponse, ChallengeRewardStatus, ChallengeType } from '../../../types/api';
 import styles from '../../../styles/ChallengesPage.module.css';
@@ -213,16 +214,16 @@ export function ChallengesPage() {
         <div className={styles.layout}>
           <aside className={styles.aside}>
             <h2 id="challenges-title">나의 챌린지 현황</h2>
-            <Link className={`button ${styles.rewardLink}`} to="/me/points-coupons">
+            <Link className="button button-secondary" to="/me/points-coupons">
               내 포인트/쿠폰 확인
             </Link>
           </aside>
 
           <div className={styles.content}>
-            <div className={styles.tabs} role="tablist" aria-label="챌린지 유형 선택">
+            <div className="points-coupons-tabs" role="tablist" aria-label="챌린지 유형 선택">
               {tabs.map((tab) => (
                 <button
-                  className={`${styles.tab} ${activeTab === tab.value ? styles.activeTab : ''}`}
+                  className={`points-coupons-tab${activeTab === tab.value ? ' is-active' : ''}`}
                   type="button"
                   role="tab"
                   aria-selected={activeTab === tab.value}
@@ -308,14 +309,14 @@ export function ChallengesPage() {
                       </div>
 
                       <div className={styles.rewardArea}>
-                        <button
-                          className="button button-secondary"
+                        <Button
                           type="button"
+                          variant="secondary"
                           disabled={rewardStatus !== 'AVAILABLE' || claimingChallengeId === challengeId}
                           onClick={() => handleClaimReward(challenge)}
                         >
                           {claimingChallengeId === challengeId ? '처리 중' : getRewardButtonLabel(rewardStatus)}
-                        </button>
+                        </Button>
                       </div>
                     </article>
                   );
