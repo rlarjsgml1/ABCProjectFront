@@ -198,7 +198,7 @@ export function MyRentalsPage() {
 
         <Table<RentalCardData>
           columns={[
-            { key: 'title', header: '책 제목', render: (item) => <Link to={`/books/${item.bookId}`}>{item.title}</Link> },
+            { key: 'title', header: '책 제목', maxWidth: '320px', render: (item) => <Link to={`/books/${item.bookId}`}>{item.title}</Link> },
             { key: 'author', header: '저자', render: (item) => item.author ?? '-' },
             { key: 'rentalEndAt', header: '반납 예정일', render: (item) => formatDate(item.rentalEndAt) },
             { key: 'rentalStatus', header: '상태', render: (item) => getRentalStatusLabel(item) },

@@ -4,8 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { getNotices } from '../../../api/noticeApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { Pagination } from '../../../components/common/Pagination';
-import { Table } from '../../../components/common/Table';
-import type { NoticeItem, NoticePage } from '../../../types/api';
+import type { NoticePage } from '../../../types/api';
 import styles from '../../../styles/NoticeListPage.module.css';
 
 const PAGE_SIZE = 13;
@@ -84,17 +83,21 @@ export function NoticeListPage() {
 
       {errorMessage ? <div className="status-banner">{errorMessage}</div> : null}
 
-      <Table<NoticeItem>
-        columns={[
-          { key: 'title', header: '제목', render: (notice) => <Link to={`/notices/${notice.noticeId}`}>{notice.title}</Link> },
-          { key: 'createdAt', header: '등록일', align: 'right', render: (notice) => formatDate(notice.createdAt) },
-        ]}
-        rows={noticePage.content}
-        rowKey={(notice) => notice.noticeId}
-        isLoading={isLoading}
-        loadingMessage="공지사항을 불러오는 중입니다."
-        emptyMessage="등록된 공지사항이 없습니다."
-      />
+      <div className={styles.list}>
+        {isLoading ? (
+          <p className={styles.status}>공지사항을 불러오는 중입니다.</p>
+        ) : noticePage.content.length > 0 ? (
+          noticePage.content.map((notice) => (
+            <Link className={styles.row} to={`/notices/${notice.noticeId}`} key={notice.noticeId}>
+              <span className={styles.badge}>공지</span>
+              <strong className={styles.rowTitle}>{notice.title}</strong>
+              <span className={styles.rowDate}>{formatDate(notice.createdAt)}</span>
+            </Link>
+          ))
+        ) : (
+          <p className={styles.status}>등록된 공지사항이 없습니다.</p>
+        )}
+      </div>
 
       <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={movePage} />
     </section>

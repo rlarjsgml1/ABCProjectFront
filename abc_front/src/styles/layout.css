@@ -1924,7 +1924,7 @@ a.admin-dashboard-kpi-card:focus-visible {
 }
 
 .mypage-overview {
-  --mypage-banner-bg: linear-gradient(160deg, color-mix(in srgb, var(--color-primary) 6%, #ffffff) 0%, #fbfdfc 62%);
+  --mypage-banner-bg: color-mix(in srgb, var(--color-primary) 4%, #ffffff);
   --mypage-widget-bg: var(--color-surface);
   --mypage-widget-surface: var(--color-primary-soft);
   --mypage-widget-text: var(--color-text);
@@ -2068,7 +2068,7 @@ a.admin-dashboard-kpi-card:focus-visible {
 .profile-chip span,
 .profile-chip small {
   color: var(--mypage-widget-muted);
-  font-size: 0.72rem;
+  font-size: var(--font-size-sm);
   font-weight: 700;
 }
 
@@ -2124,7 +2124,7 @@ a.count-card:focus-visible {
 .count-card span {
   display: block;
   color: var(--mypage-widget-muted);
-  font-size: 0.72rem;
+  font-size: var(--font-size-sm);
   font-weight: 700;
 }
 
@@ -3094,7 +3094,7 @@ a.count-card:focus-visible {
   --reading-statistics-chart-tooltip-surface: color-mix(in srgb, var(--reading-statistics-surface) 94%, var(--color-success-soft));
   display: grid;
   gap: var(--space-6);
-  background: linear-gradient(135deg, var(--reading-statistics-panel), var(--reading-statistics-surface));
+  background: var(--reading-statistics-surface);
 }
 
 .reading-statistics-page h3,
@@ -3313,7 +3313,7 @@ a.count-card:focus-visible {
 
 .reading-statistics-environment-card {
   align-content: space-between;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--color-success-soft) 72%, var(--color-surface)), var(--reading-statistics-surface));
+  background: color-mix(in srgb, var(--color-success-soft) 45%, var(--color-surface));
 }
 
 .reading-statistics-environment-grid {

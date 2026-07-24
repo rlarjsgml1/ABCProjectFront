@@ -7,6 +7,8 @@ export type TableColumn<T> = {
   header: string;
   render?: (row: T) => ReactNode;
   align?: 'left' | 'center' | 'right';
+  /** 길어질 수 있는 텍스트 컬럼(도서명 등)의 최대 너비. 지정하면 한 줄로 말줄임 처리한다. */
+  maxWidth?: string;
 };
 
 type TableProps<T> = {
@@ -48,11 +50,25 @@ export function Table<T>({
           ) : rows.length > 0 ? (
             rows.map((row) => (
               <tr key={rowKey(row)}>
-                {columns.map((column) => (
-                  <td key={column.key} style={{ textAlign: column.align ?? 'left' }}>
-                    {column.render ? column.render(row) : String((row as Record<string, unknown>)[column.key] ?? '')}
-                  </td>
-                ))}
+                {columns.map((column) => {
+                  const value = column.render ? column.render(row) : String((row as Record<string, unknown>)[column.key] ?? '');
+
+                  return (
+                    <td key={column.key} style={{ textAlign: column.align ?? 'left' }}>
+                      {column.maxWidth ? (
+                        <span
+                          className={styles.truncate}
+                          style={{ maxWidth: column.maxWidth }}
+                          title={typeof value === 'string' ? value : undefined}
+                        >
+                          {value}
+                        </span>
+                      ) : (
+                        value
+                      )}
+                    </td>
+                  );
+                })}
               </tr>
             ))
           ) : (

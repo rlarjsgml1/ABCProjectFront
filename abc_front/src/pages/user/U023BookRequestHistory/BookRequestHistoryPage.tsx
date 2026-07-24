@@ -102,7 +102,7 @@ export function BookRequestHistoryPage() {
 
         <Table<BookRequestHistoryItem>
           columns={[
-            { key: 'title', header: '제목' },
+            { key: 'title', header: '제목', maxWidth: '280px' },
             { key: 'author', header: '저자' },
             { key: 'publisher', header: '출판사' },
             { key: 'createdAt', header: '신청일', render: (item) => formatDate(item.createdAt) },

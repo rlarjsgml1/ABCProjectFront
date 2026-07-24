@@ -176,6 +176,7 @@ export function PaymentsPage() {
             {
               key: 'title',
               header: '도서명',
+              maxWidth: '320px',
               render: (payment) =>
                 payment.bookId ? <Link to={`/books/${payment.bookId}`}>{payment.title}</Link> : payment.title,
             },
