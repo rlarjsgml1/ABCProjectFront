@@ -204,7 +204,7 @@ promote_release() {
         --region "$AWS_REGION" \
         --bucket "$FRONTEND_S3_BUCKET" \
         --key "${CURRENT_PREFIX}/index.html" \
-        --query 'Metadata.release-sha' \
+        --query 'Metadata."release-sha"' \
         --output text)
     if [[ "$RELEASE_ID" == 5b13c6d ]]; then
         # 기존 수동 release에는 metadata가 없으므로 legacy rollback에서는 ETag 존재만 확인한다.
