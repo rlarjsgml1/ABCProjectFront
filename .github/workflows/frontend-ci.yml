@@ -1,0 +1,73 @@
+name: Frontend CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "abc_front/**"
+      - ".github/workflows/frontend-ci.yml"
+      - ".github/workflows/frontend-cd.yml"
+      - "deploy/frontend-release.sh"
+  push:
+    branches:
+      - main
+    paths:
+      - "abc_front/**"
+      - ".github/workflows/frontend-ci.yml"
+      - ".github/workflows/frontend-cd.yml"
+      - "deploy/frontend-release.sh"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Lint and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: abc_front
+    env:
+      VITE_API_BASE_URL: https://ci.invalid/api/v1
+      VITE_NAVER_MAP_CLIENT_ID: ci-client-id
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22.16.0
+          cache: npm
+          cache-dependency-path: abc_front/package-lock.json
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=critical
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify build contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f dist/index.html
+          test -n "$(find dist/assets -type f -print -quit)"
+          if grep -RqsF "localhost:8080" dist; then
+            echo "build output contains the local API origin" >&2
+            exit 1
+          fi
+          grep -RqsF "$VITE_API_BASE_URL" dist

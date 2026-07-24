@@ -1,0 +1,205 @@
+name: Frontend Production CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: deploy는 현재 main을 build하고, rollback은 기존 release를 재승격합니다.
+        required: true
+        type: choice
+        options:
+          - deploy
+          - rollback
+      confirm_production:
+        description: production 변경을 확인합니다.
+        required: true
+        type: boolean
+      confirm_release:
+        description: deploy는 현재 full SHA, rollback은 대상 release ID를 입력합니다.
+        required: true
+        type: string
+
+permissions:
+  checks: read
+  contents: write
+  id-token: write
+
+concurrency:
+  group: frontend-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy frontend to production
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_ROLE_ARN: ${{ vars.AWS_ROLE_ARN }}
+      FRONTEND_S3_BUCKET: ${{ vars.FRONTEND_S3_BUCKET }}
+      CLOUDFRONT_DISTRIBUTION_ID: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
+      FRONTEND_BASE_URL: ${{ vars.FRONTEND_BASE_URL }}
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+      VITE_NAVER_MAP_CLIENT_ID: ${{ vars.VITE_NAVER_MAP_CLIENT_ID }}
+      OPERATION: ${{ inputs.operation }}
+      CONFIRM_PRODUCTION: ${{ inputs.confirm_production }}
+      CONFIRM_RELEASE: ${{ inputs.confirm_release }}
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Refuse non-main or incomplete configuration
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF" != refs/heads/main ]]; then
+            echo "production CD accepts refs/heads/main only" >&2
+            exit 1
+          fi
+          if [[ "$CONFIRM_PRODUCTION" != true ]]; then
+            echo "production confirmation is required" >&2
+            exit 1
+          fi
+          if [[ -z "$AWS_REGION" || -z "$AWS_ROLE_ARN" \
+             || -z "$FRONTEND_S3_BUCKET" || -z "$CLOUDFRONT_DISTRIBUTION_ID" \
+             || -z "$FRONTEND_BASE_URL" || -z "$VITE_API_BASE_URL" \
+             || -z "$VITE_NAVER_MAP_CLIENT_ID" ]]; then
+            echo "required production variables are missing" >&2
+            exit 1
+          fi
+          case "$OPERATION" in
+            deploy)
+              if [[ ! "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ \
+                 || "$CONFIRM_RELEASE" != "$GITHUB_SHA" ]]; then
+                echo "deploy requires the exact current main SHA" >&2
+                exit 1
+              fi
+              release_id=$GITHUB_SHA
+              ;;
+            rollback)
+              if [[ ! "$CONFIRM_RELEASE" =~ ^([0-9a-f]{40}|5b13c6d)$ ]]; then
+                echo "rollback requires an exact immutable release ID" >&2
+                exit 1
+              fi
+              release_id=$CONFIRM_RELEASE
+              ;;
+            *)
+              echo "unsupported operation" >&2
+              exit 1
+              ;;
+          esac
+          echo "release_id=$release_id" >> "$GITHUB_OUTPUT"
+
+      - name: Require successful Frontend CI
+        if: inputs.operation == 'deploy'
+        shell: bash
+        run: |
+          set -euo pipefail
+          deadline=$((SECONDS + 900))
+          while (( SECONDS < deadline )); do
+            status=$(gh api \
+              -H "Accept: application/vnd.github+json" \
+              "/repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/check-runs" \
+              --jq '[.check_runs[] | select(.name == "Lint and build")][0].status // ""')
+            conclusion=$(gh api \
+              -H "Accept: application/vnd.github+json" \
+              "/repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/check-runs" \
+              --jq '[.check_runs[] | select(.name == "Lint and build")][0].conclusion // ""')
+            if [[ "$status" == completed && "$conclusion" == success ]]; then
+              echo "Frontend CI passed for $GITHUB_SHA"
+              exit 0
+            fi
+            if [[ "$status" == completed && -n "$conclusion" ]]; then
+              echo "Frontend CI did not succeed: $conclusion" >&2
+              exit 1
+            fi
+            sleep 10
+          done
+          echo "timed out waiting for Frontend CI" >&2
+          exit 1
+
+      - name: Set up Node.js
+        if: inputs.operation == 'deploy'
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22.16.0
+          cache: npm
+          cache-dependency-path: abc_front/package-lock.json
+
+      - name: Build exact release
+        if: inputs.operation == 'deploy'
+        working-directory: abc_front
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          npm audit --omit=dev --audit-level=critical
+          npm run lint
+          npm run build
+          test -f dist/index.html
+          test -n "$(find dist/assets -type f -print -quit)"
+          if grep -RqsF "localhost:8080" dist; then
+            echo "production build contains the local API origin" >&2
+            exit 1
+          fi
+          grep -RqsF "$VITE_API_BASE_URL" dist
+          grep -RqsF "$VITE_NAVER_MAP_CLIENT_ID" dist
+
+      - name: Configure AWS credentials through OIDC
+        uses: aws-actions/configure-aws-credentials@cabfdba3510de1431bac9dba27511d97497fc100
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: frontend-production-${{ github.run_id }}
+
+      - name: Publish immutable release
+        if: inputs.operation == 'deploy'
+        shell: bash
+        run: deploy/frontend-release.sh publish "${{ steps.release.outputs.release_id }}"
+
+      - name: Promote release
+        shell: bash
+        run: deploy/frontend-release.sh promote "${{ steps.release.outputs.release_id }}"
+
+      - name: Create or verify production git tag
+        shell: bash
+        env:
+          RELEASE_ID: ${{ steps.release.outputs.release_id }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$RELEASE_ID" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "legacy rollback keeps its existing production tag"
+            exit 0
+          fi
+          production_tag="prod-$(date -u +%Y%m%d)-${RELEASE_ID:0:7}"
+          git fetch --tags origin
+          if git rev-parse --verify "refs/tags/${production_tag}^{commit}" > /dev/null 2>&1; then
+            tagged_sha=$(git rev-parse "refs/tags/${production_tag}^{commit}")
+            [[ "$tagged_sha" == "$RELEASE_ID" ]]
+          else
+            git tag -a "$production_tag" "$RELEASE_ID" \
+              -m "frontend production release ${RELEASE_ID}"
+            git push origin "refs/tags/${production_tag}"
+          fi
+
+      - name: Write deployment summary
+        shell: bash
+        env:
+          RELEASE_ID: ${{ steps.release.outputs.release_id }}
+        run: |
+          {
+            echo "### Frontend production release"
+            echo
+            echo "- operation: ${OPERATION}"
+            echo "- release: ${RELEASE_ID}"
+            echo "- bucket prefix: releases/${RELEASE_ID}/"
+            echo "- distribution: ${CLOUDFRONT_DISTRIBUTION_ID}"
+            echo "- URL: ${FRONTEND_BASE_URL}"
+          } >> "$GITHUB_STEP_SUMMARY"
