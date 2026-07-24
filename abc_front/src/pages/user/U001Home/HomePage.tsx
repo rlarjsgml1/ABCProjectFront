@@ -427,7 +427,7 @@ export function HomePage() {
           .join(' ');
 
         return (
-          <section className={sectionClassName} key={section.title}>
+          <section className={sectionClassName} key={section.moreTo}>
             <div className="home-section-heading">
               <div>
                 <h2>
