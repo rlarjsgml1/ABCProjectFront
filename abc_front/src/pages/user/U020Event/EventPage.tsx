@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Pagination } from '../../../components/common/Pagination';
 import '../../../styles/event.css';
 
 type EventItem = {
@@ -28,7 +29,7 @@ const eventItems: EventItem[] = [
 
 export function EventPage() {
   const [keyword, setKeyword] = useState('');
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0);
 
   const filteredEvents = useMemo(() => {
     const trimmedKeyword = keyword.trim().toLowerCase();
@@ -46,17 +47,17 @@ export function EventPage() {
   }, [keyword]);
 
   const totalPages = Math.max(1, Math.ceil(filteredEvents.length / PAGE_SIZE));
-  const currentPage = Math.min(page, totalPages);
-  const visibleEvents = filteredEvents.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const currentPage = Math.min(page, totalPages - 1);
+  const visibleEvents = filteredEvents.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
 
   const changePage = (nextPage: number) => {
-    setPage(Math.min(Math.max(nextPage, 1), totalPages));
+    setPage(Math.min(Math.max(nextPage, 0), totalPages - 1));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleKeywordChange = (value: string) => {
     setKeyword(value);
-    setPage(1);
+    setPage(0);
   };
 
   return (
@@ -116,31 +117,13 @@ export function EventPage() {
         <div className="event-empty">검색 결과가 없습니다.</div>
       )}
 
-      <nav className="event-pagination" aria-label="이벤트 페이지 이동">
-        <button type="button" onClick={() => changePage(currentPage - 1)} disabled={currentPage === 1}>
-          &lt;
-        </button>
-
-        {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
-          <button
-            className={pageNumber === currentPage ? 'is-active' : ''}
-            type="button"
-            onClick={() => changePage(pageNumber)}
-            key={pageNumber}
-            aria-current={pageNumber === currentPage ? 'page' : undefined}
-          >
-            {pageNumber}
-          </button>
-        ))}
-
-        <button
-          type="button"
-          onClick={() => changePage(currentPage + 1)}
-          disabled={currentPage === totalPages}
-        >
-          &gt;
-        </button>
-      </nav>
+      <Pagination
+        className="event-pagination"
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={changePage}
+        ariaLabel="이벤트 페이지 이동"
+      />
     </div>
   );
 }
