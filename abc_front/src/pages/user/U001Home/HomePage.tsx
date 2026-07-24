@@ -135,19 +135,17 @@ const sectionCardVariants: Variants = {
 };
 
 function toBookItems(books: BookCard[], fallbackBooks: BookItem[]) {
-  if (!books.length) return fallbackBooks;
-
   return books.map((book, index) => ({
     id: book.bookId,
     title: book.title,
     author: book.authors?.join(', ') || book.publisherName || 'ABC',
-    tone: fallbackBooks[index % fallbackBooks.length].tone,
+    tone: fallbackBooks[index % fallbackBooks.length]?.tone ?? fallbackBestBooks[index % fallbackBestBooks.length].tone,
     coverImageUrl: book.coverImageUrl,
   }));
 }
 
 // 컬렉션 섹션은 실데이터가 없으면 더미로 대체하지 않고 섹션 자체를 표시하지 않는다.
-function toCollectionBookItems(books: BookCard[]) {
+function toCollectionBookItems(books: BookCard[] = []) {
   return books.map((book, index) => ({
     id: book.bookId,
     title: book.title,
@@ -163,9 +161,9 @@ export function HomePage() {
   const [[activeBannerIndex, bannerDirection], setBannerState] = useState<[number, number]>([0, 1]);
   const [isAutoplayPaused, setIsAutoplayPaused] = useState(false);
   const [isBannerHovered, setIsBannerHovered] = useState(false);
-  const [recommendedBooks, setRecommendedBooks] = useState<BookItem[]>(isLoggedIn ? fallbackRecommendedBooks : fallbackBestBooks);
-  const [newBooks, setNewBooks] = useState<BookItem[]>(fallbackNewBooks);
-  const [bestBooks, setBestBooks] = useState<BookItem[]>(fallbackBestBooks);
+  const [recommendedBooks, setRecommendedBooks] = useState<BookItem[]>([]);
+  const [newBooks, setNewBooks] = useState<BookItem[]>([]);
+  const [bestBooks, setBestBooks] = useState<BookItem[]>([]);
   const [latestNotice, setLatestNotice] = useState<NoticeItem | null>(null);
   const [collectionSections, setCollectionSections] = useState<{ collectionId: number; title: string; books: BookItem[] }[]>([]);
   // 배너 3층 폴백: ① 노출 중인 컬렉션 → ② 표지 있는 신간/베스트 → ③ 하드코딩 기본 배너
@@ -215,11 +213,12 @@ export function HomePage() {
       }
 
       if (collectionsResult.status === 'fulfilled') {
+        const collections = Array.isArray(collectionsResult.value.content) ? collectionsResult.value.content : [];
         // 정렬 1순위가 startDate라서 기간이 없는 시리즈보다 이벤트가 항상 앞에 온다.
         // 도서가 매핑된 노출 컬렉션은 전부 홈 섹션으로 보여준다.
         setCollectionSections(
-          collectionsResult.value.content
-            .filter((collection) => collection.previewBooks.length > 0)
+          collections
+            .filter((collection) => Array.isArray(collection.previewBooks) && collection.previewBooks.length > 0)
             .map((collection) => ({
               collectionId: collection.collectionId,
               title: collection.collectionName,
@@ -232,9 +231,12 @@ export function HomePage() {
       const dynamicBanners: BannerItem[] = [];
 
       if (collectionsResult.status === 'fulfilled') {
-        for (const [index, collection] of collectionsResult.value.content.entries()) {
-          const coverBook = collection.previewBooks.find((book) => book.coverImageUrl);
-          const covers = collection.previewBooks
+        const collections = Array.isArray(collectionsResult.value.content) ? collectionsResult.value.content : [];
+
+        for (const [index, collection] of collections.entries()) {
+          const previewBooks = Array.isArray(collection.previewBooks) ? collection.previewBooks : [];
+          const coverBook = previewBooks.find((book) => book.coverImageUrl);
+          const covers = previewBooks
             .filter((book) => book.coverImageUrl)
             .slice(0, 2)
             .map((book) => ({ title: book.title, imageUrl: book.coverImageUrl }));
@@ -549,7 +551,9 @@ export function HomePage() {
               <Link className="home-section-more" to={section.moreTo}>더보기</Link>
             </div>
 
-            {section.ranked ? (
+            {section.books.length === 0 ? (
+              <p className="home-book-empty">표시할 도서가 없습니다.</p>
+            ) : section.ranked ? (
               <motion.div
                 className="home-best-grid"
                 variants={sectionGridVariants}
@@ -571,18 +575,13 @@ export function HomePage() {
                 </button>
                 {section.kind === 'latest' ? (
                   <motion.div
-                    className="home-book-row home-book-row-scroll is-stacked"
+                    className="home-book-row home-book-row-scroll"
                     variants={sectionGridVariants}
                     initial={prefersReducedMotion ? false : 'hidden'}
                     whileInView={prefersReducedMotion ? undefined : 'visible'}
                     viewport={{ once: true, amount: 0.15 }}
                   >
-                    <div className="home-book-row-scroll-line">
-                      {section.books.slice(0, 15).map((book) => renderBookCard(book))}
-                    </div>
-                    <div className="home-book-row-scroll-line">
-                      {section.books.slice(15, 30).map((book) => renderBookCard(book))}
-                    </div>
+                    {section.books.slice(0, 15).map((book) => renderBookCard(book))}
                   </motion.div>
                 ) : (
                   <motion.div
