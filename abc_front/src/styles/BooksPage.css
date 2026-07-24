@@ -133,23 +133,20 @@
   z-index: 6;
   display: grid;
   place-items: center;
-  width: 46px;
-  height: 46px;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 14%, transparent);
+  width: 52px;
+  height: 52px;
+  border: 0;
   border-radius: 50%;
   color: var(--books-green);
   background: rgba(255, 255, 255, 0.94);
-  font-size: 1.45rem;
-  font-weight: 900;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.18);
+  font-size: 2.2rem;
+  font-weight: 700;
   line-height: 1;
   opacity: 0;
   pointer-events: none;
-  transform: translateY(-50%);
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease,
-    background 0.2s ease,
-    border-color 0.2s ease;
+  transform: translateY(-50%) scale(0.92);
+  transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
 }
 
 .books-recommend-arrow.is-prev {
@@ -164,12 +161,11 @@
 .books-recommend-arrow:focus-visible {
   opacity: 1;
   pointer-events: auto;
+  transform: translateY(-50%) scale(1);
 }
 
 .books-recommend-arrow:hover {
-  border-color: color-mix(in srgb, var(--color-primary) 28%, transparent);
   background: #ffffff;
-  transform: translateY(-50%) scale(1.05);
 }
 
 .books-recommend-viewport {
@@ -837,6 +833,7 @@
     height: 40px;
     opacity: 1;
     pointer-events: auto;
+    transform: translateY(-50%) scale(1);
   }
 
   .books-recommend-arrow.is-prev {

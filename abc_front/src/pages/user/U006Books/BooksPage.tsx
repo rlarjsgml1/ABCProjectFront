@@ -436,7 +436,7 @@ export function BooksPage() {
               onClick={moveFeaturedPrevious}
               aria-label="이전 입고 도서 보기"
             >
-              &lt;
+              ‹
             </button>
           ) : null}
           <div className="books-recommend-viewport">
@@ -467,7 +467,7 @@ export function BooksPage() {
               onClick={moveFeaturedNext}
               aria-label="다음 입고 도서 보기"
             >
-              &gt;
+              ›
             </button>
           ) : null}
         </div>
