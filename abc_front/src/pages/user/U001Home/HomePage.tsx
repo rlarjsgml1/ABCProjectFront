@@ -31,6 +31,8 @@ type BannerItem = {
   coverTitle: string;
   /** 운영 배너 이미지 URL. 값을 넣으면 플레이스홀더 대신 실제 이미지가 표시된다. */
   imageUrl?: string;
+  /** 클릭 시 이동 경로. 없으면 일반 이벤트 페이지로 이동한다. */
+  linkTo?: string;
 };
 
 const bannerItems: BannerItem[] = [
@@ -98,9 +100,21 @@ const fallbackBestBooks: BookItem[] = withFallbackTones([
 ]);
 
 const heroSlideVariants: Variants = {
-  enter: (direction: number) => ({ x: direction > 0 ? '100%' : '-100%', opacity: 0 }),
-  center: { x: '0%', opacity: 1 },
-  exit: (direction: number) => ({ x: direction > 0 ? '-100%' : '100%', opacity: 0 }),
+  enter: (direction: number) => ({ x: direction > 0 ? 48 : -48, opacity: 0, scale: 0.98 }),
+  center: { x: 0, opacity: 1, scale: 1 },
+  exit: (direction: number) => ({ x: direction > 0 ? -48 : 48, opacity: 0, scale: 0.98 }),
+};
+
+const heroCopyContainerVariants: Variants = {
+  enter: {},
+  center: { transition: { staggerChildren: 0.09, delayChildren: 0.1 } },
+  exit: {},
+};
+
+const heroCopyItemVariants: Variants = {
+  enter: { opacity: 0, y: 14 },
+  center: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+  exit: { opacity: 0, y: -8, transition: { duration: 0.15 } },
 };
 
 const sectionGridVariants: Variants = {
@@ -140,6 +154,7 @@ export function HomePage() {
   const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
   const prefersReducedMotion = useReducedMotion();
   const [[activeBannerIndex, bannerDirection], setBannerState] = useState<[number, number]>([0, 1]);
+  const [isAutoplayPaused, setIsAutoplayPaused] = useState(false);
   const [recommendedBooks, setRecommendedBooks] = useState<BookItem[]>(isLoggedIn ? fallbackRecommendedBooks : fallbackBestBooks);
   const [newBooks, setNewBooks] = useState<BookItem[]>(fallbackNewBooks);
   const [bestBooks, setBestBooks] = useState<BookItem[]>(fallbackBestBooks);
@@ -150,12 +165,16 @@ export function HomePage() {
   const memberName = localStorage.getItem('memberName');
 
   useEffect(() => {
+    if (isAutoplayPaused || prefersReducedMotion) {
+      return;
+    }
+
     const timerId = window.setInterval(() => {
       setBannerState(([currentIndex]) => [(currentIndex + 1) % banners.length, 1]);
     }, 5000);
 
     return () => window.clearInterval(timerId);
-  }, [banners.length]);
+  }, [banners.length, isAutoplayPaused, activeBannerIndex, prefersReducedMotion]);
 
   useEffect(() => {
     let ignore = false;
@@ -213,6 +232,7 @@ export function HomePage() {
             description: collection.description || '지금 ABC에서 준비한 컬렉션을 만나보세요.',
             coverTitle: coverBook?.title ?? collection.collectionName,
             imageUrl: coverBook?.coverImageUrl,
+            linkTo: `/books?section=collection&collectionId=${collection.collectionId}&source=home`,
           });
         }
       }
@@ -231,6 +251,7 @@ export function HomePage() {
             description: book.authors?.join(', ') || book.publisherName || 'ABC가 고른 오늘의 책',
             coverTitle: book.title,
             imageUrl: book.coverImageUrl,
+            linkTo: `/books/${book.bookId}`,
           });
         }
       }
@@ -315,10 +336,17 @@ export function HomePage() {
 
   return (
     <div className="home-page">
-      <section className="home-hero" aria-label="광고 이벤트 배너">
-        <Link className="home-hero-link" to="/events">
+      <section
+        className="home-hero"
+        aria-label="광고 이벤트 배너"
+        onMouseEnter={() => setIsAutoplayPaused(true)}
+        onMouseLeave={() => setIsAutoplayPaused(false)}
+        onFocus={() => setIsAutoplayPaused(true)}
+        onBlur={() => setIsAutoplayPaused(false)}
+      >
+        <Link className="home-hero-link" to={activeBanner.linkTo ?? '/events'}>
           <div className="home-hero-track">
-            <AnimatePresence initial={false} custom={bannerDirection} mode="wait">
+            <AnimatePresence initial={false} custom={bannerDirection}>
               <motion.article
                 className="home-hero-slide"
                 key={activeBanner.title}
@@ -327,16 +355,21 @@ export function HomePage() {
                 initial={prefersReducedMotion ? 'center' : 'enter'}
                 animate="center"
                 exit={prefersReducedMotion ? 'center' : 'exit'}
-                transition={{ duration: prefersReducedMotion ? 0 : 0.45, ease: 'easeInOut' }}
+                transition={{ duration: prefersReducedMotion ? 0 : 0.5, ease: [0.22, 1, 0.36, 1] }}
               >
-                <div className="home-hero-copy">
-                  <span>{activeBanner.badge}</span>
-                  <h1>{activeBanner.title}</h1>
-                  <p>{activeBanner.description}</p>
-                </div>
+                <motion.div className="home-hero-copy" variants={heroCopyContainerVariants}>
+                  <motion.span variants={heroCopyItemVariants}>{activeBanner.badge}</motion.span>
+                  <motion.h1 variants={heroCopyItemVariants}>{activeBanner.title}</motion.h1>
+                  <motion.p variants={heroCopyItemVariants}>{activeBanner.description}</motion.p>
+                </motion.div>
                 <div className="home-hero-book" aria-hidden="true">
                   {activeBanner.imageUrl ? (
-                    <img className="home-hero-face home-hero-face-image" src={activeBanner.imageUrl} alt="" />
+                    <img
+                      className="home-hero-face home-hero-face-image"
+                      src={activeBanner.imageUrl}
+                      alt=""
+                      key={activeBanner.imageUrl}
+                    />
                   ) : (
                     <div className="home-hero-face">
                       <span className="home-hero-face-icon">📖</span>
@@ -365,7 +398,11 @@ export function HomePage() {
               aria-label={`${index + 1}번째 배너로 이동`}
               aria-selected={index === activeBannerIndex}
               onClick={() => setBannerState(([currentIndex]) => [index, index > currentIndex ? 1 : -1])}
-            />
+            >
+              {index === activeBannerIndex && !prefersReducedMotion ? (
+                <span className="home-hero-dot-fill" key={activeBannerIndex} />
+              ) : null}
+            </button>
           ))}
         </div>
       </section>

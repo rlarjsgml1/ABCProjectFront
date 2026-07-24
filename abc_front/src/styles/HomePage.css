@@ -118,6 +118,7 @@
   width: clamp(140px, 11vw, 190px);
   max-width: 100%;
   aspect-ratio: 4 / 5;
+  overflow: hidden;
   border: 1px dashed color-mix(in srgb, var(--color-primary) 32%, transparent);
   border-radius: var(--radius-lg);
   padding: var(--space-6);
@@ -138,9 +139,28 @@
 
 .home-hero-face-image {
   display: block;
+  width: 100%;
+  height: 100%;
   border: 0;
   padding: 0;
   object-fit: cover;
+  animation: home-hero-kenburns 6s ease-out forwards;
+}
+
+@keyframes home-hero-kenburns {
+  from {
+    transform: scale(1.08);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-face-image {
+    animation: none;
+  }
 }
 
 .home-hero-dots {
@@ -196,19 +216,46 @@
 }
 
 .home-hero-dot {
+  position: relative;
   width: 8px;
   height: 8px;
   padding: 0;
   border: 0;
-  border-radius: 50%;
+  border-radius: 999px;
+  overflow: hidden;
   background: color-mix(in srgb, var(--color-primary) 28%, transparent);
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: width 0.25s ease, background 0.2s ease;
 }
 
 .home-hero-dot.is-active {
+  width: 28px;
+  background: color-mix(in srgb, var(--color-primary) 24%, transparent);
+}
+
+.home-hero-dot-fill {
+  position: absolute;
+  inset: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+  border-radius: inherit;
   background: var(--home-green);
-  transform: scale(1.3);
+  animation: home-hero-dot-fill 5s linear forwards;
+}
+
+.home-hero:hover .home-hero-dot-fill,
+.home-hero:focus-within .home-hero-dot-fill {
+  animation-play-state: paused;
+}
+
+@keyframes home-hero-dot-fill {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
 }
 
 .home-quick-menu {
