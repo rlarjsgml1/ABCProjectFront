@@ -5,6 +5,10 @@ import type {
   CheckLoginIdResponse,
   FindIdRequest,
   FindIdResponse,
+  GoogleAuthResponse,
+  GoogleLinkRequest,
+  GoogleLoginRequest,
+  GoogleSignupRequest,
   LoginRequest,
   LoginResponse,
   PasswordResetConfirmPayload,
@@ -33,6 +37,21 @@ export async function checkLoginId(loginId: string) {
 
 export async function login(payload: LoginRequest) {
   const response = await apiClient.post<ApiResponse<LoginResponse>>('/auth/login', payload);
+  return response.data.data;
+}
+
+export async function loginWithGoogle(payload: GoogleLoginRequest) {
+  const response = await apiClient.post<ApiResponse<GoogleAuthResponse>>('/auth/google', payload);
+  return response.data.data;
+}
+
+export async function completeGoogleSignup(payload: GoogleSignupRequest) {
+  const response = await apiClient.post<ApiResponse<GoogleAuthResponse>>('/auth/google/signup', payload);
+  return response.data.data;
+}
+
+export async function completeGoogleLink(payload: GoogleLinkRequest) {
+  const response = await apiClient.post<ApiResponse<GoogleAuthResponse>>('/auth/google/link', payload);
   return response.data.data;
 }
 
