@@ -249,7 +249,7 @@ promote_release() {
         --prefix "${CURRENT_PREFIX}/assets/" \
         --max-keys 20 \
         --no-paginate \
-        --query 'Contents[?Size > `0`][0].Key' \
+        --query 'Contents[?Size > `0`] | [0].Key' \
         --output text)
     if [[ -z "$asset_key" || "$asset_key" == None ]]; then
         echo "current release does not contain a cacheable asset" >&2
