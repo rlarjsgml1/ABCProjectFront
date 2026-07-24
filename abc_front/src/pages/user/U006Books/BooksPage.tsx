@@ -9,7 +9,7 @@ import { Pagination } from '../../../components/common/Pagination';
 import type { BookCard, Category, PageResponse } from '../../../types/api';
 import '../../../styles/BooksPage.css';
 
-const PAGE_SIZE = 15;
+const PAGE_SIZE = 30;
 const SECTION_PAGE_SIZE = 16;
 const RANKING_PAGE_SIZE = 15;
 const viewOptions = [
