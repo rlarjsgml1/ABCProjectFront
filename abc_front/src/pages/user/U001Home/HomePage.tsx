@@ -29,8 +29,10 @@ type BannerItem = {
   title: string;
   description: string;
   coverTitle: string;
+  theme?: 'brown' | 'forest' | 'midnight' | 'plum';
   /** 운영 배너 이미지 URL. 값을 넣으면 플레이스홀더 대신 실제 이미지가 표시된다. */
   imageUrl?: string;
+  covers?: { title: string; imageUrl?: string }[];
   /** 클릭 시 이동 경로. 없으면 일반 이벤트 페이지로 이동한다. */
   linkTo?: string;
 };
@@ -41,20 +43,25 @@ const bannerItems: BannerItem[] = [
     title: 'ABC에서 만나는 이번 주 특별 도서',
     description: '추천 작품과 신간을 한곳에서 빠르게 확인해보세요.',
     coverTitle: 'ABC Pick',
+    theme: 'brown',
   },
   {
     badge: 'NEW',
     title: '새로 들어온 전자책을 먼저 만나보세요',
     description: '매일 업데이트되는 신간 도서를 ABC가 골라드립니다.',
     coverTitle: 'New Book',
+    theme: 'forest',
   },
   {
     badge: 'BEST',
     title: '지금 가장 많이 읽는 베스트 작품',
     description: '독자들이 선택한 인기 도서를 메인에서 바로 확인하세요.',
     coverTitle: 'Best Book',
+    theme: 'midnight',
   },
 ];
+
+const bannerThemes: NonNullable<BannerItem['theme']>[] = ['brown', 'forest', 'midnight', 'plum'];
 
 const quickMenuItems = [
   { to: '/me/attendance', icon: '✔️', label: '출석체크', description: '매일 읽고 혜택 받기' },
@@ -155,6 +162,7 @@ export function HomePage() {
   const prefersReducedMotion = useReducedMotion();
   const [[activeBannerIndex, bannerDirection], setBannerState] = useState<[number, number]>([0, 1]);
   const [isAutoplayPaused, setIsAutoplayPaused] = useState(false);
+  const [isBannerHovered, setIsBannerHovered] = useState(false);
   const [recommendedBooks, setRecommendedBooks] = useState<BookItem[]>(isLoggedIn ? fallbackRecommendedBooks : fallbackBestBooks);
   const [newBooks, setNewBooks] = useState<BookItem[]>(fallbackNewBooks);
   const [bestBooks, setBestBooks] = useState<BookItem[]>(fallbackBestBooks);
@@ -165,7 +173,7 @@ export function HomePage() {
   const memberName = localStorage.getItem('memberName');
 
   useEffect(() => {
-    if (isAutoplayPaused || prefersReducedMotion) {
+    if (isAutoplayPaused || isBannerHovered || prefersReducedMotion) {
       return;
     }
 
@@ -174,7 +182,7 @@ export function HomePage() {
     }, 5000);
 
     return () => window.clearInterval(timerId);
-  }, [banners.length, isAutoplayPaused, activeBannerIndex, prefersReducedMotion]);
+  }, [banners.length, isAutoplayPaused, isBannerHovered, activeBannerIndex, prefersReducedMotion]);
 
   useEffect(() => {
     let ignore = false;
@@ -224,15 +232,25 @@ export function HomePage() {
       const dynamicBanners: BannerItem[] = [];
 
       if (collectionsResult.status === 'fulfilled') {
-        for (const collection of collectionsResult.value.content) {
+        for (const [index, collection] of collectionsResult.value.content.entries()) {
           const coverBook = collection.previewBooks.find((book) => book.coverImageUrl);
+          const covers = collection.previewBooks
+            .filter((book) => book.coverImageUrl)
+            .slice(0, 2)
+            .map((book) => ({ title: book.title, imageUrl: book.coverImageUrl }));
+
           dynamicBanners.push({
             badge: collection.collectionType === 'EVENT' ? 'EVENT' : 'SERIES',
             title: collection.collectionName,
             description: collection.description || '지금 ABC에서 준비한 컬렉션을 만나보세요.',
             coverTitle: coverBook?.title ?? collection.collectionName,
+            theme: bannerThemes[index % bannerThemes.length],
             imageUrl: coverBook?.coverImageUrl,
-            linkTo: `/books?section=collection&collectionId=${collection.collectionId}&source=home`,
+            covers,
+            linkTo:
+              collection.collectionType === 'EVENT'
+                ? '/events'
+                : `/books?section=collection&collectionId=${collection.collectionId}&source=home`,
           });
         }
       }
@@ -244,19 +262,63 @@ export function HomePage() {
           ...(bestResult.status === 'fulfilled' ? bestResult.value.map((book) => ({ book, badge: 'BEST' })) : []),
         ].filter(({ book }) => book.coverImageUrl);
 
-        for (const { book, badge } of candidates.slice(0, 3)) {
+        for (const [index, { book, badge }] of candidates.slice(0, 3).entries()) {
+          const pairBook = candidates.find((candidate) => candidate.book.bookId !== book.bookId)?.book;
+
           dynamicBanners.push({
             badge,
             title: book.title,
             description: book.authors?.join(', ') || book.publisherName || 'ABC가 고른 오늘의 책',
             coverTitle: book.title,
+            theme: bannerThemes[index % bannerThemes.length],
             imageUrl: book.coverImageUrl,
+            covers: [
+              { title: book.title, imageUrl: book.coverImageUrl },
+              ...(pairBook?.coverImageUrl ? [{ title: pairBook.title, imageUrl: pairBook.coverImageUrl }] : []),
+            ],
             linkTo: `/books/${book.bookId}`,
           });
         }
       }
 
       // 3층: 그래도 없으면 기본 배너(bannerItems) 유지
+      if (dynamicBanners.length < 4) {
+        const supplementalCandidates = [
+          ...(latestResult.status === 'fulfilled' ? latestResult.value.map((book) => ({ book, badge: 'NEW' })) : []),
+          ...(bestResult.status === 'fulfilled' ? bestResult.value.map((book) => ({ book, badge: 'BEST' })) : []),
+        ].filter(({ book }) => book.coverImageUrl);
+
+        for (const { book, badge } of supplementalCandidates) {
+          if (dynamicBanners.length >= 4) break;
+          if (dynamicBanners.some((banner) => banner.linkTo === `/books/${book.bookId}`)) continue;
+
+          const pairBook = supplementalCandidates.find((candidate) => candidate.book.bookId !== book.bookId)?.book;
+
+          dynamicBanners.push({
+            badge,
+            title: book.title,
+            description: book.authors?.join(', ') || book.publisherName || 'ABC 추천 도서',
+            coverTitle: book.title,
+            theme: bannerThemes[dynamicBanners.length % bannerThemes.length],
+            imageUrl: book.coverImageUrl,
+            covers: [
+              { title: book.title, imageUrl: book.coverImageUrl },
+              ...(pairBook?.coverImageUrl ? [{ title: pairBook.title, imageUrl: pairBook.coverImageUrl }] : []),
+            ],
+            linkTo: `/books/${book.bookId}`,
+          });
+        }
+      }
+
+      if (dynamicBanners.length < 2) {
+        dynamicBanners.push(
+          ...bannerItems.slice(0, 2 - dynamicBanners.length).map((banner) => ({
+            ...banner,
+            theme: bannerThemes[dynamicBanners.length % bannerThemes.length],
+          })),
+        );
+      }
+
       if (dynamicBanners.length) {
         setBanners(dynamicBanners);
         setBannerState([0, 1]);
@@ -332,6 +394,10 @@ export function HomePage() {
     setBannerState(([currentIndex]) => [(currentIndex + direction + banners.length) % banners.length, direction]);
   }
 
+  function selectBanner(index: number) {
+    setBannerState(([currentIndex]) => [index, index >= currentIndex ? 1 : -1]);
+  }
+
   function scrollRow(event: ReactMouseEvent<HTMLButtonElement>, direction: 1 | -1) {
     const wrap = event.currentTarget.closest('.home-book-row-scroll-wrap');
     const scrollEl = wrap?.querySelector('.home-book-row-scroll');
@@ -359,18 +425,18 @@ export function HomePage() {
   return (
     <div className="home-page">
       <section
-        className="home-hero"
+        className={`home-hero ${isAutoplayPaused ? 'is-paused' : ''}`}
         aria-label="광고 이벤트 배너"
-        onMouseEnter={() => setIsAutoplayPaused(true)}
-        onMouseLeave={() => setIsAutoplayPaused(false)}
-        onFocus={() => setIsAutoplayPaused(true)}
-        onBlur={() => setIsAutoplayPaused(false)}
+        onMouseEnter={() => setIsBannerHovered(true)}
+        onMouseLeave={() => setIsBannerHovered(false)}
+        onFocus={() => setIsBannerHovered(true)}
+        onBlur={() => setIsBannerHovered(false)}
       >
         <Link className="home-hero-link" to={activeBanner.linkTo ?? '/events'}>
           <div className="home-hero-track">
             <AnimatePresence initial={false} custom={bannerDirection}>
               <motion.article
-                className="home-hero-slide"
+                className={`home-hero-slide home-hero-slide-${activeBanner.theme ?? 'brown'}`}
                 key={activeBanner.title}
                 custom={bannerDirection}
                 variants={heroSlideVariants}
@@ -384,20 +450,24 @@ export function HomePage() {
                   <motion.h1 variants={heroCopyItemVariants}>{activeBanner.title}</motion.h1>
                   <motion.p variants={heroCopyItemVariants}>{activeBanner.description}</motion.p>
                 </motion.div>
-                <div className="home-hero-book" aria-hidden="true">
-                  {activeBanner.imageUrl ? (
-                    <img
-                      className="home-hero-face home-hero-face-image"
-                      src={activeBanner.imageUrl}
-                      alt=""
-                      key={activeBanner.imageUrl}
-                    />
-                  ) : (
-                    <div className="home-hero-face">
-                      <span className="home-hero-face-icon">📖</span>
-                      <strong>{activeBanner.coverTitle}</strong>
-                    </div>
-                  )}
+                <div className="home-hero-book-stack" aria-hidden="true">
+                  {(activeBanner.covers?.length ? activeBanner.covers : [{ title: activeBanner.coverTitle, imageUrl: activeBanner.imageUrl }])
+                    .slice(0, 2)
+                    .map((cover) =>
+                      cover.imageUrl ? (
+                        <img
+                          className="home-hero-face home-hero-face-image"
+                          src={cover.imageUrl}
+                          alt=""
+                          key={`${activeBanner.title}-${cover.imageUrl}`}
+                        />
+                      ) : (
+                        <div className="home-hero-face" key={`${activeBanner.title}-${cover.title}`}>
+                          <span className="home-hero-face-icon">📖</span>
+                          <strong>{cover.title}</strong>
+                        </div>
+                      ),
+                    )}
                 </div>
               </motion.article>
             </AnimatePresence>
@@ -410,21 +480,30 @@ export function HomePage() {
           ›
         </button>
 
-        <div className="home-hero-dots" role="tablist" aria-label="배너 슬라이드 이동">
+        <div className="home-hero-controls" aria-label="배너 슬라이드 상태">
+          <button
+            type="button"
+            className="home-hero-pause"
+            aria-label={isAutoplayPaused ? '배너 자동 넘김 다시 시작' : '배너 자동 넘김 일시정지'}
+            onClick={() => setIsAutoplayPaused((paused) => !paused)}
+          >
+            {isAutoplayPaused ? '▶' : 'Ⅱ'}
+          </button>
+          <span className="home-hero-count">
+            {activeBannerIndex + 1} / {banners.length} +
+          </span>
+        </div>
+
+        <div className="home-hero-dots" aria-label="배너 슬라이드 이동">
           {banners.map((banner, index) => (
             <button
-              key={banner.title}
               type="button"
-              role="tab"
               className={`home-hero-dot ${index === activeBannerIndex ? 'is-active' : ''}`}
-              aria-label={`${index + 1}번째 배너로 이동`}
-              aria-selected={index === activeBannerIndex}
-              onClick={() => setBannerState(([currentIndex]) => [index, index > currentIndex ? 1 : -1])}
-            >
-              {index === activeBannerIndex && !prefersReducedMotion ? (
-                <span className="home-hero-dot-fill" key={activeBannerIndex} />
-              ) : null}
-            </button>
+              aria-label={`${index + 1}번째 배너 보기`}
+              aria-current={index === activeBannerIndex ? 'true' : undefined}
+              key={`${banner.title}-${index}`}
+              onClick={() => selectBanner(index)}
+            />
           ))}
         </div>
       </section>
