@@ -1,5 +1,5 @@
 // 홈 화면(U001) — 배너 슬라이드, 카테고리, 추천/신간/베스트 도서 섹션을 보여준다.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion, type Variants } from 'framer-motion';
 import { getBestBooks, getLatestBooks, getRecommendedBooks } from '../../../api/bookApi';
@@ -181,11 +181,11 @@ export function HomePage() {
 
     async function loadHomeData() {
       const [recommendedResult, latestResult, bestResult, noticeResult, collectionsResult] = await Promise.allSettled([
-        isLoggedIn ? getRecommendedBooks(5) : getBestBooks(5),
-        getLatestBooks(5),
+        isLoggedIn ? getRecommendedBooks(15) : getBestBooks(15),
+        getLatestBooks(30),
         getBestBooks(10),
         getNotices(0, 1),
-        getCollections({ status: 'ACTIVE', page: 0, size: 5, previewSize: 10 }),
+        getCollections({ status: 'ACTIVE', page: 0, size: 5, previewSize: 15 }),
       ]);
 
       if (ignore) return;
@@ -332,6 +332,28 @@ export function HomePage() {
     setBannerState(([currentIndex]) => [(currentIndex + direction + banners.length) % banners.length, direction]);
   }
 
+  function scrollRow(event: ReactMouseEvent<HTMLButtonElement>, direction: 1 | -1) {
+    const wrap = event.currentTarget.closest('.home-book-row-scroll-wrap');
+    const scrollEl = wrap?.querySelector('.home-book-row-scroll');
+    scrollEl?.scrollBy({ left: direction * 640, behavior: 'smooth' });
+  }
+
+  function renderBookCard(book: BookItem) {
+    return (
+      <motion.div variants={sectionCardVariants} key={book.id}>
+        <Link className="home-book-card" to={`/books/${book.id}`}>
+          {book.coverImageUrl ? (
+            <img className="home-book-cover" src={book.coverImageUrl} alt="" />
+          ) : (
+            <span className="home-book-cover" style={{ backgroundColor: book.tone }} />
+          )}
+          <strong>{book.title}</strong>
+          <small>{book.author}</small>
+        </Link>
+      </motion.div>
+    );
+  }
+
   const activeBanner = banners[activeBannerIndex] ?? banners[0];
 
   return (
@@ -448,27 +470,62 @@ export function HomePage() {
               <Link className="home-section-more" to={section.moreTo}>더보기</Link>
             </div>
 
-            <motion.div
-              className={section.ranked ? 'home-best-grid' : 'home-book-row'}
-              variants={sectionGridVariants}
-              initial={prefersReducedMotion ? false : 'hidden'}
-              whileInView={prefersReducedMotion ? undefined : 'visible'}
-              viewport={{ once: true, amount: 0.15 }}
-            >
-              {section.books.map((book) => (
-                <motion.div variants={sectionCardVariants} key={book.id}>
-                  <Link className="home-book-card" to={`/books/${book.id}`}>
-                    {book.coverImageUrl ? (
-                      <img className="home-book-cover" src={book.coverImageUrl} alt="" />
-                    ) : (
-                      <span className="home-book-cover" style={{ backgroundColor: book.tone }} />
-                    )}
-                    <strong>{book.title}</strong>
-                    <small>{book.author}</small>
-                  </Link>
-                </motion.div>
-              ))}
-            </motion.div>
+            {section.ranked ? (
+              <motion.div
+                className="home-best-grid"
+                variants={sectionGridVariants}
+                initial={prefersReducedMotion ? false : 'hidden'}
+                whileInView={prefersReducedMotion ? undefined : 'visible'}
+                viewport={{ once: true, amount: 0.15 }}
+              >
+                {section.books.map((book) => renderBookCard(book))}
+              </motion.div>
+            ) : (
+              <div className="home-book-row-scroll-wrap">
+                <button
+                  type="button"
+                  className="home-book-row-arrow is-prev"
+                  aria-label={`이전 ${section.title} 보기`}
+                  onClick={(event) => scrollRow(event, -1)}
+                >
+                  ‹
+                </button>
+                {section.kind === 'latest' ? (
+                  <motion.div
+                    className="home-book-row home-book-row-scroll is-stacked"
+                    variants={sectionGridVariants}
+                    initial={prefersReducedMotion ? false : 'hidden'}
+                    whileInView={prefersReducedMotion ? undefined : 'visible'}
+                    viewport={{ once: true, amount: 0.15 }}
+                  >
+                    <div className="home-book-row-scroll-line">
+                      {section.books.slice(0, 15).map((book) => renderBookCard(book))}
+                    </div>
+                    <div className="home-book-row-scroll-line">
+                      {section.books.slice(15, 30).map((book) => renderBookCard(book))}
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    className="home-book-row home-book-row-scroll"
+                    variants={sectionGridVariants}
+                    initial={prefersReducedMotion ? false : 'hidden'}
+                    whileInView={prefersReducedMotion ? undefined : 'visible'}
+                    viewport={{ once: true, amount: 0.15 }}
+                  >
+                    {section.books.map((book) => renderBookCard(book))}
+                  </motion.div>
+                )}
+                <button
+                  type="button"
+                  className="home-book-row-arrow is-next"
+                  aria-label={`다음 ${section.title} 보기`}
+                  onClick={(event) => scrollRow(event, 1)}
+                >
+                  ›
+                </button>
+              </div>
+            )}
           </section>
         );
       })}
