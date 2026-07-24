@@ -42,6 +42,7 @@ jobs:
       FRONTEND_BASE_URL: ${{ vars.FRONTEND_BASE_URL }}
       VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
       VITE_NAVER_MAP_CLIENT_ID: ${{ vars.VITE_NAVER_MAP_CLIENT_ID }}
+      VITE_GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
       OPERATION: ${{ inputs.operation }}
       CONFIRM_PRODUCTION: ${{ inputs.confirm_production }}
       CONFIRM_RELEASE: ${{ inputs.confirm_release }}
@@ -70,7 +71,7 @@ jobs:
           if [[ -z "$AWS_REGION" || -z "$AWS_ROLE_ARN" \
              || -z "$FRONTEND_S3_BUCKET" || -z "$CLOUDFRONT_DISTRIBUTION_ID" \
              || -z "$FRONTEND_BASE_URL" || -z "$VITE_API_BASE_URL" \
-             || -z "$VITE_NAVER_MAP_CLIENT_ID" ]]; then
+             || -z "$VITE_NAVER_MAP_CLIENT_ID" || -z "$VITE_GOOGLE_CLIENT_ID" ]]; then
             echo "required production variables are missing" >&2
             exit 1
           fi
@@ -151,6 +152,7 @@ jobs:
           fi
           grep -RqsF "$VITE_API_BASE_URL" dist
           grep -RqsF "$VITE_NAVER_MAP_CLIENT_ID" dist
+          grep -RqsF "$VITE_GOOGLE_CLIENT_ID" dist
 
       - name: Configure AWS credentials through OIDC
         uses: aws-actions/configure-aws-credentials@cabfdba3510de1431bac9dba27511d97497fc100
