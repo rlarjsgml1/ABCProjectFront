@@ -110,6 +110,41 @@ export type LoginResponse = {
   member: LoginMember;
 };
 
+export type GoogleAuthStatus = 'AUTHENTICATED' | 'SIGNUP_REQUIRED' | 'LINK_REQUIRED';
+
+export type GoogleTransition = {
+  transitionToken: string;
+  expiresIn: number;
+  email: string;
+  name: string | null;
+};
+
+export type GoogleAuthResponse = {
+  status: GoogleAuthStatus;
+  login: LoginResponse | null;
+  transition: GoogleTransition | null;
+};
+
+export type GoogleLoginRequest = {
+  idToken: string;
+};
+
+export type GoogleSignupRequest = {
+  transitionToken: string;
+  loginId: string;
+  name: string;
+  password: string;
+  passwordConfirm: string;
+  phone?: string;
+  birthDate: string;
+  gender: 'MALE' | 'FEMALE';
+};
+
+export type GoogleLinkRequest = {
+  transitionToken: string;
+  password: string;
+};
+
 export type AdminMemberStatus = 'JOINED' | 'SANCTIONED' | 'WITHDRAWN' | 'DEACTIVATED';
 
 export type AdminMemberRole = 'USER' | 'ADMIN';
