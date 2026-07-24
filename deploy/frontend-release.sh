@@ -247,9 +247,14 @@ promote_release() {
         --region "$AWS_REGION" \
         --bucket "$FRONTEND_S3_BUCKET" \
         --prefix "${CURRENT_PREFIX}/assets/" \
-        --max-items 1 \
-        --query 'Contents[0].Key' \
+        --max-keys 20 \
+        --no-paginate \
+        --query 'Contents[?Size > `0`][0].Key' \
         --output text)
+    if [[ -z "$asset_key" || "$asset_key" == None ]]; then
+        echo "current release does not contain a cacheable asset" >&2
+        exit 1
+    fi
     asset_cache=$(aws s3api head-object \
         --region "$AWS_REGION" \
         --bucket "$FRONTEND_S3_BUCKET" \
