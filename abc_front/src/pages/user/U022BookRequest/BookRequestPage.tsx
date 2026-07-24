@@ -1,12 +1,16 @@
 // 희망도서 신청(U022) 화면 — 도서 정보와 신청 사유를 입력받아 희망도서 신청을 등록한다
 import { FormEvent, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { createBookRequest } from '../../../api/bookRequestsApi';
 import { getApiErrorMessage } from '../../../api/profileApi';
 import { Button } from '../../../components/common/Button';
 import type { BookRequestCreateRequest } from '../../../types/api';
 
-const initialForm: BookRequestCreateRequest = {
+type BookRequestPrefillState = {
+  title?: string;
+};
+
+const emptyForm: BookRequestCreateRequest = {
   title: '',
   author: '',
   publisher: '',
@@ -35,7 +39,9 @@ function validateForm(form: BookRequestCreateRequest) {
 
 export function BookRequestPage() {
   const navigate = useNavigate();
-  const [form, setForm] = useState<BookRequestCreateRequest>(initialForm);
+  const location = useLocation();
+  const prefill = (location.state as BookRequestPrefillState) ?? null;
+  const [form, setForm] = useState<BookRequestCreateRequest>({ ...emptyForm, title: prefill?.title ?? '' });
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 

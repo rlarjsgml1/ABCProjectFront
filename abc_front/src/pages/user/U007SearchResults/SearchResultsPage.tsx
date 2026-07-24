@@ -2,9 +2,10 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getBooks, getCategories, searchBooks, type BookSearchQuery } from '../../../api/bookApi';
-import { createBookRequest } from '../../../api/bookRequestsApi';
-import { getApiErrorCode, getApiErrorMessage } from '../../../api/profileApi';
+import { getApiErrorMessage } from '../../../api/profileApi';
+import { Button } from '../../../components/common/Button';
 import { EmptyState } from '../../../components/common/EmptyState';
+import { Modal } from '../../../components/common/Modal';
 import { Pagination } from '../../../components/common/Pagination';
 import type { BookCard, Category, PageResponse } from '../../../types/api';
 import '../../../styles/BooksPage.css';
@@ -73,10 +74,6 @@ function formatRentalType(book: BookCard) {
   return '유료';
 }
 
-function getRequestStorageKey(keyword: string) {
-  return `abc-book-request:${keyword.trim().toLowerCase()}`;
-}
-
 export function SearchResultsPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -94,8 +91,7 @@ export function SearchResultsPage() {
   const [categories, setCategories] = useState<Category[]>(fallbackCategories);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-  const [isRequested, setIsRequested] = useState(() => Boolean(keyword && localStorage.getItem(getRequestStorageKey(keyword))));
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
 
   const query = useMemo<BookSearchQuery>(
     () => ({
@@ -131,8 +127,10 @@ export function SearchResultsPage() {
   }, [featuredBooks.length]);
 
   useEffect(() => {
-    setIsRequested(Boolean(keyword && localStorage.getItem(getRequestStorageKey(keyword))));
-  }, [keyword]);
+    if (requestMode && keyword) {
+      setIsRequestModalOpen(true);
+    }
+  }, [requestMode, keyword]);
 
   useEffect(() => {
     let ignore = false;
@@ -229,7 +227,7 @@ export function SearchResultsPage() {
   }, [currentPage, keyword, query]);
 
   const totalPages = Math.max(1, bookPage.totalPages);
-  const showRequestPanel = Boolean(keyword && (requestMode || (!isLoading && bookPage.totalElements === 0)));
+  const showRequestPanel = Boolean(keyword && !isLoading && bookPage.totalElements === 0);
   const updateFilter = (updates: Record<string, string | undefined>) => {
     const next = new URLSearchParams(searchParams);
     next.delete('page');
@@ -251,7 +249,10 @@ export function SearchResultsPage() {
     setSearchParams(next);
   };
 
-  const handleRequest = async () => {
+  const openRequestModal = () => setIsRequestModalOpen(true);
+  const closeRequestModal = () => setIsRequestModalOpen(false);
+
+  const handleConfirmRequest = () => {
     if (!keyword) return;
 
     if (!localStorage.getItem('accessToken')) {
@@ -259,30 +260,8 @@ export function SearchResultsPage() {
       return;
     }
 
-    if (isRequested) return;
-
-    setIsSubmitting(true);
-    setErrorMessage('');
-
-    try {
-      await createBookRequest({
-        title: keyword,
-        author: '미상',
-        publisher: '미상',
-        reason: `검색 결과가 없어 희망 도서로 신청합니다. 검색어: ${keyword}`,
-      });
-      localStorage.setItem(getRequestStorageKey(keyword), '1');
-      setIsRequested(true);
-    } catch (error) {
-      if (getApiErrorCode(error) === 'BOOK_REQUEST_ALREADY_EXISTS') {
-        localStorage.setItem(getRequestStorageKey(keyword), '1');
-        setIsRequested(true);
-      } else {
-        setErrorMessage(getApiErrorMessage(error));
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
+    setIsRequestModalOpen(false);
+    navigate('/me/book-requests', { state: { title: keyword } });
   };
 
   return (
@@ -423,13 +402,30 @@ export function SearchResultsPage() {
 
           {showRequestPanel ? (
             <div className="search-request-panel">
-              <h2>{isRequested ? '요청이 완료 되었습니다.' : `"${keyword}"에 대한 검색 결과가 없습니다.`}</h2>
-              {!isRequested ? <p>희망 도서를 신청하시겠습니까?</p> : null}
-              <button type="button" onClick={handleRequest} disabled={isSubmitting || isRequested}>
-                {isSubmitting ? '요청 중...' : '요청하기'}
+              <h2>{`"${keyword}"에 대한 검색 결과가 없습니다.`}</h2>
+              <p>원하시는 책이 없나요? 희망 도서를 신청해 보세요.</p>
+              <button type="button" className="button button-secondary" onClick={openRequestModal}>
+                희망 도서 신청하기
               </button>
             </div>
           ) : null}
+
+          <Modal
+            isOpen={isRequestModalOpen}
+            onClose={closeRequestModal}
+            title="희망 도서 신청"
+            titleId="book-request-confirm-title"
+          >
+            <p>{`"${keyword}"에 대한 검색 결과가 없습니다. 희망 도서 신청 화면으로 이동하시겠습니까?`}</p>
+            <div className="form-action-row">
+              <Button type="button" variant="secondary" onClick={closeRequestModal}>
+                아니요
+              </Button>
+              <Button type="button" onClick={handleConfirmRequest}>
+                예
+              </Button>
+            </div>
+          </Modal>
 
           {!isLoading && keyword && !showRequestPanel && bookPage.content.length ? (
             <>
